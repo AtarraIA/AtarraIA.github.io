@@ -1,0 +1,360 @@
+/* ───────────────────────────────────────────
+   Atarraia – Redes Neuronales
+   Recreación fiel del Google Sites original
+   ─────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg:      #000000;
+  --gold:    #f5c542;
+  --text:    #e0e0e0;
+  --text-dim:#999999;
+  --border:  #333333;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 16px;
+}
+
+/* ── HERO ──────────────────────────────────── */
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.hero canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-title {
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  color: #ffffff;
+  text-transform: uppercase;
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+}
+
+.hero-title .gold { color: var(--gold); }
+
+.hero-subtitle {
+  font-size: clamp(0.9rem, 2vw, 1.2rem);
+  font-style: italic;
+  color: var(--text-dim);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+}
+
+/* ── SECTIONS ──────────────────────────────── */
+section {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+}
+
+
+/* ── SOBRE NOSOTROS ────────────────────────── */
+.section-heading {
+  text-align: center;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 400;
+  letter-spacing: 0.35em;
+  color: var(--text);
+  margin-bottom: 2.5rem;
+  text-transform: lowercase;
+}
+
+.section-heading .gold { color: var(--gold); }
+
+.about-text {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--text);
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+/* ── REQUISITOS ────────────────────────────── */
+.req-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.req-column h3 {
+  color: var(--gold);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.req-column ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.req-column ul li {
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.invite-note {
+  text-align: center;
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-top: 4rem;
+}
+
+/* ── INFO CENTER ───────────────────────────── */
+.info-center {
+  text-align: center;
+}
+
+.info-icons {
+  font-size: 2.5rem;
+  color: var(--gold);
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.3em;
+}
+
+.info-line {
+  font-size: 1.3rem;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.info-line .gold {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.info-link {
+  margin-top: 2rem;
+}
+
+.info-link a {
+  color: var(--gold);
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.info-link a:hover {
+  opacity: 0.8;
+}
+
+/* ── CRONOGRAMA INTRO ──────────────────────── */
+.cronograma-title {
+  font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.cronograma-subtitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 2rem;
+}
+
+.cronograma-intro {
+  font-size: 0.92rem;
+  line-height: 1.8;
+  color: var(--text);
+  margin-bottom: 2.5rem;
+}
+
+.cronograma-intro p {
+  margin-bottom: 1.2rem;
+}
+
+.cronograma-intro a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.cronograma-intro a:hover {
+  color: var(--gold);
+}
+
+.gold-highlight {
+  color: var(--gold);
+  font-size: 1.15em;
+  font-weight: 700;
+}
+
+/* ── TEXTBOOK NOTE ─────────────────────────── */
+.textbook-note {
+  text-align: center;
+  margin-top: 2rem;
+  padding: 1.2rem;
+  border: 1px solid var(--border);
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.textbook-note strong { color: var(--gold); }
+
+/* ── ACCORDION / CRONOGRAMA ────────────────── */
+.accordion {
+  margin-top: 1.5rem;
+}
+
+.accordion-item {
+  border-top: 1px solid var(--border);
+}
+
+.accordion-item:last-child {
+  border-bottom: 1px solid var(--border);
+}
+
+.accordion-header {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--gold);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 1rem 1.2rem;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.2s;
+}
+
+.accordion-header:hover {
+  background: rgba(212, 165, 55, 0.05);
+}
+
+.accordion-header .arrow {
+  font-size: 0.7rem;
+  transition: transform 0.3s;
+  color: var(--text-dim);
+}
+
+.accordion-item.open .accordion-header .arrow {
+  transform: rotate(180deg);
+}
+
+.accordion-item.open .accordion-header {
+  background: rgba(212, 165, 55, 0.08);
+}
+
+.accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+.accordion-item.open .accordion-body {
+  max-height: 800px;
+}
+
+/* ── SCHEDULE TABLE ────────────────────────── */
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+}
+
+.schedule-table td {
+  padding: 0.7rem 1.2rem;
+  font-size: 0.88rem;
+  color: var(--text);
+  border-bottom: 1px solid rgba(51, 51, 51, 0.5);
+  vertical-align: middle;
+}
+
+.schedule-table tr:last-child td {
+  border-bottom: none;
+}
+
+.schedule-table .col-topic {
+  min-width: 280px;
+}
+
+.schedule-table .col-date {
+  color: var(--gold);
+  white-space: nowrap;
+  min-width: 180px;
+}
+
+.schedule-table .col-type {
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.schedule-table .col-type.teorica { color: var(--gold); }
+.schedule-table .col-type.practica { color: var(--gold); }
+
+.schedule-note {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+
+/* ── FOOTER ────────────────────────────────── */
+footer {
+  text-align: center;
+  padding: 2rem 1.5rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+footer a { color: var(--gold); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* ── RESPONSIVE ────────────────────────────── */
+@media (max-width: 600px) {
+  .req-container { grid-template-columns: 1fr; gap: 2rem; }
+  .hero-title { letter-spacing: 0.08em; }
+  .schedule-table .col-topic { min-width: auto; }
+}

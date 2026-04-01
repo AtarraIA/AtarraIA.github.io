@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ATARRAIA – Semillero de Redes Neuronales</title>
+  <meta name="description" content="Semillero de redes neuronales, deep learning e inteligencia artificial en la Universidad Nacional de Colombia sede Medellín." />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <!-- ── HERO ─────────────────────────────── -->
+  <header class="hero">
+    <canvas id="network"></canvas>
+    <div class="hero-content">
+      <h1 class="hero-title">
+        ATARRA<span class="gold">IA</span>
+      </h1>
+      <div class="hero-subtitle">Semillero de Redes Neuronales</div>
+    </div>
+  </header>
+
+  <!-- ── SOBRE NOSOTROS ───────────────────── -->
+  <section id="sobre">
+    <h2 class="section-heading">s o b r e &nbsp; <span class="gold">n</span> o s o t r o s</h2>
+    <p class="about-text">
+      El semillero es un punto de encuentro para las personas interesadas en las redes neuronales, el deep learning, y la inteligencia artificial. Es organizado principalmente por estudiantes de las carreras de Ciencias de la Computación, Matemáticas e Ingeniería de Sistemas de la Universidad Nacional de Colombia Sede Medellín. Tiene un enfoque teórico-práctico. Todas las semanas nos reunimos a aprender sobre Deep Learning.
+    </p>
+  </section>
+
+  <!-- ── REQUISITOS ───────────────────────── -->
+  <section id="requisitos">
+    <div class="req-container">
+      <div class="req-column">
+        <h3>Requisitos mínimos</h3>
+        <ul>
+          <li>Ganas de aprender</li>
+        </ul>
+      </div>
+      <div class="req-column">
+        <h3>Requisitos recomendados</h3>
+        <ul>
+          <li>Álgebra lineal</li>
+          <li>Cálculo diferencial</li>
+        </ul>
+      </div>
+    </div>
+    <p class="invite-note">¡Todos están invitados!</p>
+  </section>
+
+  <!-- ── INFO ─────────────────────────────── -->
+  <section id="info">
+    <div class="info-center">
+      <p class="info-line"><span class="gold">Horario:</span> Lunes a las 6:00pm y Viernes a las 4:00pm</p>
+      <p class="info-line"><span class="gold">Salón:</span> 11- 203</p>
+      <p class="info-link">
+        <a href="https://chat.whatsapp.com/" target="_blank" rel="noopener noreferrer">Grupo de Whatsapp</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ── CRONOGRAMA ───────────────────────── -->
+  <section id="cronograma">
+    <h2 class="cronograma-title">Cronograma de Actividades</h2>
+    <h3 class="cronograma-subtitle">Semestre 2026-1</h3>
+
+    <div class="cronograma-intro">
+      <p>Desde lo teórico, el objetivo principal de este semestre es entender a profundidad tres arquitecturas para redes neuronales: feedforward, convolucionales y transformers. Si nos da tiempo podemos ver más arquitecturas. El objetivo en lo práctico es presentar implementaciones, modelos pre-entrenados, casos de uso, proyectos (pequeños o grandes), agentes y sistemas multiagénticos, y cualquier otra cosa que pueda ser interesante.</p>
+      <p>El cronograma de abajo está basado en las secciones del libro <a href="https://www.bishopbook.com/" target="_blank" rel="noopener noreferrer">Deep Learning Foundations and Concepts</a>. La idea es que nos basemos mucho en el libro ya que está bien estructurado y llega a transformers rápido, pero están invitad@s a buscar más recursos si así lo desean. El cronograma es <span class="gold-highlight">tentativo</span> y podrá estar sujeto a cambios según lo consideremos necesario.</p>
+    </div>
+
+    <div class="accordion" id="accordion-container">
+      <!-- Loaded dynamically from cronograma.xlsx -->
+    </div>
+
+    <p class="schedule-note">* El cronograma es tentativo y sujeto a cambios según las necesidades del semillero.</p>
+  </section>
+
+  <!-- ── FOOTER ────────────────────────────── -->
+  <footer>
+    <p>Atarraia – Semillero de Redes Neuronales · Universidad Nacional de Colombia, Sede Medellín · 2026-1</p>
+  </footer>
+
+  <!-- ── SCRIPTS ───────────────────────────── -->
+  <script>
+    /* ── Neural Network Canvas ── */
+    const canvas = document.getElementById("network");
+    const ctx = canvas.getContext("2d");
+
+    const layers = [4, 6, 6, 4];
+    let nodes = [];
+    let connections = [];
+    let pulseTime = 0;
+    const PULSE_SPEED = 0.005;
+
+    class Node {
+      constructor(x, y, layer, indexInLayer) {
+        this.baseX = x;
+        this.baseY = y;
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.layer = layer;
+        this.indexInLayer = indexInLayer;
+        this.r = 3.5;
+        this.activation = 0;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        const maxDrift = 20;
+        if (Math.abs(this.x - this.baseX) > maxDrift) this.vx *= -1;
+        if (Math.abs(this.y - this.baseY) > maxDrift) this.vy *= -1;
+      }
+
+      draw() {
+        const brightness = 0.3 + this.activation * 0.7;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(245, 197, 66, ${brightness})`;
+        ctx.fill();
+
+        if (this.activation > 0.5) {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.r + 3, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(245, 197, 66, ${(this.activation - 0.5) * 0.4})`;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+      }
+    }
+
+    function initNetwork() {
+      nodes.length = 0;
+      connections.length = 0;
+
+      const w = canvas.width;
+      const h = canvas.height;
+      const margin = Math.min(w, h) * 0.08;
+      const layerSpacing = (w - 2 * margin) / (layers.length - 1);
+
+      layers.forEach((count, layerIdx) => {
+        const x = margin + layerIdx * layerSpacing;
+        const verticalSpacing = (h - 2 * margin) / (count + 1);
+        for (let i = 0; i < count; i++) {
+          const y = margin + (i + 1) * verticalSpacing;
+          nodes.push(new Node(x, y, layerIdx, i));
+        }
+      });
+
+      let nodeIndex = 0;
+      for (let l = 0; l < layers.length - 1; l++) {
+        const currentLayerNodes = nodes.slice(nodeIndex, nodeIndex + layers[l]);
+        const nextLayerStart = nodeIndex + layers[l];
+        const nextLayerNodes = nodes.slice(nextLayerStart, nextLayerStart + layers[l + 1]);
+
+        currentLayerNodes.forEach(n1 => {
+          nextLayerNodes.forEach(n2 => {
+            connections.push({ from: n1, to: n2, weight: 0.5 + Math.random() * 0.5 });
+          });
+        });
+        nodeIndex += layers[l];
+      }
+    }
+
+    function updateActivations() {
+      const cycle = pulseTime % 2;
+      const isForward = cycle < 1;
+      const progress = cycle < 1 ? cycle : cycle - 1;
+
+      nodes.forEach(node => {
+        const currentLayer = node.layer;
+        const totalLayers = layers.length - 1;
+
+        if (isForward) {
+          const layerProgress = progress * totalLayers;
+          if (layerProgress >= currentLayer - 0.3 && layerProgress <= currentLayer + 0.3) {
+            const diff = Math.abs(layerProgress - currentLayer);
+            node.activation = Math.max(0, 1 - diff / 0.3);
+          } else {
+            node.activation *= 0.95;
+          }
+        } else {
+          const reverseLayer = totalLayers - currentLayer;
+          const neuronsInLayer = layers[currentLayer];
+          const neuronProgress = progress * totalLayers * neuronsInLayer;
+
+          let layerStartNeuron = 0;
+          for (let i = layers.length - 1; i > currentLayer; i--) {
+            layerStartNeuron += layers[i];
+          }
+
+          const currentNeuronIndex = layerStartNeuron + node.indexInLayer;
+          const neuronWindow = 0.15;
+
+          if (neuronProgress >= currentNeuronIndex - neuronWindow &&
+              neuronProgress <= currentNeuronIndex + neuronWindow) {
+            const diff = Math.abs(neuronProgress - currentNeuronIndex);
+            node.activation = Math.max(0, 1 - diff / neuronWindow);
+          } else {
+            node.activation *= 0.92;
+          }
+        }
+      });
+    }
+
+    function drawConnections() {
+      const cycle = pulseTime % 2;
+      const isForward = cycle < 1;
+      const progress = cycle < 1 ? cycle : cycle - 1;
+      const totalLayers = layers.length - 1;
+
+      connections.forEach(conn => {
+        ctx.strokeStyle = `rgba(245, 197, 66, 0.35)`;
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(conn.from.x, conn.from.y);
+        ctx.lineTo(conn.to.x, conn.to.y);
+        ctx.stroke();
+
+        const fromLayer = conn.from.layer;
+        const toLayer = conn.to.layer;
+        let intensity = 0;
+
+        if (isForward) {
+          const layerProgress = progress * totalLayers;
+          if (layerProgress >= fromLayer && layerProgress <= toLayer) {
+            const localProgress = (layerProgress - fromLayer) / (toLayer - fromLayer);
+            intensity = Math.sin(localProgress * Math.PI);
+          }
+        } else {
+          let neuronsSoFar = 0;
+          for (let i = layers.length - 1; i > toLayer; i--) {
+            neuronsSoFar += layers[i];
+          }
+          const targetNeuronIndex = neuronsSoFar + conn.to.indexInLayer;
+          const totalNeurons = layers.reduce((sum, count) => sum + count, 0);
+          const currentNeuronProgress = progress * totalNeurons;
+          const neuronWindow = 1.5;
+          if (currentNeuronProgress >= targetNeuronIndex - neuronWindow &&
+              currentNeuronProgress <= targetNeuronIndex + neuronWindow) {
+            const diff = Math.abs(currentNeuronProgress - targetNeuronIndex);
+            intensity = Math.max(0, 1 - diff / neuronWindow);
+          }
+        }
+
+        if (intensity > 0.05) {
+          const alpha = intensity * 0.5 * conn.weight;
+          ctx.strokeStyle = `rgba(245, 197, 66, ${alpha})`;
+          ctx.lineWidth = 1 + intensity * 0.8;
+          ctx.beginPath();
+          ctx.moveTo(conn.from.x, conn.from.y);
+          ctx.lineTo(conn.to.x, conn.to.y);
+          ctx.stroke();
+        }
+      });
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pulseTime += PULSE_SPEED;
+      updateActivations();
+      drawConnections();
+      nodes.forEach(n => { n.update(); n.draw(); });
+      requestAnimationFrame(animate);
+    }
+
+    function resizeCanvas() {
+      const hero = document.querySelector('.hero');
+      canvas.width = hero.offsetWidth;
+      canvas.height = hero.offsetHeight;
+      initNetwork();
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+    animate();
+
+    /* ── Load Cronograma from Excel ── */
+    async function loadCronograma() {
+      try {
+        const response = await fetch('cronograma.xlsx');
+        const arrayBuffer = await response.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet);
+
+        const sections = new Map();
+        rows.forEach(row => {
+          const seccion = row['Seccion'] || '';
+          if (!sections.has(seccion)) sections.set(seccion, []);
+          const tema = row['Tema'] || '';
+          const fecha = row['Fecha'] || '';
+          const tipo = row['Tipo'] || '';
+          if (tema && tema !== 'Por definir') {
+            sections.set(seccion, [...sections.get(seccion), { tema, fecha, tipo }]);
+          }
+        });
+
+        const container = document.getElementById('accordion-container');
+        container.innerHTML = '';
+        let first = true;
+
+        sections.forEach((items, seccion) => {
+          const div = document.createElement('div');
+          div.className = 'accordion-item' + (first ? '' : '');
+          first = false;
+
+          let tableRows = '';
+          if (items.length === 0) {
+            tableRows = '<tr><td class="col-topic">Por definir</td><td class="col-date">—</td><td class="col-type">—</td></tr>';
+          } else {
+            items.forEach(item => {
+              const typeClass = item.tipo.includes('PRÁCTICA') ? 'practica' : 'teorica';
+              tableRows += `<tr>
+                <td class="col-topic">${item.tema}</td>
+                <td class="col-date">${item.fecha}</td>
+                <td class="col-type ${typeClass}">${item.tipo}</td>
+              </tr>`;
+            });
+          }
+
+          div.innerHTML = `
+            <button class="accordion-header">
+              <span>${seccion}</span>
+              <span class="arrow">&#9660;</span>
+            </button>
+            <div class="accordion-body">
+              <table class="schedule-table">${tableRows}</table>
+            </div>`;
+          container.appendChild(div);
+        });
+
+        // Bind accordion clicks
+        document.querySelectorAll('.accordion-header').forEach(btn => {
+          btn.addEventListener('click', () => {
+            btn.parentElement.classList.toggle('open');
+          });
+        });
+      } catch (e) {
+        console.error('Error loading cronograma:', e);
+      }
+    }
+
+    loadCronograma();
+  </script>
+
+</body>
+</html>
