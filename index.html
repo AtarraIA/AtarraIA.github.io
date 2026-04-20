@@ -11,8 +11,19 @@
 </head>
 <body>
 
+  <!-- ── NAV ──────────────────────────────── -->
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a class="nav-logo" href="#inicio">ATARRA<span class="gold">IA</span></a>
+      <ul class="nav-links">
+        <li><a href="#inicio">inicio</a></li>
+        <li><a href="#playgrounds">playgrounds</a></li>
+      </ul>
+    </div>
+  </nav>
+
   <!-- ── HERO ─────────────────────────────── -->
-  <header class="hero">
+  <header class="hero" id="inicio">
     <canvas id="network"></canvas>
     <div class="hero-content">
       <h1 class="hero-title">
@@ -76,6 +87,22 @@
     </div>
 
     <p class="schedule-note">* El cronograma es tentativo y sujeto a cambios según las necesidades del semillero.</p>
+  </section>
+
+  <!-- ── PLAYGROUNDS ──────────────────────── -->
+  <section id="playgrounds">
+    <h2 class="section-heading">p l a y g r o u n d s</h2>
+    <div class="cards-grid">
+      <a class="card" href="https://atarraIA.github.io/convolutional-filters-playground/" target="_blank" rel="noopener noreferrer">
+        <div class="card-body">
+          <h3 class="card-title">Convolutional Filters</h3>
+          <p class="card-desc">Explora de forma interactiva cómo los filtros convolucionales transforman imágenes.</p>
+        </div>
+        <div class="card-footer">
+          <span class="card-link">Abrir playground →</span>
+        </div>
+      </a>
+    </div>
   </section>
 
   <!-- ── FOOTER ────────────────────────────── -->
