@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:sites.google.com)"
+      "WebFetch(domain:sites.google.com)",
+      "Bash(git -C /home/joan/projects/AtarraIA.github.io status)",
+      "Bash(git -C /home/joan/projects/AtarraIA.github.io diff --stat)",
+      "Bash(git -C /home/joan/projects/AtarraIA.github.io add index.html style.css)",
+      "Bash(git -C /home/joan/projects/AtarraIA.github.io commit -m ' *)",
+      "Bash(git *)"
     ]
   }
 }
