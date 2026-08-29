@@ -17,7 +17,7 @@
       <a class="nav-logo" href="#inicio">ATARRA<span class="gold">IA</span></a>
       <ul class="nav-links">
         <li><a href="#inicio">inicio</a></li>
-        <li><a href="#semestre">2026-2</a></li>
+        <li><a href="#semestre" data-txt="nav.semestre">2026-2</a></li>
         <li><a href="#cronograma">cronograma</a></li>
         <li><a href="#playgrounds">playgrounds</a></li>
       </ul>
@@ -37,20 +37,20 @@
 
   <!-- ── SOBRE NOSOTROS ───────────────────── -->
   <section id="sobre">
-    <h2 class="section-heading">s o b r e &nbsp; <span class="gold">n</span> o s o t r o s</h2>
-    <p class="about-text">
-      El semillero es un punto de encuentro para las personas interesadas en las redes neuronales, el deep learning, y la inteligencia artificial. Es organizado principalmente por estudiantes de las carreras de Ciencias de la Computación, Matemáticas e Ingeniería de Sistemas de la Universidad Nacional de Colombia Sede Medellín. Tiene un enfoque teórico-práctico. Todas las semanas nos reunimos a aprender sobre Deep Learning.
-    </p>
+    <h2 class="section-heading" data-txt="titulo.sobre">s o b r e &nbsp; <span class="gold">n</span> o s o t r o s</h2>
+    <div class="about-text" data-txt-parrafos="texto.sobre">
+      <p>El semillero es un punto de encuentro para las personas interesadas en las redes neuronales, el deep learning, y la inteligencia artificial. Es organizado principalmente por estudiantes de las carreras de Ciencias de la Computación, Matemáticas e Ingeniería de Sistemas de la Universidad Nacional de Colombia Sede Medellín. Tiene un enfoque teórico-práctico. Todas las semanas nos reunimos a aprender sobre Deep Learning.</p>
+    </div>
   </section>
 
   <!-- ── SEMESTRE 2026-2 ──────────────────── -->
   <section id="semestre">
-    <h2 class="section-heading">2 0 2 6 - <span class="gold">2</span></h2>
-    <p class="about-text">
-      Este semestre nos adentraremos en el problema del lenguaje, y vamos a aprender a hacer que los computadores hablen con nosotros usando LLMs. Entenderemos a profundidad cómo funciona la IA moderna como ChatGPT, Claude, Gemini, etc.
-    </p>
-    <p class="about-text">Entre los temas que veremos están:</p>
-    <ul class="topics-list">
+    <h2 class="section-heading" data-txt="titulo.semestre">2 0 2 6 - <span class="gold">2</span></h2>
+    <div class="about-text" data-txt-parrafos="texto.semestre">
+      <p>Este semestre nos adentraremos en el problema del lenguaje, y vamos a aprender a hacer que los computadores hablen con nosotros usando LLMs. Entenderemos a profundidad cómo funciona la IA moderna como ChatGPT, Claude, Gemini, etc.</p>
+      <p>Entre los temas que veremos están:</p>
+    </div>
+    <ul class="topics-list" data-txt-lista="temas">
       <li>Tokenización</li>
       <li>N-gramas</li>
       <li>Embeddings</li>
@@ -58,7 +58,7 @@
       <li>Transformers</li>
       <li>Interpretabilidad</li>
     </ul>
-    <p class="start-note">
+    <p class="start-note" data-txt="texto.inicio">
       Empezamos las sesiones el <span class="gold-highlight">lunes 7 de septiembre a las 10am</span>
       en el <span class="gold-highlight">43-302</span>.
     </p>
@@ -68,43 +68,47 @@
   <section id="requisitos">
     <div class="req-container">
       <div class="req-column">
-        <h3>Requisitos mínimos</h3>
-        <ul>
+        <h3 data-txt="requisitos.minimos.titulo">Requisitos mínimos</h3>
+        <ul data-txt-lista="requisitos.minimos">
           <li>Ganas de aprender</li>
         </ul>
       </div>
       <div class="req-column">
-        <h3>Requisitos recomendados</h3>
-        <ul>
+        <h3 data-txt="requisitos.recomendados.titulo">Requisitos recomendados</h3>
+        <ul data-txt-lista="requisitos.recomendados">
           <li>Álgebra lineal</li>
           <li>Cálculo diferencial</li>
         </ul>
       </div>
     </div>
-    <p class="invite-note">¡Todos están invitados!</p>
+    <p class="invite-note" data-txt="requisitos.nota">¡Todos están invitados!</p>
   </section>
 
   <!-- ── INFO ─────────────────────────────── -->
   <section id="info">
     <div class="info-center">
-      <p class="info-line"><span class="gold">Horario:</span> Lunes a las 10:00am</p>
-      <p class="info-line"><span class="gold">Salón:</span> 43-302</p>
-      <p class="info-line"><span class="gold">Primera sesión:</span> Lunes 7 de septiembre</p>
-      <p class="info-link">
-        <a href="https://chat.whatsapp.com/" target="_blank" rel="noopener noreferrer">Grupo de Whatsapp</a>
-      </p>
-      <p class="info-link">
-        <a href="https://youtube.com/playlist?list=PLO-NKK0trBZFwlBqvjj8fpZH4cNpfTKaZ&si=HoBaVFVBO-KCLKRv" target="_blank" rel="noopener noreferrer">Videos de las sesiones</a>
-      </p>
+      <div data-txt-lista="info.lineas" data-txt-clase="info-line">
+        <p class="info-line"><span class="gold">Horario:</span> Lunes a las 10:00am</p>
+        <p class="info-line"><span class="gold">Salón:</span> 43-302</p>
+        <p class="info-line"><span class="gold">Primera sesión:</span> Lunes 7 de septiembre</p>
+      </div>
+      <div data-txt-lista="info.enlaces" data-txt-clase="info-link">
+        <p class="info-link">
+          <a href="https://chat.whatsapp.com/" target="_blank" rel="noopener noreferrer">Grupo de Whatsapp</a>
+        </p>
+        <p class="info-link">
+          <a href="https://youtube.com/playlist?list=PLO-NKK0trBZFwlBqvjj8fpZH4cNpfTKaZ&si=HoBaVFVBO-KCLKRv" target="_blank" rel="noopener noreferrer">Videos de las sesiones</a>
+        </p>
+      </div>
     </div>
   </section>
 
   <!-- ── CRONOGRAMA ───────────────────────── -->
   <section id="cronograma">
-    <h2 class="cronograma-title">Cronograma de Actividades</h2>
-    <h3 class="cronograma-subtitle">Semestre 2026-2</h3>
+    <h2 class="cronograma-title" data-txt="cronograma.titulo">Cronograma de Actividades</h2>
+    <h3 class="cronograma-subtitle" data-txt="cronograma.subtitulo">Semestre 2026-2</h3>
 
-    <div class="cronograma-intro">
+    <div class="cronograma-intro" data-txt-parrafos="cronograma.intro">
       <p>El objetivo de este semestre es entender a profundidad cómo los computadores procesan y generan lenguaje: desde cómo se parte un texto en tokens hasta cómo funcionan por dentro los modelos que están detrás de ChatGPT, Claude o Gemini. Arrancamos con un repaso de deep learning y de ahí pasamos a modelos de lenguaje, embeddings, atención, transformers e interpretabilidad.</p>
       <p>Las sesiones son los <span class="gold-highlight">lunes a las 10am en el salón 43-302</span>, empezando el 7 de septiembre. El cronograma es <span class="gold-highlight">tentativo</span> y podrá estar sujeto a cambios según lo consideremos necesario. También puedes consultarlo en la <a href="https://docs.google.com/spreadsheets/d/1eosmXTDAsBMHL3bpT-_GoqDiT-bLCEr47ngbs_K0CyA/edit?usp=sharing#gid=333864661" target="_blank" rel="noopener noreferrer">hoja de cálculo del cronograma</a>.</p>
     </div>
@@ -113,24 +117,24 @@
       <!-- Loaded live from the Google Sheet (hoja 2026-2) -->
     </div>
 
-    <p class="schedule-note">* El cronograma es tentativo y sujeto a cambios según las necesidades del semillero.</p>
+    <p class="schedule-note" data-txt="cronograma.nota">* El cronograma es tentativo y sujeto a cambios según las necesidades del semillero.</p>
     <p class="source-note" id="cronograma-source"></p>
 
     <!-- ── ARCHIVO: SEMESTRES ANTERIORES ──── -->
     <div class="archive">
-      <h3 class="archive-title">Semestres anteriores</h3>
+      <h3 class="archive-title" data-txt="archivo.titulo">Semestres anteriores</h3>
       <div class="accordion" id="archive-container">
         <!-- Loaded live from the Google Sheet (hoja 2026-1) -->
       </div>
-      <div class="archive-note" id="archive-note-2026-1">
-        <p><strong>2026-1 —</strong> Desde lo teórico, el objetivo principal de ese semestre fue entender a profundidad tres arquitecturas para redes neuronales: feedforward, convolucionales y transformers. El objetivo en lo práctico fue presentar implementaciones, modelos pre-entrenados, casos de uso, proyectos, agentes y sistemas multiagénticos. El cronograma estuvo basado en las secciones del libro <a href="https://www.bishopbook.com/" target="_blank" rel="noopener noreferrer">Deep Learning Foundations and Concepts</a>.</p>
+      <div class="archive-note" id="archive-note-2026-1" data-txt-parrafos="archivo.nota">
+        <p><span class="gold">2026-1 —</span> Desde lo teórico, el objetivo principal de ese semestre fue entender a profundidad tres arquitecturas para redes neuronales: feedforward, convolucionales y transformers. El objetivo en lo práctico fue presentar implementaciones, modelos pre-entrenados, casos de uso, proyectos, agentes y sistemas multiagénticos. El cronograma estuvo basado en las secciones del libro <a href="https://www.bishopbook.com/" target="_blank" rel="noopener noreferrer">Deep Learning Foundations and Concepts</a>.</p>
       </div>
     </div>
   </section>
 
   <!-- ── PLAYGROUNDS ──────────────────────── -->
   <section id="playgrounds">
-  <h2 class="section-heading">p l a y g r o u n d s</h2>
+  <h2 class="section-heading" data-txt="titulo.playgrounds">p l a y g r o u n d s</h2>
   <div class="cards-grid" style="display: flex; gap: 1rem;">
 
     <a class="card" href="https://atarraIA.github.io/convolutional-filters-playground/" target="_blank" rel="noopener noreferrer">
@@ -159,7 +163,7 @@
 
   <!-- ── FOOTER ────────────────────────────── -->
   <footer>
-    <p>Atarraia – Semillero de Redes Neuronales · Universidad Nacional de Colombia, Sede Medellín · 2026-2</p>
+    <p data-txt="footer">Atarraia – Semillero de Redes Neuronales · Universidad Nacional de Colombia, Sede Medellín · 2026-2</p>
   </footer>
 
   <!-- ── SCRIPTS ───────────────────────────── -->
@@ -359,6 +363,102 @@
     resizeCanvas();
     animate();
 
+    /* ── Textos editables (contenido.txt) ────────────────────────────
+       Los textos de la página se pueden editar en contenido.txt sin
+       tocar este archivo. Si contenido.txt falta o falla, la página
+       conserva los textos que ya trae el HTML.                        */
+    let CONTENIDO = {};
+
+    function parseContenido(text) {
+      const blocks = {};
+      let key = null, lines = [];
+      const flush = () => { if (key !== null) blocks[key] = lines.join('\n').trim(); };
+
+      text.split(/\r?\n/).forEach(raw => {
+        if (/^\s*#/.test(raw)) return;                 // comentario
+        const header = raw.match(/^\[([^\]]+)\]\s*$/); // [etiqueta]
+        if (header) { flush(); key = header[1].trim(); lines = []; return; }
+        if (key !== null) lines.push(raw);
+      });
+      flush();
+      return blocks;
+    }
+
+    const escapeHtml = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+    /* *dorado*, **dorado grande**, [texto](enlace) */
+    function renderInline(text) {
+      return escapeHtml(text)
+        .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,
+                 (_, label, url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`)
+        .replace(/\*\*([^*]+)\*\*/g, '<span class="gold-highlight">$1</span>')
+        .replace(/\*([^*]+)\*/g, '<span class="gold">$1</span>');
+    }
+
+    /* Los títulos de sección van con las letras separadas: "s o b r e" */
+    function renderHeading(text) {
+      const chars = [];
+      let gold = false;
+      for (const c of text) {
+        if (c === '*') { gold = !gold; continue; }
+        chars.push({ c, gold });
+      }
+      const words = [];
+      let word = [];
+      chars.forEach(ch => {
+        if (ch.c === ' ') { if (word.length) { words.push(word); word = []; } }
+        else word.push(ch);
+      });
+      if (word.length) words.push(word);
+
+      return words.map(w => w.map(ch =>
+        ch.gold ? `<span class="gold">${escapeHtml(ch.c)}</span>` : escapeHtml(ch.c)
+      ).join(' ')).join(' &nbsp; ');
+    }
+
+    function applyContenido(blocks) {
+      document.querySelectorAll('[data-txt]').forEach(el => {
+        const value = blocks[el.dataset.txt];
+        if (!value) return;
+        el.innerHTML = el.classList.contains('section-heading')
+          ? renderHeading(value)
+          : renderInline(value);
+      });
+
+      document.querySelectorAll('[data-txt-parrafos]').forEach(el => {
+        const value = blocks[el.dataset.txtParrafos];
+        if (!value) return;
+        el.innerHTML = value.split(/\n\s*\n/)
+          .map(par => par.replace(/\s*\n\s*/g, ' ').trim())
+          .filter(Boolean)
+          .map(par => `<p>${renderInline(par)}</p>`)
+          .join('');
+      });
+
+      document.querySelectorAll('[data-txt-lista]').forEach(el => {
+        const value = blocks[el.dataset.txtLista];
+        if (!value) return;
+        const items = value.split(/\r?\n/)
+          .map(line => line.replace(/^\s*-\s*/, '').trim())
+          .filter(Boolean);
+        if (!items.length) return;
+        const tag = (el.tagName === 'UL' || el.tagName === 'OL') ? 'li' : 'p';
+        const cls = el.dataset.txtClase ? ` class="${el.dataset.txtClase}"` : '';
+        el.innerHTML = items.map(item => `<${tag}${cls}>${renderInline(item)}</${tag}>`).join('');
+      });
+    }
+
+    async function loadContenido() {
+      try {
+        const res = await fetch('contenido.txt', { cache: 'no-store' });
+        if (!res.ok) return;
+        CONTENIDO = parseContenido(await res.text());
+        applyContenido(CONTENIDO);
+      } catch (e) {
+        /* se conservan los textos que ya están en el HTML */
+      }
+    }
+
     /* ── Load Cronograma ─────────────────────────────────────────────
        Fuente en vivo: la hoja de cálculo de Google. Así el cronograma de
        la página se actualiza solo cuando se edita la hoja, sin tener que
@@ -493,8 +593,8 @@
       const note = document.getElementById('cronograma-source');
       if (!note) return;
       note.textContent = live
-        ? 'Sincronizado con la hoja de cálculo del cronograma.'
-        : 'No se pudo contactar la hoja de cálculo; mostrando la última versión guardada.';
+        ? (CONTENIDO['cronograma.fuente.viva'] || 'Sincronizado con la hoja de cálculo del cronograma.')
+        : (CONTENIDO['cronograma.fuente.guardada'] || 'No se pudo contactar la hoja de cálculo; mostrando la última versión guardada.');
       note.classList.toggle('stale', !live);
     }
 
@@ -513,7 +613,10 @@
       setSourceNote(allLive);
     }
 
-    loadCronograma();
+    (async () => {
+      await loadContenido();
+      await loadCronograma();
+    })();
   </script>
 
 </body>

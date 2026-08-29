@@ -96,6 +96,10 @@ section {
 
 .section-heading .gold { color: var(--gold); }
 
+/* Resaltado dorado genérico, usado por los textos de contenido.txt.
+   Las reglas más específicas (.nav-logo .gold, etc.) siguen mandando. */
+.gold { color: var(--gold); }
+
 .about-text {
   font-size: 0.95rem;
   line-height: 1.8;
@@ -103,6 +107,10 @@ section {
   max-width: 800px;
   margin: 0 auto;
   padding: 1.5rem;
+}
+
+.about-text p + p {
+  margin-top: 1.2rem;
 }
 
 /* ── REQUISITOS ────────────────────────────── */

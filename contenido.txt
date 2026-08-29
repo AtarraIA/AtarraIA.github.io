@@ -1,0 +1,131 @@
+# ══════════════════════════════════════════════════════════════════
+#  TEXTOS DE LA PÁGINA DE ATARRAIA
+#
+#  Edita el texto debajo de cada [etiqueta] y guarda el archivo.
+#  La página toma los cambios al recargar: no hay que tocar el HTML.
+#
+#  Cómo escribir:
+#    *texto*            resalta en dorado
+#    **texto**          resalta en dorado grande y en negrita
+#    [texto](enlace)    crea un enlace
+#    - item             cada línea con guion es un elemento de lista
+#    Una línea en blanco separa párrafos.
+#    Las líneas que empiezan con # son comentarios y se ignoran.
+#
+#  Si borras una etiqueta o el archivo entero, la página sigue
+#  funcionando con los textos que ya trae el HTML.
+# ══════════════════════════════════════════════════════════════════
+
+
+# ── Menú de arriba ────────────────────────────────────────────────
+
+[nav.semestre]
+2026-2
+
+
+# ── Sobre nosotros ────────────────────────────────────────────────
+
+[titulo.sobre]
+sobre *n*osotros
+
+[texto.sobre]
+El semillero es un punto de encuentro para las personas interesadas en las redes neuronales, el deep learning, y la inteligencia artificial. Es organizado principalmente por estudiantes de las carreras de Ciencias de la Computación, Matemáticas e Ingeniería de Sistemas de la Universidad Nacional de Colombia Sede Medellín. Tiene un enfoque teórico-práctico. Todas las semanas nos reunimos a aprender sobre Deep Learning.
+
+
+# ── El semestre actual ────────────────────────────────────────────
+
+[titulo.semestre]
+2026-*2*
+
+[texto.semestre]
+Este semestre nos adentraremos en el problema del lenguaje, y vamos a aprender a hacer que los computadores hablen con nosotros usando LLMs. Entenderemos a profundidad cómo funciona la IA moderna como ChatGPT, Claude, Gemini, etc.
+
+Entre los temas que veremos están:
+
+[temas]
+- Tokenización
+- N-gramas
+- Embeddings
+- Atención
+- Transformers
+- Interpretabilidad
+
+[texto.inicio]
+Empezamos las sesiones el **lunes 7 de septiembre a las 10am** en el **43-302**.
+
+
+# ── Requisitos ────────────────────────────────────────────────────
+
+[requisitos.minimos.titulo]
+Requisitos mínimos
+
+[requisitos.minimos]
+- Ganas de aprender
+
+[requisitos.recomendados.titulo]
+Requisitos recomendados
+
+[requisitos.recomendados]
+- Álgebra lineal
+- Cálculo diferencial
+
+[requisitos.nota]
+¡Todos están invitados!
+
+
+# ── Horario y enlaces ─────────────────────────────────────────────
+
+[info.lineas]
+- *Horario:* Lunes a las 10:00am
+- *Salón:* 43-302
+- *Primera sesión:* Lunes 7 de septiembre
+
+[info.enlaces]
+- [Grupo de Whatsapp](https://chat.whatsapp.com/)
+- [Videos de las sesiones](https://youtube.com/playlist?list=PLO-NKK0trBZFwlBqvjj8fpZH4cNpfTKaZ&si=HoBaVFVBO-KCLKRv)
+
+
+# ── Cronograma ────────────────────────────────────────────────────
+#  Ojo: aquí solo se edita el texto que rodea al cronograma.
+#  Las sesiones se leen en vivo de la hoja de cálculo de Google.
+
+[cronograma.titulo]
+Cronograma de Actividades
+
+[cronograma.subtitulo]
+Semestre 2026-2
+
+[cronograma.intro]
+El objetivo de este semestre es entender a profundidad cómo los computadores procesan y generan lenguaje: desde cómo se parte un texto en tokens hasta cómo funcionan por dentro los modelos que están detrás de ChatGPT, Claude o Gemini. Arrancamos con un repaso de deep learning y de ahí pasamos a modelos de lenguaje, embeddings, atención, transformers e interpretabilidad.
+
+Las sesiones son los **lunes a las 10am en el salón 43-302**, empezando el 7 de septiembre. El cronograma es **tentativo** y podrá estar sujeto a cambios según lo consideremos necesario. También puedes consultarlo en la [hoja de cálculo del cronograma](https://docs.google.com/spreadsheets/d/1eosmXTDAsBMHL3bpT-_GoqDiT-bLCEr47ngbs_K0CyA/edit?usp=sharing#gid=333864661).
+
+[cronograma.nota]
+* El cronograma es tentativo y sujeto a cambios según las necesidades del semillero.
+
+[cronograma.fuente.viva]
+Sincronizado con la hoja de cálculo del cronograma.
+
+[cronograma.fuente.guardada]
+No se pudo contactar la hoja de cálculo; mostrando la última versión guardada.
+
+
+# ── Semestres anteriores ──────────────────────────────────────────
+
+[archivo.titulo]
+Semestres anteriores
+
+[archivo.nota]
+*2026-1 —* Desde lo teórico, el objetivo principal de ese semestre fue entender a profundidad tres arquitecturas para redes neuronales: feedforward, convolucionales y transformers. El objetivo en lo práctico fue presentar implementaciones, modelos pre-entrenados, casos de uso, proyectos, agentes y sistemas multiagénticos. El cronograma estuvo basado en las secciones del libro [Deep Learning Foundations and Concepts](https://www.bishopbook.com/).
+
+
+# ── Playgrounds ───────────────────────────────────────────────────
+
+[titulo.playgrounds]
+playgrounds
+
+
+# ── Pie de página ─────────────────────────────────────────────────
+
+[footer]
+Atarraia – Semillero de Redes Neuronales · Universidad Nacional de Colombia, Sede Medellín · 2026-2
