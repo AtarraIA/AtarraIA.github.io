@@ -331,6 +331,25 @@ section {
 
 .schedule-table .col-type.teorica { color: var(--gold); }
 .schedule-table .col-type.practica { color: var(--gold); }
+.schedule-table .col-type.charla { color: var(--text-dim); }
+
+.schedule-table .col-speaker {
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.schedule-table .col-topic.pending {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.schedule-table .session-no {
+  display: inline-block;
+  min-width: 1.6em;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
 
 .schedule-note {
   font-size: 0.82rem;
@@ -340,6 +359,72 @@ section {
   text-align: center;
 }
 
+
+/* ── SEMESTRE ──────────────────────────────── */
+.topics-list {
+  list-style: none;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem 0.8rem;
+}
+
+.topics-list li {
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.topics-list li:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.start-note {
+  max-width: 800px;
+  margin: 2rem auto 0;
+  padding: 0 1.5rem;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+/* ── ARCHIVO ───────────────────────────────── */
+.archive {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.archive-title {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+  margin-bottom: 1.5rem;
+}
+
+.archive-note {
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: var(--text-dim);
+  margin-top: 1.5rem;
+}
+
+.archive-note strong { color: var(--gold); }
+
+.archive-note a {
+  color: var(--text-dim);
+  text-decoration: underline;
+}
+
+.archive-note a:hover { color: var(--gold); }
 
 /* ── FOOTER ────────────────────────────────── */
 footer {
