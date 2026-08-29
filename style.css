@@ -351,6 +351,16 @@ section {
   font-size: 0.8rem;
 }
 
+.source-note {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin-top: 0.4rem;
+  opacity: 0.7;
+}
+
+.source-note.stale { color: var(--gold); opacity: 1; }
+
 .schedule-note {
   font-size: 0.82rem;
   color: var(--text-dim);

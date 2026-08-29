@@ -110,16 +110,17 @@
     </div>
 
     <div class="accordion" id="accordion-container">
-      <!-- Loaded dynamically from cronograma.xlsx (hoja 2026-2) -->
+      <!-- Loaded live from the Google Sheet (hoja 2026-2) -->
     </div>
 
     <p class="schedule-note">* El cronograma es tentativo y sujeto a cambios según las necesidades del semillero.</p>
+    <p class="source-note" id="cronograma-source"></p>
 
     <!-- ── ARCHIVO: SEMESTRES ANTERIORES ──── -->
     <div class="archive">
       <h3 class="archive-title">Semestres anteriores</h3>
       <div class="accordion" id="archive-container">
-        <!-- Loaded dynamically from cronograma.xlsx (hoja 2026-1) -->
+        <!-- Loaded live from the Google Sheet (hoja 2026-1) -->
       </div>
       <div class="archive-note" id="archive-note-2026-1">
         <p><strong>2026-1 —</strong> Desde lo teórico, el objetivo principal de ese semestre fue entender a profundidad tres arquitecturas para redes neuronales: feedforward, convolucionales y transformers. El objetivo en lo práctico fue presentar implementaciones, modelos pre-entrenados, casos de uso, proyectos, agentes y sistemas multiagénticos. El cronograma estuvo basado en las secciones del libro <a href="https://www.bishopbook.com/" target="_blank" rel="noopener noreferrer">Deep Learning Foundations and Concepts</a>.</p>
@@ -358,15 +359,51 @@
     resizeCanvas();
     animate();
 
-    /* ── Load Cronograma from Excel ── */
+    /* ── Load Cronograma ─────────────────────────────────────────────
+       Fuente en vivo: la hoja de cálculo de Google. Así el cronograma de
+       la página se actualiza solo cuando se edita la hoja, sin tener que
+       volver a subir el archivo. Si Google no responde, se usa el
+       cronograma.xlsx de este repositorio como respaldo.               */
+    const SHEET_ID = '1eosmXTDAsBMHL3bpT-_GoqDiT-bLCEr47ngbs_K0CyA';
+
     const CRONOGRAMA_SHEETS = {
-      actual:  { sheet: '2026-2', container: 'accordion-container', openFirst: true },
-      archivo: { sheet: '2026-1', container: 'archive-container',   openFirst: false }
+      actual:  { sheet: '2026-2', gid: '333864661', container: 'accordion-container', openFirst: true },
+      archivo: { sheet: '2026-1', gid: '592743870', container: 'archive-container',   openFirst: false }
     };
 
-    function pickSheet(workbook, wanted) {
-      if (workbook.SheetNames.includes(wanted)) return workbook.Sheets[wanted];
+    const liveUrls = gid => [
+      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`,
+      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=1&gid=${gid}`
+    ];
+
+    async function fetchLiveRows(gid) {
+      for (const url of liveUrls(gid)) {
+        try {
+          const res = await fetch(url, { cache: 'no-store' });
+          if (!res.ok) continue;
+          const csv = await res.text();
+          if (!csv.trim()) continue;
+          const wb = XLSX.read(csv, { type: 'string' });
+          return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+        } catch (e) {
+          /* CORS, red caída o la hoja dejó de ser pública: probamos la otra URL */
+        }
+      }
       return null;
+    }
+
+    let fallbackWorkbook;
+    async function fetchBackupRows(sheetName) {
+      try {
+        if (!fallbackWorkbook) {
+          const res = await fetch('cronograma.xlsx');
+          fallbackWorkbook = XLSX.read(await res.arrayBuffer(), { type: 'array' });
+        }
+        const ws = fallbackWorkbook.Sheets[sheetName];
+        return ws ? XLSX.utils.sheet_to_json(ws) : null;
+      } catch (e) {
+        return null;
+      }
     }
 
     function typeClass(tipo) {
@@ -444,29 +481,36 @@
             </div>`;
         container.appendChild(div);
       });
+
+      container.querySelectorAll('.accordion-header').forEach(btn => {
+        btn.addEventListener('click', () => {
+          btn.parentElement.classList.toggle('open');
+        });
+      });
+    }
+
+    function setSourceNote(live) {
+      const note = document.getElementById('cronograma-source');
+      if (!note) return;
+      note.textContent = live
+        ? 'Sincronizado con la hoja de cálculo del cronograma.'
+        : 'No se pudo contactar la hoja de cálculo; mostrando la última versión guardada.';
+      note.classList.toggle('stale', !live);
     }
 
     async function loadCronograma() {
-      try {
-        const response = await fetch('cronograma.xlsx');
-        const arrayBuffer = await response.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      let allLive = true;
 
-        Object.values(CRONOGRAMA_SHEETS).forEach(({ sheet, container, openFirst }) => {
-          const ws = pickSheet(workbook, sheet);
-          if (!ws) return;
-          renderSchedule(XLSX.utils.sheet_to_json(ws), container, openFirst);
-        });
+      await Promise.all(Object.values(CRONOGRAMA_SHEETS).map(async cfg => {
+        let rows = await fetchLiveRows(cfg.gid);
+        if (!rows || rows.length === 0) {
+          allLive = false;
+          rows = await fetchBackupRows(cfg.sheet);
+        }
+        if (rows) renderSchedule(rows, cfg.container, cfg.openFirst);
+      }));
 
-        // Bind accordion clicks
-        document.querySelectorAll('.accordion-header').forEach(btn => {
-          btn.addEventListener('click', () => {
-            btn.parentElement.classList.toggle('open');
-          });
-        });
-      } catch (e) {
-        console.error('Error loading cronograma:', e);
-      }
+      setSourceNote(allLive);
     }
 
     loadCronograma();
