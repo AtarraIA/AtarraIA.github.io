@@ -434,33 +434,80 @@
       /* contenido.txt puede reemplazar la lista */
       window.setRefranes = function (texto) {
         const nuevos = parseRefranes(texto);
-        if (nuevos.length) { REFRANES = nuevos; idx = 0; rebuild(); }
+        if (nuevos.length) { REFRANES = nuevos; idx = 0; elapsed = 0; construirEscena(); }
       };
 
-      /* ── Escena ─────────────────────────────────────────────────── */
-      let scene = null, idx = 0, elapsed = 0, last = 0, visible = true, raf = null;
+      /* ── Escena ─────────────────────────────────────────────────────
+         "base" (la red y las cajas del diseño) se construye una sola vez
+         y se mantiene entre refranes: así la red nunca se reinicia de
+         golpe. "scene" es lo único que cambia con cada refrán.        */
+      let base = null, scene = null;
+      let idx = 0, elapsed = 0, last = 0, visible = true, raf = null, fade = 1;
       let vertical = false;   /* pantallas angostas: el texto va arriba y la red debajo */
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       const clamp = v => v < 0 ? 0 : v > 1 ? 1 : v;
       const ease  = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
-      function buildScene() {
+      function construirBase() {
         const W = cvs.clientWidth, H = cvs.clientHeight;
-        const r = REFRANES[idx % REFRANES.length];
-        const fs = vertical ? 11 : 13;
-        const outFs = vertical ? 19 : 23;
+        /* en pantallas anchas todo crece un poco para llenar el espacio */
+        const ancho = !vertical && W > 900;
+        const fs = vertical ? 11 : (ancho ? 15 : 13);
+        const outFs = vertical ? 19 : (ancho ? 28 : 23);
+        const anchoBloque = vertical ? 240 : (ancho ? 300 : 230);
+        const radio = ancho ? 4 : 3;
 
         let promptBox, netBox, outBox;
         if (!vertical) {
-          promptBox = { x: 4,        y: 0,         w: W * 0.37 - 4, h: H };
-          netBox    = { x: W * 0.42, y: H * 0.16,  w: W * 0.21,     h: H * 0.68 };
-          outBox    = { x: W * 0.67, y: 0,         w: W * 0.33 - 4, h: H };
+          promptBox = { x: 4,        y: 0,         w: W * 0.40 - 4, h: H };
+          netBox    = { x: W * 0.44, y: H * 0.12,  w: W * 0.22,     h: H * 0.76 };
+          outBox    = { x: W * 0.70, y: 0,         w: W * 0.30 - 4, h: H };
         } else {
           promptBox = { x: 4,        y: 0,         w: W - 8,        h: H * 0.30 };
           netBox    = { x: W * 0.20, y: H * 0.30,  w: W * 0.60,     h: H * 0.25 };
           outBox    = { x: 4,        y: H * 0.60,  w: W - 8,        h: H * 0.40 };
         }
+
+        const nodos = [];
+        LAYERS.forEach((n, li) => {
+          const t = li / (LAYERS.length - 1);
+          for (let i = 0; i < n; i++) {
+            const u = (i + 1) / (n + 1);
+            nodos.push({
+              x: netBox.x + (vertical ? u : t) * netBox.w,
+              y: netBox.y + (vertical ? t : u) * netBox.h,
+              capa: li, i: i, fase: Math.random() * Math.PI * 2,
+              act: 0, dx: 0, dy: 0
+            });
+          }
+        });
+
+        const conexiones = [];
+        for (let l = 0; l < LAYERS.length - 1; l++) {
+          nodos.filter(n => n.capa === l).forEach(a => {
+            nodos.filter(n => n.capa === l + 1).forEach(b => {
+              conexiones.push({ a: a, b: b, w: 0.4 + Math.random() * 0.6 });
+            });
+          });
+        }
+
+        const anchorIn  = vertical
+          ? { x: netBox.x + netBox.w / 2, y: netBox.y - 10 }
+          : { x: netBox.x - 10, y: netBox.y + netBox.h / 2 };
+        const anchorOut = vertical
+          ? { x: netBox.x + netBox.w / 2, y: netBox.y + netBox.h + 10 }
+          : { x: netBox.x + netBox.w + 10, y: netBox.y + netBox.h / 2 };
+
+        base = { W, H, fs, outFs, anchoBloque, radio, promptBox, netBox, outBox, nodos, conexiones,
+                 entrada: nodos.filter(n => n.capa === 0),
+                 salida:  nodos.filter(n => n.capa === LAYERS.length - 1),
+                 anchorIn, anchorOut };
+      }
+
+      function construirEscena() {
+        const r = REFRANES[idx % REFRANES.length];
+        const { promptBox, fs } = base;
 
         /* tokens del refrán, envueltos en varias líneas */
         c.font = fs + "px 'JetBrains Mono', monospace";
@@ -491,30 +538,6 @@
           y += lineH + lineGap;
         });
 
-        /* red neuronal */
-        const nodos = [];
-        LAYERS.forEach((n, li) => {
-          const t = li / (LAYERS.length - 1);
-          for (let i = 0; i < n; i++) {
-            const u = (i + 1) / (n + 1);
-            nodos.push({
-              x: netBox.x + (vertical ? u : t) * netBox.w,
-              y: netBox.y + (vertical ? t : u) * netBox.h,
-              capa: li, i: i, fase: Math.random() * Math.PI * 2, act: 0
-            });
-          }
-        });
-        const conexiones = [];
-        for (let l = 0; l < LAYERS.length - 1; l++) {
-          nodos.filter(n => n.capa === l).forEach(a => {
-            nodos.filter(n => n.capa === l + 1).forEach(b => {
-              conexiones.push({ a: a, b: b, w: 0.4 + Math.random() * 0.6 });
-            });
-          });
-        }
-        const entrada = nodos.filter(n => n.capa === 0);
-        const salida  = nodos.filter(n => n.capa === LAYERS.length - 1);
-
         /* candidatos con probabilidades estables por refrán */
         const p1 = 0.63 + ((idx * 37) % 22) / 100;
         const resto = 1 - p1;
@@ -526,13 +549,6 @@
           cand.push({ t: alts[0], p: resto });
         }
 
-        const anchorIn  = vertical
-          ? { x: netBox.x + netBox.w / 2, y: netBox.y - 10 }
-          : { x: netBox.x - 10, y: netBox.y + netBox.h / 2 };
-        const anchorOut = vertical
-          ? { x: netBox.x + netBox.w / 2, y: netBox.y + netBox.h + 10 }
-          : { x: netBox.x + netBox.w + 10, y: netBox.y + netBox.h / 2 };
-
         const fases = [
           { n: "tokens", d: chips.length * 75 + 320 },
           { n: "feed",   d: 800 },
@@ -540,13 +556,10 @@
           { n: "emit",   d: 550 },
           { n: "reveal", d: 900 },
           { n: "hold",   d: 2000 },
-          { n: "salir",  d: 600 }
+          { n: "salir",  d: 700 }
         ];
 
-        scene = { W, H, vertical, fs, outFs, promptBox, netBox, outBox,
-                  chips, nodos, conexiones, entrada, salida, cand,
-                  anchorIn, anchorOut, fases,
-                  total: fases.reduce((s, f) => s + f.d, 0) };
+        scene = { chips, cand, fases, total: fases.reduce((s, f) => s + f.d, 0) };
       }
 
       function faseActual() {
@@ -569,18 +582,18 @@
       }
 
       /* ── Dibujo ─────────────────────────────────────────────────── */
-      function dibujarChips(fase) {
+      function dibujarChips() {
         const inicioFeed = indiceFase("feed");
         const nChips = scene.chips.length;
-        c.font = scene.fs + "px 'JetBrains Mono', monospace";
+        c.font = base.fs + "px 'JetBrains Mono', monospace";
         c.textBaseline = "middle";
         c.textAlign = "center";
 
         scene.chips.forEach((ch, i) => {
           const a = clamp((elapsed - i * 75) / 320);
           if (a <= 0) return;
-          const dx = (1 - a) * (scene.vertical ? 0 : -10);
-          const dy = (1 - a) * (scene.vertical ? -8 : 0);
+          const dx = (1 - a) * (vertical ? 0 : -10);
+          const dy = (1 - a) * (vertical ? -8 : 0);
 
           /* se enciende cuando su token viaja hacia la red */
           let calor = 0;
@@ -590,7 +603,7 @@
             calor = clamp(1 - Math.abs(tFeed - salida - 160) / 420);
           }
 
-          c.globalAlpha = a;
+          c.globalAlpha = a * fade;
           c.strokeStyle = "rgba(" + (calor > 0.05 ? GOLD : LINE) + ", " +
                           (0.45 + calor * 0.55).toFixed(3) + ")";
           c.lineWidth = 1;
@@ -605,7 +618,7 @@
         const pulso = fase.n === "infer" ? fase.p : (fase.n === "feed" ? -1 : 2);
         const nCapas = LAYERS.length - 1;
 
-        scene.nodos.forEach(n => {
+        base.nodos.forEach(n => {
           n.dx = Math.sin(t / 1400 + n.fase) * 2.2;
           n.dy = Math.cos(t / 1700 + n.fase) * 2.2;
           if (pulso >= 0 && pulso <= 1) {
@@ -617,7 +630,7 @@
           }
         });
 
-        scene.conexiones.forEach(cn => {
+        base.conexiones.forEach(cn => {
           const x1 = cn.a.x + cn.a.dx, y1 = cn.a.y + cn.a.dy;
           const x2 = cn.b.x + cn.b.dx, y2 = cn.b.y + cn.b.dy;
           c.strokeStyle = "rgba(" + GOLD + ", 0.13)";
@@ -638,15 +651,15 @@
           }
         });
 
-        scene.nodos.forEach(n => {
+        base.nodos.forEach(n => {
           const x = n.x + n.dx, y = n.y + n.dy;
           c.beginPath();
-          c.arc(x, y, 3, 0, Math.PI * 2);
+          c.arc(x, y, base.radio, 0, Math.PI * 2);
           c.fillStyle = "rgba(" + GOLD + ", " + (0.3 + n.act * 0.7).toFixed(3) + ")";
           c.fill();
           if (n.act > 0.45) {
             c.beginPath();
-            c.arc(x, y, 3 + n.act * 4, 0, Math.PI * 2);
+            c.arc(x, y, base.radio + n.act * 4, 0, Math.PI * 2);
             c.strokeStyle = "rgba(" + GOLD + ", " + ((n.act - 0.45) * 0.6).toFixed(3) + ")";
             c.lineWidth = 1.2;
             c.stroke();
@@ -680,10 +693,10 @@
           const salida = (i / Math.max(n, 1)) * 0.45;
           const p = clamp((fase.p - salida) / 0.5);
           if (p <= 0 || p >= 1) return;
-          const destino = scene.entrada[i % scene.entrada.length];
-          const sx = scene.vertical ? ch.x + ch.w / 2 : ch.x + ch.w;
-          const sy = scene.vertical ? ch.y + ch.h : ch.y + ch.h / 2;
-          const pos = curva(ease(p), { x: sx, y: sy }, scene.anchorIn, destino);
+          const destino = base.entrada[i % base.entrada.length];
+          const sx = vertical ? ch.x + ch.w / 2 : ch.x + ch.w;
+          const sy = vertical ? ch.y + ch.h : ch.y + ch.h / 2;
+          const pos = curva(ease(p), { x: sx, y: sy }, base.anchorIn, destino);
           particula(pos.x, pos.y, Math.sin(p * Math.PI) * 0.9);
         });
       }
@@ -691,28 +704,29 @@
       function dibujarSalida(fase) {
         if (fase.n !== "emit") return;
         const destino = puntoSalida();
-        scene.salida.forEach((n, i) => {
+        base.salida.forEach((n, i) => {
           const p = clamp((fase.p - i * 0.12) / 0.7);
           if (p <= 0 || p >= 1) return;
-          const pos = curva(ease(p), n, scene.anchorOut, destino);
+          const pos = curva(ease(p), n, base.anchorOut, destino);
           particula(pos.x, pos.y, Math.sin(p * Math.PI) * 0.9);
         });
       }
 
       function bloqueSalida() {
-        const anchoMax = scene.vertical ? Math.min(240, scene.outBox.w - 8) : Math.min(210, scene.outBox.w - 8);
-        const x = scene.vertical
-          ? scene.outBox.x + (scene.outBox.w - anchoMax) / 2
-          : scene.outBox.x + 8;
+        const anchoMax = Math.min(base.anchoBloque, base.outBox.w - 8);
+        const x = vertical
+          ? base.outBox.x + (base.outBox.w - anchoMax) / 2
+          : base.outBox.x + 8;
         const filas = scene.cand.length;
-        const alto = 34 + scene.outFs + (filas - 1) * 26;
-        const y = scene.outBox.y + (scene.outBox.h - alto) / 2;
+        const paso = base.outFs > 25 ? 30 : 26;
+        const alto = 34 + base.outFs + (filas - 1) * paso;
+        const y = base.outBox.y + (base.outBox.h - alto) / 2;
         return { x: x, y: y, w: anchoMax, h: alto };
       }
 
       function puntoSalida() {
         const b = bloqueSalida();
-        return scene.vertical
+        return vertical
           ? { x: b.x + b.w / 2, y: b.y - 6 }
           : { x: b.x - 8, y: b.y + b.h / 2 };
       }
@@ -725,21 +739,21 @@
 
         const b = bloqueSalida();
         c.textBaseline = "middle";
-        c.globalAlpha = a;
 
         /* etiqueta */
+        c.globalAlpha = a * fade;
         c.textAlign = "left";
-        c.font = "9px 'JetBrains Mono', monospace";
+        c.font = (base.outFs > 25 ? 10 : 9) + "px 'JetBrains Mono', monospace";
         c.fillStyle = "rgba(" + DIM + ", 0.75)";
         c.fillText("SIGUIENTE PALABRA", b.x, b.y + 6);
 
-        let y = b.y + 24 + scene.outFs / 2;
+        let y = b.y + 24 + base.outFs / 2;
         scene.cand.forEach((cd, i) => {
           const aFila = clamp((a - i * 0.18) / 0.6);
           if (aFila <= 0) return;
-          c.globalAlpha = a * aFila;
+          c.globalAlpha = a * aFila * fade;
           const top = i === 0;
-          const fsFila = top ? scene.outFs : 11;
+          const fsFila = top ? base.outFs : (base.outFs > 25 ? 13 : 11);
 
           c.font = (top ? "700 " : "") + fsFila + "px 'JetBrains Mono', monospace";
           c.textAlign = "left";
@@ -749,7 +763,7 @@
           c.shadowBlur = 0;
 
           c.textAlign = "right";
-          c.font = (top ? 11 : 9) + "px 'JetBrains Mono', monospace";
+          c.font = (top ? (base.outFs > 25 ? 13 : 11) : (base.outFs > 25 ? 11 : 9)) + "px 'JetBrains Mono', monospace";
           c.fillStyle = top ? "rgba(" + GOLD + ", 0.85)" : "rgba(" + DIM + ", 0.7)";
           c.fillText(Math.round(cd.p * 100) + "%", b.x + b.w, y);
 
@@ -761,45 +775,47 @@
           c.fillStyle = top ? "rgba(" + GOLD + ", 0.9)" : "rgba(" + DIM + ", 0.55)";
           c.fillRect(b.x, by, b.w * cd.p * aFila, bh);
 
-          y += top ? scene.outFs / 2 + 26 : 26;
+          y += top ? base.outFs / 2 + (base.outFs > 25 ? 30 : 26) : (base.outFs > 25 ? 30 : 26);
         });
         c.globalAlpha = 1;
       }
 
       function dibujar(t) {
         const fase = faseActual();
-        c.clearRect(0, 0, scene.W, scene.H);
-        const global = fase.n === "salir" ? 1 - ease(fase.p) : 1;
-        c.save();
-        c.globalAlpha = global;
-        dibujarChips(fase);
+        c.clearRect(0, 0, base.W, base.H);
+        /* solo el texto y la predicción se desvanecen al cambiar de
+           refrán; la red sigue viva de un refrán al siguiente */
+        fade = fase.n === "salir" ? 1 - ease(fase.p) : 1;
         dibujarRed(fase, t);
+        dibujarChips();
         dibujarEntrada(fase);
         dibujarSalida(fase);
         dibujarPrediccion(fase);
-        c.restore();
       }
 
       /* ── Bucle ──────────────────────────────────────────────────── */
+      function avanzar(dt, t) {
+        elapsed += dt;
+        if (elapsed >= scene.total) {
+          elapsed -= scene.total;
+          idx = (idx + 1) % REFRANES.length;
+          construirEscena();      /* la red no se reconstruye */
+        }
+        dibujar(t);
+      }
+
       function loop(t) {
         raf = requestAnimationFrame(loop);
         if (!visible) { last = t; return; }
-        const dt = Math.min(t - last, 50);
+        avanzar(Math.min(t - last, 50), t);
         last = t;
-        elapsed += dt;
-        if (elapsed >= scene.total) {
-          elapsed = 0;
-          idx = (idx + 1) % REFRANES.length;
-          buildScene();
-        }
-        dibujar(t);
       }
 
       function ajustar() {
         /* el alto lo decide el guion, así el canvas siempre acompaña
            al diseño que se va a dibujar (horizontal o vertical) */
         vertical = cvs.clientWidth < 560;
-        cvs.style.height = vertical ? "430px" : "300px";
+        cvs.style.height = vertical ? "430px" : (cvs.clientWidth > 900 ? "340px" : "300px");
         const dpr = window.devicePixelRatio || 1;
         cvs.width  = Math.round(cvs.clientWidth * dpr);
         cvs.height = Math.round(cvs.clientHeight * dpr);
@@ -808,8 +824,11 @@
 
       function rebuild() {
         ajustar();
-        buildScene();
-        if (reduce) { elapsed = scene.total - scene.fases[scene.fases.length - 1].d - 100; dibujar(0); }
+        construirBase();
+        construirEscena();
+        /* sin movimiento se muestra la escena ya resuelta */
+        if (reduce) elapsed = scene.total - scene.fases[scene.fases.length - 1].d - 100;
+        dibujar(0);   /* pinta de una vez, sin esperar al primer cuadro */
       }
 
       window.addEventListener("resize", () => { elapsed = 0; rebuild(); });

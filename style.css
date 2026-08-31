@@ -403,19 +403,18 @@ section {
 }
 
 /* ── DEMO DE INFERENCIA (refranes) ─────────── */
+/* Se sale del ancho de la sección para tener más aire a los lados */
 .inference-demo {
-  max-width: 800px;
-  margin: 3rem auto 0;
-  padding: 0 1.5rem;
+  width: min(1200px, calc(100vw - 3rem));
+  margin: 3rem 0 0 50%;
+  transform: translateX(-50%);
+  padding: 0;
 }
 
 .inference-demo canvas {
   display: block;
   width: 100%;
   height: 300px;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  background: rgba(245, 197, 66, 0.015);
 }
 
 .inference-demo figcaption {
@@ -709,7 +708,7 @@ footer a:hover { text-decoration: underline; }
   .info-line { font-size: 1.05rem; }
   .info-link a { font-size: 1.05rem; }
 
-  .inference-demo { padding: 0; }
+  .inference-demo { width: calc(100vw - 2.5rem); }
 
   .cards-grid { grid-template-columns: 1fr; gap: 1.25rem; }
   .card-body { padding: 1.25rem 1.25rem 1rem; }
