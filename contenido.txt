@@ -50,6 +50,37 @@ Entre los temas que veremos están:
 - Transformers
 - Interpretabilidad
 
+[texto.inferencia]
+Un modelo de lenguaje hace justamente esto: lee el texto, lo convierte en tokens y calcula qué palabra viene después.
+
+# Refranes de la animación. Un refrán por línea, con el formato:
+#   texto del refrán -> palabra que predice | otra opción, otra opción
+# Las dos opciones después de la barra son las palabras que compiten
+# con la respuesta en la gráfica de probabilidades (son opcionales).
+[refranes]
+- Más sabe el diablo por viejo que por -> diablo | sabio, brujo
+- A caballo regalado no se le mira el -> diente | precio, freno
+- Al que madruga, Dios lo -> ayuda | espera, mira
+- No hay mal que por bien no -> venga | dure, valga
+- Camarón que se duerme se lo lleva la -> corriente | marea, noche
+- El que mucho abarca, poco -> aprieta | logra, alcanza
+- A palabras necias, oídos -> sordos | atentos, abiertos
+- En casa de herrero, cuchillo de -> palo | hierro, madera
+- Más vale pájaro en mano que cien -> volando | pájaros, después
+- Perro que ladra no -> muerde | ataca, corre
+- Al mal tiempo, buena -> cara | suerte, sombrilla
+- Ojos que no ven, corazón que no -> siente | duele, sabe
+- Dime con quién andas y te diré quién -> eres | fuiste, serás
+- No por mucho madrugar amanece más -> temprano | rápido, claro
+- El que a hierro mata, a hierro -> muere | acaba, cae
+- Cría cuervos y te sacarán los -> ojos | dientes, hijos
+- Agua que no has de beber, déjala -> correr | quieta, pasar
+- Del dicho al hecho hay mucho -> trecho | camino, tiempo
+- Árbol que nace torcido, jamás su tronco -> endereza | crece, cambia
+- Barriga llena, corazón -> contento | tranquilo, lleno
+- La curiosidad mató al -> gato | ratón, sabio
+- No hay mal que dure cien -> años | días, inviernos
+
 [texto.inicio]
 Empezamos las sesiones el **lunes 7 de septiembre a las 10am** en el **43-302**.
 

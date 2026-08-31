@@ -58,6 +58,13 @@
       <li>Transformers</li>
       <li>Interpretabilidad</li>
     </ul>
+
+    <!-- ── DEMO: LA RED COMPLETA EL REFRÁN ── -->
+    <figure class="inference-demo">
+      <canvas id="inference-canvas"></canvas>
+      <figcaption data-txt="texto.inferencia">Un modelo de lenguaje hace justamente esto: lee el texto, lo convierte en tokens y calcula qué palabra viene después.</figcaption>
+    </figure>
+
     <p class="start-note" data-txt="texto.inicio">
       Empezamos las sesiones el <span class="gold-highlight">lunes 7 de septiembre a las 10am</span>
       en el <span class="gold-highlight">43-302</span>.
@@ -135,7 +142,7 @@
   <!-- ── PLAYGROUNDS ──────────────────────── -->
   <section id="playgrounds">
   <h2 class="section-heading" data-txt="titulo.playgrounds">p l a y g r o u n d s</h2>
-  <div class="cards-grid" style="display: flex; gap: 1rem;">
+  <div class="cards-grid">
 
     <a class="card" href="https://atarraIA.github.io/convolutional-filters-playground/" target="_blank" rel="noopener noreferrer">
       <div class="card-body">
@@ -363,6 +370,462 @@
     resizeCanvas();
     animate();
 
+
+    /* ── Demo de inferencia: la red completa el refrán ───────────────
+       Cada refrán se muestra como tokens, se "entregan" a una red,
+       se ve el paso hacia adelante y sale la palabra más probable.
+       Los refranes se editan en contenido.txt, bloque [refranes]:
+         Más sabe el diablo por viejo que por -> diablo | sabio, joven  */
+    (function () {
+      const cvs = document.getElementById("inference-canvas");
+      if (!cvs) return;
+      const c = cvs.getContext("2d");
+
+      const GOLD = "245, 197, 66";
+      const TEXT = "224, 224, 224";
+      const DIM  = "153, 153, 153";
+      const LINE = "80, 80, 80";
+      const LAYERS = [3, 5, 5, 3];
+
+      const REFRANES_HTML = [
+        "Más sabe el diablo por viejo que por -> diablo | sabio, brujo",
+        "A caballo regalado no se le mira el -> diente | precio, freno",
+        "Al que madruga, Dios lo -> ayuda | espera, mira",
+        "No hay mal que por bien no -> venga | dure, valga",
+        "Camarón que se duerme se lo lleva la -> corriente | marea, noche",
+        "El que mucho abarca, poco -> aprieta | logra, alcanza",
+        "A palabras necias, oídos -> sordos | atentos, abiertos",
+        "En casa de herrero, cuchillo de -> palo | hierro, madera",
+        "Más vale pájaro en mano que cien -> volando | pájaros, después",
+        "Perro que ladra no -> muerde | ataca, corre",
+        "Al mal tiempo, buena -> cara | suerte, sombrilla",
+        "Ojos que no ven, corazón que no -> siente | duele, sabe",
+        "Dime con quién andas y te diré quién -> eres | fuiste, serás",
+        "No por mucho madrugar amanece más -> temprano | rápido, claro",
+        "El que a hierro mata, a hierro -> muere | acaba, cae",
+        "Cría cuervos y te sacarán los -> ojos | dientes, hijos",
+        "Agua que no has de beber, déjala -> correr | quieta, pasar",
+        "Del dicho al hecho hay mucho -> trecho | camino, tiempo",
+        "Árbol que nace torcido, jamás su tronco -> endereza | crece, cambia",
+        "Barriga llena, corazón -> contento | tranquilo, lleno",
+        "La curiosidad mató al -> gato | ratón, sabio",
+        "No hay mal que dure cien -> años | días, inviernos"
+      ];
+
+      function parseRefranes(text) {
+        return text.split(/\r?\n/)
+          .map(l => l.replace(/^\s*-\s*/, "").trim())
+          .filter(Boolean)
+          .map(line => {
+            const [izq, altsRaw] = line.split("|");
+            const partes = izq.split(/→|->/);
+            if (partes.length < 2) return null;
+            const prompt = partes[0].trim().replace(/\s+/g, " ");
+            const palabra = partes[1].trim();
+            if (!prompt || !palabra) return null;
+            const alts = (altsRaw || "").split(",").map(s => s.trim()).filter(Boolean);
+            return { prompt, palabra, alts };
+          })
+          .filter(Boolean);
+      }
+
+      let REFRANES = parseRefranes(REFRANES_HTML.join("\n"));
+
+      /* contenido.txt puede reemplazar la lista */
+      window.setRefranes = function (texto) {
+        const nuevos = parseRefranes(texto);
+        if (nuevos.length) { REFRANES = nuevos; idx = 0; rebuild(); }
+      };
+
+      /* ── Escena ─────────────────────────────────────────────────── */
+      let scene = null, idx = 0, elapsed = 0, last = 0, visible = true, raf = null;
+      let vertical = false;   /* pantallas angostas: el texto va arriba y la red debajo */
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      const clamp = v => v < 0 ? 0 : v > 1 ? 1 : v;
+      const ease  = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+      function buildScene() {
+        const W = cvs.clientWidth, H = cvs.clientHeight;
+        const r = REFRANES[idx % REFRANES.length];
+        const fs = vertical ? 11 : 13;
+        const outFs = vertical ? 19 : 23;
+
+        let promptBox, netBox, outBox;
+        if (!vertical) {
+          promptBox = { x: 4,        y: 0,         w: W * 0.37 - 4, h: H };
+          netBox    = { x: W * 0.42, y: H * 0.16,  w: W * 0.21,     h: H * 0.68 };
+          outBox    = { x: W * 0.67, y: 0,         w: W * 0.33 - 4, h: H };
+        } else {
+          promptBox = { x: 4,        y: 0,         w: W - 8,        h: H * 0.30 };
+          netBox    = { x: W * 0.20, y: H * 0.30,  w: W * 0.60,     h: H * 0.25 };
+          outBox    = { x: 4,        y: H * 0.60,  w: W - 8,        h: H * 0.40 };
+        }
+
+        /* tokens del refrán, envueltos en varias líneas */
+        c.font = fs + "px 'JetBrains Mono', monospace";
+        const padX = 6, padY = 5, gap = 5, lineGap = 6;
+        const lineH = fs + padY * 2;
+        const maxW = promptBox.w - 6;
+        const lineas = [[]];
+        r.prompt.split(/\s+/).forEach(p => {
+          const w = Math.min(c.measureText(p).width + padX * 2, maxW);
+          const actual = lineas[lineas.length - 1];
+          const usado = actual.reduce((s, ch) => s + ch.w + gap, 0);
+          if (actual.length && usado + w > maxW) lineas.push([{ t: p, w: w }]);
+          else actual.push({ t: p, w: w });
+        });
+
+        const chips = [];
+        const blockH = lineas.length * (lineH + lineGap) - lineGap;
+        let y = promptBox.y + (promptBox.h - blockH) / 2;
+        lineas.forEach(linea => {
+          const anchoLinea = linea.reduce((s, ch) => s + ch.w, 0) + gap * (linea.length - 1);
+          let x = vertical
+            ? promptBox.x + (promptBox.w - anchoLinea) / 2
+            : promptBox.x + promptBox.w - anchoLinea;
+          linea.forEach(ch => {
+            chips.push({ t: ch.t, x: x, y: y, w: ch.w, h: lineH });
+            x += ch.w + gap;
+          });
+          y += lineH + lineGap;
+        });
+
+        /* red neuronal */
+        const nodos = [];
+        LAYERS.forEach((n, li) => {
+          const t = li / (LAYERS.length - 1);
+          for (let i = 0; i < n; i++) {
+            const u = (i + 1) / (n + 1);
+            nodos.push({
+              x: netBox.x + (vertical ? u : t) * netBox.w,
+              y: netBox.y + (vertical ? t : u) * netBox.h,
+              capa: li, i: i, fase: Math.random() * Math.PI * 2, act: 0
+            });
+          }
+        });
+        const conexiones = [];
+        for (let l = 0; l < LAYERS.length - 1; l++) {
+          nodos.filter(n => n.capa === l).forEach(a => {
+            nodos.filter(n => n.capa === l + 1).forEach(b => {
+              conexiones.push({ a: a, b: b, w: 0.4 + Math.random() * 0.6 });
+            });
+          });
+        }
+        const entrada = nodos.filter(n => n.capa === 0);
+        const salida  = nodos.filter(n => n.capa === LAYERS.length - 1);
+
+        /* candidatos con probabilidades estables por refrán */
+        const p1 = 0.63 + ((idx * 37) % 22) / 100;
+        const resto = 1 - p1;
+        const cand = [{ t: r.palabra, p: p1 }];
+        const alts = r.alts.slice(0, 2);
+        if (alts.length === 2) {
+          cand.push({ t: alts[0], p: resto * 0.62 }, { t: alts[1], p: resto * 0.38 });
+        } else if (alts.length === 1) {
+          cand.push({ t: alts[0], p: resto });
+        }
+
+        const anchorIn  = vertical
+          ? { x: netBox.x + netBox.w / 2, y: netBox.y - 10 }
+          : { x: netBox.x - 10, y: netBox.y + netBox.h / 2 };
+        const anchorOut = vertical
+          ? { x: netBox.x + netBox.w / 2, y: netBox.y + netBox.h + 10 }
+          : { x: netBox.x + netBox.w + 10, y: netBox.y + netBox.h / 2 };
+
+        const fases = [
+          { n: "tokens", d: chips.length * 75 + 320 },
+          { n: "feed",   d: 800 },
+          { n: "infer",  d: 1500 },
+          { n: "emit",   d: 550 },
+          { n: "reveal", d: 900 },
+          { n: "hold",   d: 2000 },
+          { n: "salir",  d: 600 }
+        ];
+
+        scene = { W, H, vertical, fs, outFs, promptBox, netBox, outBox,
+                  chips, nodos, conexiones, entrada, salida, cand,
+                  anchorIn, anchorOut, fases,
+                  total: fases.reduce((s, f) => s + f.d, 0) };
+      }
+
+      function faseActual() {
+        let t = elapsed;
+        for (const f of scene.fases) {
+          if (t < f.d) return { n: f.n, p: t / f.d, t: t };
+          t -= f.d;
+        }
+        const ult = scene.fases[scene.fases.length - 1];
+        return { n: ult.n, p: 1, t: ult.d };
+      }
+
+      function indiceFase(nombre) {
+        let t = 0;
+        for (const f of scene.fases) {
+          if (f.n === nombre) return t;
+          t += f.d;
+        }
+        return 0;
+      }
+
+      /* ── Dibujo ─────────────────────────────────────────────────── */
+      function dibujarChips(fase) {
+        const inicioFeed = indiceFase("feed");
+        const nChips = scene.chips.length;
+        c.font = scene.fs + "px 'JetBrains Mono', monospace";
+        c.textBaseline = "middle";
+        c.textAlign = "center";
+
+        scene.chips.forEach((ch, i) => {
+          const a = clamp((elapsed - i * 75) / 320);
+          if (a <= 0) return;
+          const dx = (1 - a) * (scene.vertical ? 0 : -10);
+          const dy = (1 - a) * (scene.vertical ? -8 : 0);
+
+          /* se enciende cuando su token viaja hacia la red */
+          let calor = 0;
+          if (elapsed >= inicioFeed) {
+            const tFeed = elapsed - inicioFeed;
+            const salida = (i / Math.max(nChips, 1)) * 380;
+            calor = clamp(1 - Math.abs(tFeed - salida - 160) / 420);
+          }
+
+          c.globalAlpha = a;
+          c.strokeStyle = "rgba(" + (calor > 0.05 ? GOLD : LINE) + ", " +
+                          (0.45 + calor * 0.55).toFixed(3) + ")";
+          c.lineWidth = 1;
+          c.strokeRect(ch.x + dx + 0.5, ch.y + dy + 0.5, ch.w - 1, ch.h - 1);
+          c.fillStyle = "rgba(" + (calor > 0.4 ? GOLD : TEXT) + ", " + (0.75 + calor * 0.25).toFixed(3) + ")";
+          c.fillText(ch.t, ch.x + dx + ch.w / 2, ch.y + dy + ch.h / 2 + 1);
+          c.globalAlpha = 1;
+        });
+      }
+
+      function dibujarRed(fase, t) {
+        const pulso = fase.n === "infer" ? fase.p : (fase.n === "feed" ? -1 : 2);
+        const nCapas = LAYERS.length - 1;
+
+        scene.nodos.forEach(n => {
+          n.dx = Math.sin(t / 1400 + n.fase) * 2.2;
+          n.dy = Math.cos(t / 1700 + n.fase) * 2.2;
+          if (pulso >= 0 && pulso <= 1) {
+            const lp = pulso * nCapas;
+            const dif = Math.abs(lp - n.capa);
+            n.act = Math.max(n.act * 0.9, dif < 0.5 ? 1 - dif / 0.5 : 0);
+          } else {
+            n.act *= 0.93;
+          }
+        });
+
+        scene.conexiones.forEach(cn => {
+          const x1 = cn.a.x + cn.a.dx, y1 = cn.a.y + cn.a.dy;
+          const x2 = cn.b.x + cn.b.dx, y2 = cn.b.y + cn.b.dy;
+          c.strokeStyle = "rgba(" + GOLD + ", 0.13)";
+          c.lineWidth = 0.7;
+          c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+
+          if (pulso >= 0 && pulso <= 1) {
+            const lp = pulso * nCapas;
+            if (lp >= cn.a.capa && lp <= cn.b.capa) {
+              const local = lp - cn.a.capa;
+              const inten = Math.sin(local * Math.PI) * cn.w;
+              if (inten > 0.05) {
+                c.strokeStyle = "rgba(" + GOLD + ", " + (inten * 0.55).toFixed(3) + ")";
+                c.lineWidth = 0.8 + inten;
+                c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+              }
+            }
+          }
+        });
+
+        scene.nodos.forEach(n => {
+          const x = n.x + n.dx, y = n.y + n.dy;
+          c.beginPath();
+          c.arc(x, y, 3, 0, Math.PI * 2);
+          c.fillStyle = "rgba(" + GOLD + ", " + (0.3 + n.act * 0.7).toFixed(3) + ")";
+          c.fill();
+          if (n.act > 0.45) {
+            c.beginPath();
+            c.arc(x, y, 3 + n.act * 4, 0, Math.PI * 2);
+            c.strokeStyle = "rgba(" + GOLD + ", " + ((n.act - 0.45) * 0.6).toFixed(3) + ")";
+            c.lineWidth = 1.2;
+            c.stroke();
+          }
+        });
+      }
+
+      /* curva suave: sale del token, pasa por la entrada de la red y
+         termina justo en la neurona (o en el bloque de la predicción) */
+      function curva(p, s, a, d) {
+        const u = 1 - p;
+        return { x: u * u * s.x + 2 * u * p * a.x + p * p * d.x,
+                 y: u * u * s.y + 2 * u * p * a.y + p * p * d.y };
+      }
+
+      function particula(x, y, a) {
+        c.beginPath();
+        c.arc(x, y, 2.2, 0, Math.PI * 2);
+        c.fillStyle = "rgba(" + GOLD + ", " + a.toFixed(3) + ")";
+        c.fill();
+        c.beginPath();
+        c.arc(x, y, 5.5, 0, Math.PI * 2);
+        c.fillStyle = "rgba(" + GOLD + ", " + (a * 0.14).toFixed(3) + ")";
+        c.fill();
+      }
+
+      function dibujarEntrada(fase) {
+        if (fase.n !== "feed") return;
+        const n = scene.chips.length;
+        scene.chips.forEach((ch, i) => {
+          const salida = (i / Math.max(n, 1)) * 0.45;
+          const p = clamp((fase.p - salida) / 0.5);
+          if (p <= 0 || p >= 1) return;
+          const destino = scene.entrada[i % scene.entrada.length];
+          const sx = scene.vertical ? ch.x + ch.w / 2 : ch.x + ch.w;
+          const sy = scene.vertical ? ch.y + ch.h : ch.y + ch.h / 2;
+          const pos = curva(ease(p), { x: sx, y: sy }, scene.anchorIn, destino);
+          particula(pos.x, pos.y, Math.sin(p * Math.PI) * 0.9);
+        });
+      }
+
+      function dibujarSalida(fase) {
+        if (fase.n !== "emit") return;
+        const destino = puntoSalida();
+        scene.salida.forEach((n, i) => {
+          const p = clamp((fase.p - i * 0.12) / 0.7);
+          if (p <= 0 || p >= 1) return;
+          const pos = curva(ease(p), n, scene.anchorOut, destino);
+          particula(pos.x, pos.y, Math.sin(p * Math.PI) * 0.9);
+        });
+      }
+
+      function bloqueSalida() {
+        const anchoMax = scene.vertical ? Math.min(240, scene.outBox.w - 8) : Math.min(210, scene.outBox.w - 8);
+        const x = scene.vertical
+          ? scene.outBox.x + (scene.outBox.w - anchoMax) / 2
+          : scene.outBox.x + 8;
+        const filas = scene.cand.length;
+        const alto = 34 + scene.outFs + (filas - 1) * 26;
+        const y = scene.outBox.y + (scene.outBox.h - alto) / 2;
+        return { x: x, y: y, w: anchoMax, h: alto };
+      }
+
+      function puntoSalida() {
+        const b = bloqueSalida();
+        return scene.vertical
+          ? { x: b.x + b.w / 2, y: b.y - 6 }
+          : { x: b.x - 8, y: b.y + b.h / 2 };
+      }
+
+      function dibujarPrediccion(fase) {
+        let a = 0;
+        if (fase.n === "reveal") a = ease(fase.p);
+        else if (fase.n === "hold" || fase.n === "salir") a = 1;
+        if (a <= 0) return;
+
+        const b = bloqueSalida();
+        c.textBaseline = "middle";
+        c.globalAlpha = a;
+
+        /* etiqueta */
+        c.textAlign = "left";
+        c.font = "9px 'JetBrains Mono', monospace";
+        c.fillStyle = "rgba(" + DIM + ", 0.75)";
+        c.fillText("SIGUIENTE PALABRA", b.x, b.y + 6);
+
+        let y = b.y + 24 + scene.outFs / 2;
+        scene.cand.forEach((cd, i) => {
+          const aFila = clamp((a - i * 0.18) / 0.6);
+          if (aFila <= 0) return;
+          c.globalAlpha = a * aFila;
+          const top = i === 0;
+          const fsFila = top ? scene.outFs : 11;
+
+          c.font = (top ? "700 " : "") + fsFila + "px 'JetBrains Mono', monospace";
+          c.textAlign = "left";
+          if (top) { c.shadowColor = "rgba(" + GOLD + ", 0.55)"; c.shadowBlur = 16; }
+          c.fillStyle = top ? "rgba(" + GOLD + ", 1)" : "rgba(" + DIM + ", 0.9)";
+          c.fillText(cd.t, b.x, y);
+          c.shadowBlur = 0;
+
+          c.textAlign = "right";
+          c.font = (top ? 11 : 9) + "px 'JetBrains Mono', monospace";
+          c.fillStyle = top ? "rgba(" + GOLD + ", 0.85)" : "rgba(" + DIM + ", 0.7)";
+          c.fillText(Math.round(cd.p * 100) + "%", b.x + b.w, y);
+
+          /* barra de probabilidad */
+          const by = y + (top ? fsFila / 2 + 7 : 9);
+          const bh = top ? 4 : 2;
+          c.fillStyle = "rgba(" + LINE + ", 0.55)";
+          c.fillRect(b.x, by, b.w, bh);
+          c.fillStyle = top ? "rgba(" + GOLD + ", 0.9)" : "rgba(" + DIM + ", 0.55)";
+          c.fillRect(b.x, by, b.w * cd.p * aFila, bh);
+
+          y += top ? scene.outFs / 2 + 26 : 26;
+        });
+        c.globalAlpha = 1;
+      }
+
+      function dibujar(t) {
+        const fase = faseActual();
+        c.clearRect(0, 0, scene.W, scene.H);
+        const global = fase.n === "salir" ? 1 - ease(fase.p) : 1;
+        c.save();
+        c.globalAlpha = global;
+        dibujarChips(fase);
+        dibujarRed(fase, t);
+        dibujarEntrada(fase);
+        dibujarSalida(fase);
+        dibujarPrediccion(fase);
+        c.restore();
+      }
+
+      /* ── Bucle ──────────────────────────────────────────────────── */
+      function loop(t) {
+        raf = requestAnimationFrame(loop);
+        if (!visible) { last = t; return; }
+        const dt = Math.min(t - last, 50);
+        last = t;
+        elapsed += dt;
+        if (elapsed >= scene.total) {
+          elapsed = 0;
+          idx = (idx + 1) % REFRANES.length;
+          buildScene();
+        }
+        dibujar(t);
+      }
+
+      function ajustar() {
+        /* el alto lo decide el guion, así el canvas siempre acompaña
+           al diseño que se va a dibujar (horizontal o vertical) */
+        vertical = cvs.clientWidth < 560;
+        cvs.style.height = vertical ? "430px" : "300px";
+        const dpr = window.devicePixelRatio || 1;
+        cvs.width  = Math.round(cvs.clientWidth * dpr);
+        cvs.height = Math.round(cvs.clientHeight * dpr);
+        c.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function rebuild() {
+        ajustar();
+        buildScene();
+        if (reduce) { elapsed = scene.total - scene.fases[scene.fases.length - 1].d - 100; dibujar(0); }
+      }
+
+      window.addEventListener("resize", () => { elapsed = 0; rebuild(); });
+
+      if ("IntersectionObserver" in window) {
+        new IntersectionObserver(es => { visible = es[0].isIntersecting; },
+                                 { threshold: 0.05 }).observe(cvs);
+      }
+
+      /* la fuente cambia las medidas del texto: se recalcula al cargarla */
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(rebuild);
+
+      rebuild();
+      if (!reduce) { last = performance.now(); raf = requestAnimationFrame(loop); }
+    })();
+
     /* ── Textos editables (contenido.txt) ────────────────────────────
        Los textos de la página se pueden editar en contenido.txt sin
        tocar este archivo. Si contenido.txt falta o falla, la página
@@ -434,6 +897,8 @@
           .map(par => `<p>${renderInline(par)}</p>`)
           .join('');
       });
+
+      if (blocks.refranes && window.setRefranes) window.setRefranes(blocks.refranes);
 
       document.querySelectorAll('[data-txt-lista]').forEach(el => {
         const value = blocks[el.dataset.txtLista];
