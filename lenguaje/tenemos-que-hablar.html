@@ -325,6 +325,17 @@ svg.mini .solid{fill:var(--fg); stroke:none}
 .el.on.instant svg.mini g{animation:none}
 
 
+/* ---------- las reglas de ELIZA ---------- */
+.reglas{display:grid; grid-template-columns:1fr 1fr; gap:22px 46px; width:100%}
+.regla{border-left:2px solid #2c2c2c; padding:2px 0 2px 20px}
+.regla .dijo{font-size:23px; line-height:1.35; margin:0 0 10px; color:var(--ink)}
+.regla .linea{margin:0 0 3px; line-height:1.3}
+.regla .et{display:inline-block; width:118px; font-family:var(--mono); font-size:13px;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--grey-d)}
+.regla .pat{font-family:var(--mono); font-size:17px; color:var(--grey)}
+.regla .pat.gold{color:var(--gold)}
+.regla .salida{font-family:var(--mono); font-size:18px; color:var(--blue); margin:9px 0 0; line-height:1.3}
+
 /* ---------- rellenar el espacio ---------- */
 .pred{font-size:35px; line-height:1.4; margin:0 0 4px}
 .nota{font-size:23px; line-height:1.35; color:var(--grey); margin:0 0 20px; padding-left:2px}
@@ -408,6 +419,7 @@ svg.fig .bubble *{stroke-width:1.6}
 .canvasbox{display:block; width:100%; height:430px; opacity:0; transition:opacity .55s ease}
 .canvasbox.tall{height:540px}
 .canvasbox.full{height:700px}
+.canvasbox.vocab{height:580px}
 .canvasbox.big{height:626px}
 .st{display:none}
 .el.on .canvasbox{opacity:1}
@@ -415,8 +427,13 @@ svg.fig .bubble *{stroke-width:1.6}
 
 /* ---------- real tokenization ---------- */
 .toks{font-family:var(--mono); font-size:26px; line-height:1.66; white-space:pre-wrap; overflow-wrap:break-word}
-.tok{border-radius:3px; background-color:transparent; transition:background-color .5s ease}
-.seg{display:none}
+.tok{border-radius:3px; background-color:transparent}
+.seg,.invt{display:none}
+/* las palabras que no existen en español */
+.invt.lit ~ .toks .tok.inv{color:var(--gold); text-shadow:0 0 18px rgba(240,172,95,.35)}
+.invt.lit ~ .toks .tok{transition-delay:calc(var(--i)*2.2ms)}
+.invt.instant ~ .toks .tok{transition:none}
+.tok{transition:background-color .5s ease, color .5s ease, text-shadow .5s ease}
 .seg.lit ~ .toks .tok{transition-delay:calc(var(--i)*3.2ms)}
 .seg.lit ~ .toks .t0{background-color:rgba(88,196,221,.30)}
 .seg.lit ~ .toks .t1{background-color:rgba(240,172,95,.30)}
@@ -594,6 +611,41 @@ svg.nn circle{fill:var(--bg); stroke:var(--fg); stroke-width:2; opacity:0;
   <p class="t-tiny el m-fade" data-b="9" style="margin-top:46px; text-align:right">Weizenbaum (1966) · traducido</p>
 </section>
 
+<section class="slide mid" data-label="El truco de ELIZA">
+  <h2 class="t-title el m-write" data-b="0" style="margin-bottom:24px">Lo que había detrás</h2>
+  <div class="reglas">
+    <div class="regla el m-fade" data-b="1">
+      <p class="dijo">Necesito ayuda, eso seguro.</p>
+      <p class="linea"><span class="et">clave</span><span class="pat">necesito</span></p>
+      <p class="linea"><span class="et">descompone</span><span class="pat">(0 NECESITO 0)</span></p>
+      <p class="linea"><span class="et">reensambla</span><span class="pat gold">(QUÉ SIGNIFICARÍA PARA TI RECIBIR 3)</span></p>
+      <p class="salida">QUÉ SIGNIFICARÍA PARA TI RECIBIR AYUDA</p>
+    </div>
+    <div class="regla el m-fade" data-b="2">
+      <p class="dijo">Quizá podría aprender a llevarme bien con mi madre.</p>
+      <p class="linea"><span class="et">clave</span><span class="pat">madre → familia</span></p>
+      <p class="linea"><span class="et">descompone</span><span class="pat">(0)</span></p>
+      <p class="linea"><span class="et">reensambla</span><span class="pat gold">(CUÉNTAME MÁS SOBRE TU FAMILIA)</span></p>
+      <p class="salida">CUÉNTAME MÁS SOBRE TU FAMILIA</p>
+    </div>
+    <div class="regla el m-fade" data-b="3">
+      <p class="dijo">Mi madre me cuida.</p>
+      <p class="linea"><span class="et">clave</span><span class="pat">madre → familia</span></p>
+      <p class="linea"><span class="et">descompone</span><span class="pat">(0 MI MADRE 0)</span></p>
+      <p class="linea"><span class="et">reensambla</span><span class="pat gold">(QUIÉN MÁS EN TU FAMILIA 4)</span></p>
+      <p class="salida">QUIÉN MÁS EN TU FAMILIA TE CUIDA</p>
+    </div>
+    <div class="regla el m-fade" data-b="4">
+      <p class="dijo">Mi padre.</p>
+      <p class="linea"><span class="et">clave</span><span class="pat">mi</span></p>
+      <p class="linea"><span class="et">descompone</span><span class="pat">(0 MI 0)</span></p>
+      <p class="linea"><span class="et">reensambla</span><span class="pat gold">(TU 3)</span></p>
+      <p class="salida">TU PADRE</p>
+    </div>
+  </div>
+  <p class="t-small measure el m-fade" data-b="5" style="margin-top:22px">No hay comprensión: hay palabras clave, una frase partida en trozos y esos trozos vueltos a armar, invirtiendo los pronombres <span class="c-gold">(mi→tu, me→te, yo→tú)</span>.</p>
+</section>
+
 <!-- 4 ------------------------------------------------------------------ -->
 <section class="slide center" data-label="¿Qué es el lenguaje?">
   <h2 class="t-section el m-write" data-b="0">¿Qué es el lenguaje?</h2>
@@ -654,6 +706,13 @@ svg.nn circle{fill:var(--bg); stroke:var(--fg); stroke-width:2; opacity:0;
   </div>
 </section>
 
+<section class="slide mid" data-label="Necesitamos un vocabulario">
+  <h2 class="t-title el m-write" data-b="0" style="margin-bottom:22px">Necesitamos un vocabulario</h2>
+  <div class="el m-fade" data-b="1" style="width:1240px">
+    <canvas id="vocab-canvas" class="canvasbox vocab" aria-label="Una cuadrícula que se llena de palabras"></canvas>
+  </div>
+</section>
+
 <!-- 9 ------------------------------------------------------------------ -->
 <section class="slide center" data-label="Tokenización">
   <h2 class="t-section el m-write" data-b="0">Tokenización</h2>
@@ -678,9 +737,10 @@ svg.nn circle{fill:var(--bg); stroke:var(--fg); stroke-width:2; opacity:0;
 
 <!-- 12 ----------------------------------------------------------------- -->
 <section class="slide mid" data-label="El texto, segmentado">
-  <span class="hl seg" data-b="1" aria-hidden="true"></span>
-  <div class="toks measure el m-fade" data-b="0" style="--st:3.2ms"><span class="tok u t0" style="--i:0">A</span><span class="tok u t1" style="--i:1">penas</span><span class="tok u t2" style="--i:2"> él</span><span class="tok u t3" style="--i:3"> le</span><span class="tok u t4" style="--i:4"> amal</span><span class="tok u t5" style="--i:5">aba</span><span class="tok u t6" style="--i:6"> el</span><span class="tok u t7" style="--i:7"> no</span><span class="tok u t0" style="--i:8">ema</span><span class="tok u t1" style="--i:9">,</span><span class="tok u t2" style="--i:10"> a</span><span class="tok u t3" style="--i:11"> ella</span><span class="tok u t4" style="--i:12"> se</span><span class="tok u t5" style="--i:13"> le</span><span class="tok u t6" style="--i:14"> ag</span><span class="tok u t7" style="--i:15">ol</span><span class="tok u t0" style="--i:16">p</span><span class="tok u t1" style="--i:17">aba</span><span class="tok u t2" style="--i:18"> el</span><span class="tok u t3" style="--i:19"> cl</span><span class="tok u t4" style="--i:20">ém</span><span class="tok u t5" style="--i:21">iso</span><span class="tok u t6" style="--i:22"> y</span><span class="tok u t7" style="--i:23"> ca</span><span class="tok u t0" style="--i:24">ían</span><span class="tok u t1" style="--i:25"> en</span><span class="tok u t2" style="--i:26"> hid</span><span class="tok u t3" style="--i:27">rom</span><span class="tok u t4" style="--i:28">urias</span><span class="tok u t5" style="--i:29">,</span><span class="tok u t6" style="--i:30"> en</span><span class="tok u t7" style="--i:31"> salv</span><span class="tok u t0" style="--i:32">ajes</span><span class="tok u t1" style="--i:33"> amb</span><span class="tok u t2" style="--i:34">on</span><span class="tok u t3" style="--i:35">ios</span><span class="tok u t4" style="--i:36">,</span><span class="tok u t5" style="--i:37"> en</span><span class="tok u t6" style="--i:38"> sust</span><span class="tok u t7" style="--i:39">alos</span><span class="tok u t0" style="--i:40"> ex</span><span class="tok u t1" style="--i:41">asper</span><span class="tok u t2" style="--i:42">antes</span><span class="tok u t3" style="--i:43">.</span><span class="tok u t4" style="--i:44"> Cada</span><span class="tok u t5" style="--i:45"> vez</span><span class="tok u t6" style="--i:46"> que</span><span class="tok u t7" style="--i:47"> él</span><span class="tok u t0" style="--i:48"> procur</span><span class="tok u t1" style="--i:49">aba</span><span class="tok u t2" style="--i:50"> rel</span><span class="tok u t3" style="--i:51">amar</span><span class="tok u t4" style="--i:52"> las</span><span class="tok u t5" style="--i:53"> inc</span><span class="tok u t6" style="--i:54">op</span><span class="tok u t7" style="--i:55">el</span><span class="tok u t0" style="--i:56">usas</span><span class="tok u t1" style="--i:57">,</span><span class="tok u t2" style="--i:58"> se</span><span class="tok u t3" style="--i:59"> en</span><span class="tok u t4" style="--i:60">red</span><span class="tok u t5" style="--i:61">aba</span><span class="tok u t6" style="--i:62"> en</span><span class="tok u t7" style="--i:63"> un</span><span class="tok u t0" style="--i:64"> grim</span><span class="tok u t1" style="--i:65">ado</span><span class="tok u t2" style="--i:66"> que</span><span class="tok u t3" style="--i:67">j</span><span class="tok u t4" style="--i:68">umb</span><span class="tok u t5" style="--i:69">roso</span><span class="tok u t6" style="--i:70"> y</span><span class="tok u t7" style="--i:71"> tenía</span><span class="tok u t0" style="--i:72"> que</span><span class="tok u t1" style="--i:73"> env</span><span class="tok u t2" style="--i:74">ulsion</span><span class="tok u t3" style="--i:75">arse</span><span class="tok u t4" style="--i:76"> de</span><span class="tok u t5" style="--i:77"> cara</span><span class="tok u t6" style="--i:78"> al</span><span class="tok u t7" style="--i:79"> nó</span><span class="tok u t0" style="--i:80">valo</span><span class="tok u t1" style="--i:81">,</span><span class="tok u t2" style="--i:82"> sint</span><span class="tok u t3" style="--i:83">iendo</span><span class="tok u t4" style="--i:84"> cómo</span><span class="tok u t5" style="--i:85"> poco</span><span class="tok u t6" style="--i:86"> a</span><span class="tok u t7" style="--i:87"> poco</span><span class="tok u t0" style="--i:88"> las</span><span class="tok u t1" style="--i:89"> arn</span><span class="tok u t2" style="--i:90">illas</span><span class="tok u t3" style="--i:91"> se</span><span class="tok u t4" style="--i:92"> espe</span><span class="tok u t5" style="--i:93">jun</span><span class="tok u t6" style="--i:94">aban</span><span class="tok u t7" style="--i:95">,</span><span class="tok u t0" style="--i:96"> se</span><span class="tok u t1" style="--i:97"> iban</span><span class="tok u t2" style="--i:98"> apel</span><span class="tok u t3" style="--i:99">tron</span><span class="tok u t4" style="--i:100">ando</span><span class="tok u t5" style="--i:101">,</span><span class="tok u t6" style="--i:102"> redu</span><span class="tok u t7" style="--i:103">pl</span><span class="tok u t0" style="--i:104">imi</span><span class="tok u t1" style="--i:105">endo</span><span class="tok u t2" style="--i:106">,</span><span class="tok u t3" style="--i:107"> hasta</span><span class="tok u t4" style="--i:108"> quedar</span><span class="tok u t5" style="--i:109"> tend</span><span class="tok u t6" style="--i:110">ido</span><span class="tok u t7" style="--i:111"> como</span><span class="tok u t0" style="--i:112"> el</span><span class="tok u t1" style="--i:113"> tr</span><span class="tok u t2" style="--i:114">imal</span><span class="tok u t3" style="--i:115">ci</span><span class="tok u t4" style="--i:116">ato</span><span class="tok u t5" style="--i:117"> de</span><span class="tok u t6" style="--i:118"> erg</span><span class="tok u t7" style="--i:119">oman</span><span class="tok u t0" style="--i:120">ina</span><span class="tok u t1" style="--i:121"> al</span><span class="tok u t2" style="--i:122"> que</span><span class="tok u t3" style="--i:123"> se</span><span class="tok u t4" style="--i:124"> le</span><span class="tok u t5" style="--i:125"> han</span><span class="tok u t6" style="--i:126"> dejado</span><span class="tok u t7" style="--i:127"> caer</span><span class="tok u t0" style="--i:128"> unas</span><span class="tok u t1" style="--i:129"> f</span><span class="tok u t2" style="--i:130">íl</span><span class="tok u t3" style="--i:131">ulas</span><span class="tok u t4" style="--i:132"> de</span><span class="tok u t5" style="--i:133"> cari</span><span class="tok u t6" style="--i:134">acon</span><span class="tok u t7" style="--i:135">cia</span><span class="tok u t0" style="--i:136">.</span><span class="tok u t1" style="--i:137"> Y</span><span class="tok u t2" style="--i:138"> sin</span><span class="tok u t3" style="--i:139"> embargo</span><span class="tok u t4" style="--i:140"> era</span><span class="tok u t5" style="--i:141"> apenas</span><span class="tok u t6" style="--i:142"> el</span><span class="tok u t7" style="--i:143"> principio</span><span class="tok u t0" style="--i:144">,</span><span class="tok u t1" style="--i:145"> porque</span><span class="tok u t2" style="--i:146"> en</span><span class="tok u t3" style="--i:147"> un</span><span class="tok u t4" style="--i:148"> momento</span><span class="tok u t5" style="--i:149"> dado</span><span class="tok u t6" style="--i:150"> ella</span><span class="tok u t7" style="--i:151"> se</span><span class="tok u t0" style="--i:152"> t</span><span class="tok u t1" style="--i:153">ord</span><span class="tok u t2" style="--i:154">ul</span><span class="tok u t3" style="--i:155">aba</span><span class="tok u t4" style="--i:156"> los</span><span class="tok u t5" style="--i:157"> h</span><span class="tok u t6" style="--i:158">urg</span><span class="tok u t7" style="--i:159">al</span><span class="tok u t0" style="--i:160">ios</span><span class="tok u t1" style="--i:161">,</span><span class="tok u t2" style="--i:162"> cons</span><span class="tok u t3" style="--i:163">int</span><span class="tok u t4" style="--i:164">iendo</span><span class="tok u t5" style="--i:165"> en</span><span class="tok u t6" style="--i:166"> que</span><span class="tok u t7" style="--i:167"> él</span><span class="tok u t0" style="--i:168"> aproxim</span><span class="tok u t1" style="--i:169">ara</span><span class="tok u t2" style="--i:170"> suav</span><span class="tok u t3" style="--i:171">emente</span><span class="tok u t4" style="--i:172"> sus</span><span class="tok u t5" style="--i:173"> or</span><span class="tok u t6" style="--i:174">fel</span><span class="tok u t7" style="--i:175">un</span><span class="tok u t0" style="--i:176">ios</span><span class="tok u t1" style="--i:177">.</span><span class="tok u t2" style="--i:178"> Apenas</span><span class="tok u t3" style="--i:179"> se</span><span class="tok u t4" style="--i:180"> entre</span><span class="tok u t5" style="--i:181">pl</span><span class="tok u t6" style="--i:182">um</span><span class="tok u t7" style="--i:183">aban</span><span class="tok u t0" style="--i:184">,</span><span class="tok u t1" style="--i:185"> algo</span><span class="tok u t2" style="--i:186"> como</span><span class="tok u t3" style="--i:187"> un</span><span class="tok u t4" style="--i:188"> ul</span><span class="tok u t5" style="--i:189">uc</span><span class="tok u t6" style="--i:190">ord</span><span class="tok u t7" style="--i:191">io</span><span class="tok u t0" style="--i:192"> los</span><span class="tok u t1" style="--i:193"> en</span><span class="tok u t2" style="--i:194">crest</span><span class="tok u t3" style="--i:195">ori</span><span class="tok u t4" style="--i:196">aba</span><span class="tok u t5" style="--i:197">,</span><span class="tok u t6" style="--i:198"> los</span><span class="tok u t7" style="--i:199"> extr</span><span class="tok u t0" style="--i:200">ayu</span><span class="tok u t1" style="--i:201">xt</span><span class="tok u t2" style="--i:202">aba</span><span class="tok u t3" style="--i:203"> y</span><span class="tok u t4" style="--i:204"> param</span><span class="tok u t5" style="--i:205">ov</span><span class="tok u t6" style="--i:206">ía</span><span class="tok u t7" style="--i:207">,</span><span class="tok u t0" style="--i:208"> de</span><span class="tok u t1" style="--i:209"> pronto</span><span class="tok u t2" style="--i:210"> era</span><span class="tok u t3" style="--i:211"> el</span><span class="tok u t4" style="--i:212"> clin</span><span class="tok u t5" style="--i:213">ón</span><span class="tok u t6" style="--i:214">,</span><span class="tok u t7" style="--i:215"> la</span><span class="tok u t0" style="--i:216"> ester</span><span class="tok u t1" style="--i:217">fu</span><span class="tok u t2" style="--i:218">rosa</span><span class="tok u t3" style="--i:219"> conv</span><span class="tok u t4" style="--i:220">ul</span><span class="tok u t5" style="--i:221">cante</span><span class="tok u t6" style="--i:222"> de</span><span class="tok u t7" style="--i:223"> las</span><span class="tok u t0" style="--i:224"> má</span><span class="tok u t1" style="--i:225">tr</span><span class="tok u t2" style="--i:226">icas</span><span class="tok u t3" style="--i:227">,</span><span class="tok u t4" style="--i:228"> la</span><span class="tok u t5" style="--i:229"> jade</span><span class="tok u t6" style="--i:230">h</span><span class="tok u t7" style="--i:231">oll</span><span class="tok u t0" style="--i:232">ante</span><span class="tok u t1" style="--i:233"> emb</span><span class="tok u t2" style="--i:234">oc</span><span class="tok u t3" style="--i:235">ap</span><span class="tok u t4" style="--i:236">lu</span><span class="tok u t5" style="--i:237">via</span><span class="tok u t6" style="--i:238"> del</span><span class="tok u t7" style="--i:239"> org</span><span class="tok u t0" style="--i:240">um</span><span class="tok u t1" style="--i:241">io</span><span class="tok u t2" style="--i:242">,</span><span class="tok u t3" style="--i:243"> los</span><span class="tok u t4" style="--i:244"> es</span><span class="tok u t5" style="--i:245">pro</span><span class="tok u t6" style="--i:246">em</span><span class="tok u t7" style="--i:247">ios</span><span class="tok u t0" style="--i:248"> del</span><span class="tok u t1" style="--i:249"> mer</span><span class="tok u t2" style="--i:250">pas</span><span class="tok u t3" style="--i:251">mo</span><span class="tok u t4" style="--i:252"> en</span><span class="tok u t5" style="--i:253"> una</span><span class="tok u t6" style="--i:254"> sobre</span><span class="tok u t7" style="--i:255">hum</span><span class="tok u t0" style="--i:256">ítica</span><span class="tok u t1" style="--i:257"> ag</span><span class="tok u t2" style="--i:258">op</span><span class="tok u t3" style="--i:259">ausa</span><span class="tok u t4" style="--i:260">.</span><span class="tok u t5" style="--i:261"> ¡</span><span class="tok u t6" style="--i:262">E</span><span class="tok u t7" style="--i:263">vo</span><span class="tok u t0" style="--i:264">hé</span><span class="tok u t1" style="--i:265">!</span><span class="tok u t2" style="--i:266"> ¡</span><span class="tok u t3" style="--i:267">E</span><span class="tok u t4" style="--i:268">vo</span><span class="tok u t5" style="--i:269">hé</span><span class="tok u t6" style="--i:270">!</span><span class="tok u t7" style="--i:271"> Vol</span><span class="tok u t0" style="--i:272">pos</span><span class="tok u t1" style="--i:273">ados</span><span class="tok u t2" style="--i:274"> en</span><span class="tok u t3" style="--i:275"> la</span><span class="tok u t4" style="--i:276"> cre</span><span class="tok u t5" style="--i:277">sta</span><span class="tok u t6" style="--i:278"> del</span><span class="tok u t7" style="--i:279"> m</span><span class="tok u t0" style="--i:280">ure</span><span class="tok u t1" style="--i:281">lio</span><span class="tok u t2" style="--i:282">,</span><span class="tok u t3" style="--i:283"> se</span><span class="tok u t4" style="--i:284"> sent</span><span class="tok u t5" style="--i:285">ían</span><span class="tok u t6" style="--i:286"> bal</span><span class="tok u t7" style="--i:287">p</span><span class="tok u t0" style="--i:288">amar</span><span class="tok u t1" style="--i:289">,</span><span class="tok u t2" style="--i:290"> per</span><span class="tok u t3" style="--i:291">lin</span><span class="tok u t4" style="--i:292">os</span><span class="tok u t5" style="--i:293"> y</span><span class="tok u t6" style="--i:294"> már</span><span class="tok u t7" style="--i:295">ulos</span><span class="tok u t0" style="--i:296">.</span><span class="tok u t1" style="--i:297"> Tem</span><span class="tok u t2" style="--i:298">bl</span><span class="tok u t3" style="--i:299">aba</span><span class="tok u t4" style="--i:300"> el</span><span class="tok u t5" style="--i:301"> tro</span><span class="tok u t6" style="--i:302">c</span><span class="tok u t7" style="--i:303">,</span><span class="tok u t0" style="--i:304"> se</span><span class="tok u t1" style="--i:305"> venc</span><span class="tok u t2" style="--i:306">ían</span><span class="tok u t3" style="--i:307"> las</span><span class="tok u t4" style="--i:308"> mari</span><span class="tok u t5" style="--i:309">opl</span><span class="tok u t6" style="--i:310">umas</span><span class="tok u t7" style="--i:311">,</span><span class="tok u t0" style="--i:312"> y</span><span class="tok u t1" style="--i:313"> todo</span><span class="tok u t2" style="--i:314"> se</span><span class="tok u t3" style="--i:315"> resol</span><span class="tok u t4" style="--i:316">vir</span><span class="tok u t5" style="--i:317">aba</span><span class="tok u t6" style="--i:318"> en</span><span class="tok u t7" style="--i:319"> un</span><span class="tok u t0" style="--i:320"> profundo</span><span class="tok u t1" style="--i:321"> p</span><span class="tok u t2" style="--i:322">ín</span><span class="tok u t3" style="--i:323">ice</span><span class="tok u t4" style="--i:324">,</span><span class="tok u t5" style="--i:325"> en</span><span class="tok u t6" style="--i:326"> ni</span><span class="tok u t7" style="--i:327">ol</span><span class="tok u t0" style="--i:328">amas</span><span class="tok u t1" style="--i:329"> de</span><span class="tok u t2" style="--i:330"> arg</span><span class="tok u t3" style="--i:331">ut</span><span class="tok u t4" style="--i:332">end</span><span class="tok u t5" style="--i:333">idas</span><span class="tok u t6" style="--i:334"> gas</span><span class="tok u t7" style="--i:335">as</span><span class="tok u t0" style="--i:336">,</span><span class="tok u t1" style="--i:337"> en</span><span class="tok u t2" style="--i:338"> car</span><span class="tok u t3" style="--i:339">ini</span><span class="tok u t4" style="--i:340">as</span><span class="tok u t5" style="--i:341"> casi</span><span class="tok u t6" style="--i:342"> cruel</span><span class="tok u t7" style="--i:343">es</span><span class="tok u t0" style="--i:344"> que</span><span class="tok u t1" style="--i:345"> los</span><span class="tok u t2" style="--i:346"> ord</span><span class="tok u t3" style="--i:347">open</span><span class="tok u t4" style="--i:348">aban</span><span class="tok u t5" style="--i:349"> hasta</span><span class="tok u t6" style="--i:350"> el</span><span class="tok u t7" style="--i:351"> límite</span><span class="tok u t0" style="--i:352"> de</span><span class="tok u t1" style="--i:353"> las</span><span class="tok u t2" style="--i:354"> gun</span><span class="tok u t3" style="--i:355">f</span><span class="tok u t4" style="--i:356">ias</span><span class="tok u t5" style="--i:357">.</span></div>
-  <p class="t-small measure el m-fade" data-b="2" style="margin-top:24px">El mismo texto, visto por un tokenizador: <span class="c-gold">358 tokens</span> para 1198 caracteres.</p>
+  <span class="hl invt" data-b="1" aria-hidden="true"></span>
+  <span class="hl seg" data-b="2" aria-hidden="true"></span>
+  <div class="toks measure el m-fade" data-b="0" style="--st:3.2ms"><span class="tok u t0" style="--i:0">A</span><span class="tok u t1" style="--i:1">penas</span><span class="tok u t2" style="--i:2"> él</span><span class="tok u t3" style="--i:3"> le</span><span class="tok u t4 inv" style="--i:4"> amal</span><span class="tok u t5 inv" style="--i:5">aba</span><span class="tok u t6" style="--i:6"> el</span><span class="tok u t7 inv" style="--i:7"> no</span><span class="tok u t0 inv" style="--i:8">ema</span><span class="tok u t1" style="--i:9">,</span><span class="tok u t2" style="--i:10"> a</span><span class="tok u t3" style="--i:11"> ella</span><span class="tok u t4" style="--i:12"> se</span><span class="tok u t5" style="--i:13"> le</span><span class="tok u t6" style="--i:14"> ag</span><span class="tok u t7" style="--i:15">ol</span><span class="tok u t0" style="--i:16">p</span><span class="tok u t1" style="--i:17">aba</span><span class="tok u t2" style="--i:18"> el</span><span class="tok u t3 inv" style="--i:19"> cl</span><span class="tok u t4 inv" style="--i:20">ém</span><span class="tok u t5 inv" style="--i:21">iso</span><span class="tok u t6" style="--i:22"> y</span><span class="tok u t7" style="--i:23"> ca</span><span class="tok u t0" style="--i:24">ían</span><span class="tok u t1" style="--i:25"> en</span><span class="tok u t2 inv" style="--i:26"> hid</span><span class="tok u t3 inv" style="--i:27">rom</span><span class="tok u t4 inv" style="--i:28">urias</span><span class="tok u t5" style="--i:29">,</span><span class="tok u t6" style="--i:30"> en</span><span class="tok u t7" style="--i:31"> salv</span><span class="tok u t0" style="--i:32">ajes</span><span class="tok u t1 inv" style="--i:33"> amb</span><span class="tok u t2 inv" style="--i:34">on</span><span class="tok u t3 inv" style="--i:35">ios</span><span class="tok u t4" style="--i:36">,</span><span class="tok u t5" style="--i:37"> en</span><span class="tok u t6 inv" style="--i:38"> sust</span><span class="tok u t7 inv" style="--i:39">alos</span><span class="tok u t0" style="--i:40"> ex</span><span class="tok u t1" style="--i:41">asper</span><span class="tok u t2" style="--i:42">antes</span><span class="tok u t3" style="--i:43">.</span><span class="tok u t4" style="--i:44"> Cada</span><span class="tok u t5" style="--i:45"> vez</span><span class="tok u t6" style="--i:46"> que</span><span class="tok u t7" style="--i:47"> él</span><span class="tok u t0" style="--i:48"> procur</span><span class="tok u t1" style="--i:49">aba</span><span class="tok u t2 inv" style="--i:50"> rel</span><span class="tok u t3 inv" style="--i:51">amar</span><span class="tok u t4" style="--i:52"> las</span><span class="tok u t5 inv" style="--i:53"> inc</span><span class="tok u t6 inv" style="--i:54">op</span><span class="tok u t7 inv" style="--i:55">el</span><span class="tok u t0 inv" style="--i:56">usas</span><span class="tok u t1" style="--i:57">,</span><span class="tok u t2" style="--i:58"> se</span><span class="tok u t3" style="--i:59"> en</span><span class="tok u t4" style="--i:60">red</span><span class="tok u t5" style="--i:61">aba</span><span class="tok u t6" style="--i:62"> en</span><span class="tok u t7" style="--i:63"> un</span><span class="tok u t0 inv" style="--i:64"> grim</span><span class="tok u t1 inv" style="--i:65">ado</span><span class="tok u t2" style="--i:66"> que</span><span class="tok u t3" style="--i:67">j</span><span class="tok u t4" style="--i:68">umb</span><span class="tok u t5" style="--i:69">roso</span><span class="tok u t6" style="--i:70"> y</span><span class="tok u t7" style="--i:71"> tenía</span><span class="tok u t0" style="--i:72"> que</span><span class="tok u t1 inv" style="--i:73"> env</span><span class="tok u t2 inv" style="--i:74">ulsion</span><span class="tok u t3 inv" style="--i:75">arse</span><span class="tok u t4" style="--i:76"> de</span><span class="tok u t5" style="--i:77"> cara</span><span class="tok u t6" style="--i:78"> al</span><span class="tok u t7 inv" style="--i:79"> nó</span><span class="tok u t0 inv" style="--i:80">valo</span><span class="tok u t1" style="--i:81">,</span><span class="tok u t2" style="--i:82"> sint</span><span class="tok u t3" style="--i:83">iendo</span><span class="tok u t4" style="--i:84"> cómo</span><span class="tok u t5" style="--i:85"> poco</span><span class="tok u t6" style="--i:86"> a</span><span class="tok u t7" style="--i:87"> poco</span><span class="tok u t0" style="--i:88"> las</span><span class="tok u t1 inv" style="--i:89"> arn</span><span class="tok u t2 inv" style="--i:90">illas</span><span class="tok u t3" style="--i:91"> se</span><span class="tok u t4 inv" style="--i:92"> espe</span><span class="tok u t5 inv" style="--i:93">jun</span><span class="tok u t6 inv" style="--i:94">aban</span><span class="tok u t7" style="--i:95">,</span><span class="tok u t0" style="--i:96"> se</span><span class="tok u t1" style="--i:97"> iban</span><span class="tok u t2 inv" style="--i:98"> apel</span><span class="tok u t3 inv" style="--i:99">tron</span><span class="tok u t4 inv" style="--i:100">ando</span><span class="tok u t5" style="--i:101">,</span><span class="tok u t6 inv" style="--i:102"> redu</span><span class="tok u t7 inv" style="--i:103">pl</span><span class="tok u t0 inv" style="--i:104">imi</span><span class="tok u t1 inv" style="--i:105">endo</span><span class="tok u t2" style="--i:106">,</span><span class="tok u t3" style="--i:107"> hasta</span><span class="tok u t4" style="--i:108"> quedar</span><span class="tok u t5" style="--i:109"> tend</span><span class="tok u t6" style="--i:110">ido</span><span class="tok u t7" style="--i:111"> como</span><span class="tok u t0" style="--i:112"> el</span><span class="tok u t1 inv" style="--i:113"> tr</span><span class="tok u t2 inv" style="--i:114">imal</span><span class="tok u t3 inv" style="--i:115">ci</span><span class="tok u t4 inv" style="--i:116">ato</span><span class="tok u t5" style="--i:117"> de</span><span class="tok u t6 inv" style="--i:118"> erg</span><span class="tok u t7 inv" style="--i:119">oman</span><span class="tok u t0 inv" style="--i:120">ina</span><span class="tok u t1" style="--i:121"> al</span><span class="tok u t2" style="--i:122"> que</span><span class="tok u t3" style="--i:123"> se</span><span class="tok u t4" style="--i:124"> le</span><span class="tok u t5" style="--i:125"> han</span><span class="tok u t6" style="--i:126"> dejado</span><span class="tok u t7" style="--i:127"> caer</span><span class="tok u t0" style="--i:128"> unas</span><span class="tok u t1 inv" style="--i:129"> f</span><span class="tok u t2 inv" style="--i:130">íl</span><span class="tok u t3 inv" style="--i:131">ulas</span><span class="tok u t4" style="--i:132"> de</span><span class="tok u t5 inv" style="--i:133"> cari</span><span class="tok u t6 inv" style="--i:134">acon</span><span class="tok u t7 inv" style="--i:135">cia</span><span class="tok u t0" style="--i:136">.</span><span class="tok u t1" style="--i:137"> Y</span><span class="tok u t2" style="--i:138"> sin</span><span class="tok u t3" style="--i:139"> embargo</span><span class="tok u t4" style="--i:140"> era</span><span class="tok u t5" style="--i:141"> apenas</span><span class="tok u t6" style="--i:142"> el</span><span class="tok u t7" style="--i:143"> principio</span><span class="tok u t0" style="--i:144">,</span><span class="tok u t1" style="--i:145"> porque</span><span class="tok u t2" style="--i:146"> en</span><span class="tok u t3" style="--i:147"> un</span><span class="tok u t4" style="--i:148"> momento</span><span class="tok u t5" style="--i:149"> dado</span><span class="tok u t6" style="--i:150"> ella</span><span class="tok u t7" style="--i:151"> se</span><span class="tok u t0 inv" style="--i:152"> t</span><span class="tok u t1 inv" style="--i:153">ord</span><span class="tok u t2 inv" style="--i:154">ul</span><span class="tok u t3 inv" style="--i:155">aba</span><span class="tok u t4" style="--i:156"> los</span><span class="tok u t5 inv" style="--i:157"> h</span><span class="tok u t6 inv" style="--i:158">urg</span><span class="tok u t7 inv" style="--i:159">al</span><span class="tok u t0 inv" style="--i:160">ios</span><span class="tok u t1" style="--i:161">,</span><span class="tok u t2" style="--i:162"> cons</span><span class="tok u t3" style="--i:163">int</span><span class="tok u t4" style="--i:164">iendo</span><span class="tok u t5" style="--i:165"> en</span><span class="tok u t6" style="--i:166"> que</span><span class="tok u t7" style="--i:167"> él</span><span class="tok u t0" style="--i:168"> aproxim</span><span class="tok u t1" style="--i:169">ara</span><span class="tok u t2" style="--i:170"> suav</span><span class="tok u t3" style="--i:171">emente</span><span class="tok u t4" style="--i:172"> sus</span><span class="tok u t5 inv" style="--i:173"> or</span><span class="tok u t6 inv" style="--i:174">fel</span><span class="tok u t7 inv" style="--i:175">un</span><span class="tok u t0 inv" style="--i:176">ios</span><span class="tok u t1" style="--i:177">.</span><span class="tok u t2" style="--i:178"> Apenas</span><span class="tok u t3" style="--i:179"> se</span><span class="tok u t4 inv" style="--i:180"> entre</span><span class="tok u t5 inv" style="--i:181">pl</span><span class="tok u t6 inv" style="--i:182">um</span><span class="tok u t7 inv" style="--i:183">aban</span><span class="tok u t0" style="--i:184">,</span><span class="tok u t1" style="--i:185"> algo</span><span class="tok u t2" style="--i:186"> como</span><span class="tok u t3" style="--i:187"> un</span><span class="tok u t4 inv" style="--i:188"> ul</span><span class="tok u t5 inv" style="--i:189">uc</span><span class="tok u t6 inv" style="--i:190">ord</span><span class="tok u t7 inv" style="--i:191">io</span><span class="tok u t0" style="--i:192"> los</span><span class="tok u t1 inv" style="--i:193"> en</span><span class="tok u t2 inv" style="--i:194">crest</span><span class="tok u t3 inv" style="--i:195">ori</span><span class="tok u t4 inv" style="--i:196">aba</span><span class="tok u t5" style="--i:197">,</span><span class="tok u t6" style="--i:198"> los</span><span class="tok u t7 inv" style="--i:199"> extr</span><span class="tok u t0 inv" style="--i:200">ayu</span><span class="tok u t1 inv" style="--i:201">xt</span><span class="tok u t2 inv" style="--i:202">aba</span><span class="tok u t3" style="--i:203"> y</span><span class="tok u t4 inv" style="--i:204"> param</span><span class="tok u t5 inv" style="--i:205">ov</span><span class="tok u t6 inv" style="--i:206">ía</span><span class="tok u t7" style="--i:207">,</span><span class="tok u t0" style="--i:208"> de</span><span class="tok u t1" style="--i:209"> pronto</span><span class="tok u t2" style="--i:210"> era</span><span class="tok u t3" style="--i:211"> el</span><span class="tok u t4 inv" style="--i:212"> clin</span><span class="tok u t5 inv" style="--i:213">ón</span><span class="tok u t6" style="--i:214">,</span><span class="tok u t7" style="--i:215"> la</span><span class="tok u t0 inv" style="--i:216"> ester</span><span class="tok u t1 inv" style="--i:217">fu</span><span class="tok u t2 inv" style="--i:218">rosa</span><span class="tok u t3 inv" style="--i:219"> conv</span><span class="tok u t4 inv" style="--i:220">ul</span><span class="tok u t5 inv" style="--i:221">cante</span><span class="tok u t6" style="--i:222"> de</span><span class="tok u t7" style="--i:223"> las</span><span class="tok u t0 inv" style="--i:224"> má</span><span class="tok u t1 inv" style="--i:225">tr</span><span class="tok u t2 inv" style="--i:226">icas</span><span class="tok u t3" style="--i:227">,</span><span class="tok u t4" style="--i:228"> la</span><span class="tok u t5 inv" style="--i:229"> jade</span><span class="tok u t6 inv" style="--i:230">h</span><span class="tok u t7 inv" style="--i:231">oll</span><span class="tok u t0 inv" style="--i:232">ante</span><span class="tok u t1 inv" style="--i:233"> emb</span><span class="tok u t2 inv" style="--i:234">oc</span><span class="tok u t3 inv" style="--i:235">ap</span><span class="tok u t4 inv" style="--i:236">lu</span><span class="tok u t5 inv" style="--i:237">via</span><span class="tok u t6" style="--i:238"> del</span><span class="tok u t7 inv" style="--i:239"> org</span><span class="tok u t0 inv" style="--i:240">um</span><span class="tok u t1 inv" style="--i:241">io</span><span class="tok u t2" style="--i:242">,</span><span class="tok u t3" style="--i:243"> los</span><span class="tok u t4 inv" style="--i:244"> es</span><span class="tok u t5 inv" style="--i:245">pro</span><span class="tok u t6 inv" style="--i:246">em</span><span class="tok u t7 inv" style="--i:247">ios</span><span class="tok u t0" style="--i:248"> del</span><span class="tok u t1 inv" style="--i:249"> mer</span><span class="tok u t2 inv" style="--i:250">pas</span><span class="tok u t3 inv" style="--i:251">mo</span><span class="tok u t4" style="--i:252"> en</span><span class="tok u t5" style="--i:253"> una</span><span class="tok u t6 inv" style="--i:254"> sobre</span><span class="tok u t7 inv" style="--i:255">hum</span><span class="tok u t0 inv" style="--i:256">ítica</span><span class="tok u t1 inv" style="--i:257"> ag</span><span class="tok u t2 inv" style="--i:258">op</span><span class="tok u t3 inv" style="--i:259">ausa</span><span class="tok u t4" style="--i:260">.</span><span class="tok u t5" style="--i:261"> ¡</span><span class="tok u t6" style="--i:262">E</span><span class="tok u t7" style="--i:263">vo</span><span class="tok u t0" style="--i:264">hé</span><span class="tok u t1" style="--i:265">!</span><span class="tok u t2" style="--i:266"> ¡</span><span class="tok u t3" style="--i:267">E</span><span class="tok u t4" style="--i:268">vo</span><span class="tok u t5" style="--i:269">hé</span><span class="tok u t6" style="--i:270">!</span><span class="tok u t7 inv" style="--i:271"> Vol</span><span class="tok u t0 inv" style="--i:272">pos</span><span class="tok u t1 inv" style="--i:273">ados</span><span class="tok u t2" style="--i:274"> en</span><span class="tok u t3" style="--i:275"> la</span><span class="tok u t4" style="--i:276"> cre</span><span class="tok u t5" style="--i:277">sta</span><span class="tok u t6" style="--i:278"> del</span><span class="tok u t7 inv" style="--i:279"> m</span><span class="tok u t0 inv" style="--i:280">ure</span><span class="tok u t1 inv" style="--i:281">lio</span><span class="tok u t2" style="--i:282">,</span><span class="tok u t3" style="--i:283"> se</span><span class="tok u t4" style="--i:284"> sent</span><span class="tok u t5" style="--i:285">ían</span><span class="tok u t6 inv" style="--i:286"> bal</span><span class="tok u t7 inv" style="--i:287">p</span><span class="tok u t0 inv" style="--i:288">amar</span><span class="tok u t1" style="--i:289">,</span><span class="tok u t2" style="--i:290"> per</span><span class="tok u t3" style="--i:291">lin</span><span class="tok u t4" style="--i:292">os</span><span class="tok u t5" style="--i:293"> y</span><span class="tok u t6 inv" style="--i:294"> már</span><span class="tok u t7 inv" style="--i:295">ulos</span><span class="tok u t0" style="--i:296">.</span><span class="tok u t1" style="--i:297"> Tem</span><span class="tok u t2" style="--i:298">bl</span><span class="tok u t3" style="--i:299">aba</span><span class="tok u t4" style="--i:300"> el</span><span class="tok u t5 inv" style="--i:301"> tro</span><span class="tok u t6 inv" style="--i:302">c</span><span class="tok u t7" style="--i:303">,</span><span class="tok u t0" style="--i:304"> se</span><span class="tok u t1" style="--i:305"> venc</span><span class="tok u t2" style="--i:306">ían</span><span class="tok u t3" style="--i:307"> las</span><span class="tok u t4 inv" style="--i:308"> mari</span><span class="tok u t5 inv" style="--i:309">opl</span><span class="tok u t6 inv" style="--i:310">umas</span><span class="tok u t7" style="--i:311">,</span><span class="tok u t0" style="--i:312"> y</span><span class="tok u t1" style="--i:313"> todo</span><span class="tok u t2" style="--i:314"> se</span><span class="tok u t3 inv" style="--i:315"> resol</span><span class="tok u t4 inv" style="--i:316">vir</span><span class="tok u t5 inv" style="--i:317">aba</span><span class="tok u t6" style="--i:318"> en</span><span class="tok u t7" style="--i:319"> un</span><span class="tok u t0" style="--i:320"> profundo</span><span class="tok u t1 inv" style="--i:321"> p</span><span class="tok u t2 inv" style="--i:322">ín</span><span class="tok u t3 inv" style="--i:323">ice</span><span class="tok u t4" style="--i:324">,</span><span class="tok u t5" style="--i:325"> en</span><span class="tok u t6 inv" style="--i:326"> ni</span><span class="tok u t7 inv" style="--i:327">ol</span><span class="tok u t0 inv" style="--i:328">amas</span><span class="tok u t1" style="--i:329"> de</span><span class="tok u t2 inv" style="--i:330"> arg</span><span class="tok u t3 inv" style="--i:331">ut</span><span class="tok u t4 inv" style="--i:332">end</span><span class="tok u t5 inv" style="--i:333">idas</span><span class="tok u t6" style="--i:334"> gas</span><span class="tok u t7" style="--i:335">as</span><span class="tok u t0" style="--i:336">,</span><span class="tok u t1" style="--i:337"> en</span><span class="tok u t2 inv" style="--i:338"> car</span><span class="tok u t3 inv" style="--i:339">ini</span><span class="tok u t4 inv" style="--i:340">as</span><span class="tok u t5" style="--i:341"> casi</span><span class="tok u t6" style="--i:342"> cruel</span><span class="tok u t7" style="--i:343">es</span><span class="tok u t0" style="--i:344"> que</span><span class="tok u t1" style="--i:345"> los</span><span class="tok u t2 inv" style="--i:346"> ord</span><span class="tok u t3 inv" style="--i:347">open</span><span class="tok u t4 inv" style="--i:348">aban</span><span class="tok u t5" style="--i:349"> hasta</span><span class="tok u t6" style="--i:350"> el</span><span class="tok u t7" style="--i:351"> límite</span><span class="tok u t0" style="--i:352"> de</span><span class="tok u t1" style="--i:353"> las</span><span class="tok u t2 inv" style="--i:354"> gun</span><span class="tok u t3 inv" style="--i:355">f</span><span class="tok u t4 inv" style="--i:356">ias</span><span class="tok u t5" style="--i:357">.</span></div>
+  <p class="t-small measure el m-fade" data-b="3" style="margin-top:24px">El mismo texto, visto por un tokenizador: <span class="c-gold">358 tokens</span> para 1198 caracteres.</p>
 </section>
 
 <!-- 13 ----------------------------------------------------------------- -->
@@ -749,7 +809,7 @@ svg.nn circle{fill:var(--bg); stroke:var(--fg); stroke-width:2; opacity:0;
       <p class="lang el m-fade" data-b="1">en el juego</p>
       <p class="ej el m-fade" data-b="1">Estaba <span class="hl" data-b="1">farmeando</span> XP con el Charmander para que se vuelva un Charizard.</p>
       <p class="ej el m-fade" data-b="1">Estaba jugando Minecraft, me puse a <span class="hl" data-b="1">farmear</span> comida.</p>
-      <p class="ej el m-fade" data-b="2">Todas quieren con él, tiene mucha <span class="hl hl-b" data-b="2">aura</span>.</p>
+      <p class="ej el m-fade" data-b="2">Todos quieren ser como él, tiene mucha <span class="hl hl-b" data-b="2">aura</span>.</p>
       <p class="ej el m-fade" data-b="2">¿Viste cómo bailaba? <span class="hl" data-b="2">Farmeó</span> <span class="hl hl-b" data-b="2">aura</span> duro.</p>
     </div>
     <div>
@@ -2518,10 +2578,6 @@ svg.nn circle{fill:var(--bg); stroke:var(--fg); stroke-width:2; opacity:0;
         c.ellipse(g.cx, g.cy, g.rx, g.ry, 0, 0, 6.2832);
         c.strokeStyle = 'rgba(' + g.col + ', .32)';
         c.lineWidth = 1.2; c.setLineDash([4, 5]); c.stroke(); c.setLineDash([]);
-        c.font = '20px ' + MONO;
-        c.textAlign = 'center';
-        c.fillStyle = 'rgba(' + g.col + ', .8)';
-        c.fillText(g.n, g.cx, g.cy - g.ry - 10);
         c.globalAlpha = 1;
       });
     }
@@ -3362,6 +3418,146 @@ svg.nn circle{fill:var(--bg); stroke:var(--fg); stroke-width:2; opacity:0;
   window.addEventListener('resize', rebuild);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(rebuild);
   requestAnimationFrame(function (t) { last = t; loop(t); });
+})();
+
+</script>
+
+<script>
+
+/* ── Necesitamos un vocabulario ──────────────────────────────────────
+   Una cuadrícula regular que se va llenando de palabras, desde la
+   esquina superior izquierda, hasta quedar completa a los 10 s.    */
+(function () {
+  var cvs = document.getElementById('vocab-canvas');
+  if (!cvs) return;
+  var c = cvs.getContext('2d');
+  var host = cvs.closest('.el'), slide = cvs.closest('.slide');
+
+  var SERIF = "'LM Roman', Georgia, serif";
+  var TOTAL = 10000, COLS = 9, FILAS = 10;
+  var TINTAS = ['235,235,235', '235,235,235', '235,235,235', '235,235,235',
+                '88,196,221', '92,208,179', '240,172,95', '131,193,103', '154,114,172'];
+
+  var PALABRAS = ('casa perro gato agua fuego tierra aire madre padre hijo hija amigo ciudad calle ' +
+    'puerta ventana mesa silla libro papel lápiz mano ojo boca pie cabeza corazón sangre hueso piel ' +
+    'sol luna estrella cielo mar río montaña árbol hoja flor raíz semilla pan sal azúcar café leche ' +
+    'vino carne pescado arroz maíz fruta manzana naranja tiempo día noche mañana tarde año mes semana ' +
+    'hora minuto ayer hoy siempre nunca antes después aquí allá cerca lejos dentro fuera arriba abajo ' +
+    'grande pequeño largo corto alto bajo nuevo viejo joven bueno malo bonito feo rápido lento fuerte ' +
+    'débil caliente frío claro oscuro lleno vacío abierto cerrado dulce amargo blanco negro rojo azul ' +
+    'verde amarillo gris hablar decir contar leer escribir mirar ver oír sentir pensar saber entender ' +
+    'aprender olvidar recordar querer amar reír llorar cantar bailar caminar correr saltar dormir ' +
+    'soñar comer beber vivir morir nacer crecer trabajar jugar ganar perder buscar encontrar abrir ' +
+    'cerrar dar tomar poner sacar subir bajar entrar salir llegar volver quedar pasar seguir parar ' +
+    'palabra lengua voz nombre cosa idea verdad mentira historia cuento canción música silencio ruido ' +
+    'luz sombra sueño miedo alegría tristeza rabia amor vida muerte alma cuerpo mente número camino ' +
+    'puente pueblo campo lluvia viento nieve trueno arena piedra metal madera hilo tela sombrero ' +
+    'zapato llave reloj espejo cuchara plato taza cama techo suelo pared jardín semáforo maestro ' +
+    'médico obrero vecino abuela nieto hermano fiesta trabajo escuela mercado dinero suerte').split(/\s+/);
+
+  function rng(seed) {
+    return function () {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function clamp(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function ease(t) { return 1 - Math.pow(1 - t, 3); }
+
+  var base = null, t0 = -1;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function construir() {
+    var W = cvs.clientWidth, H = cvs.clientHeight;
+    var cw = W / COLS, ch = H / FILAS;
+    var r = rng(4242);
+    /* una palabra distinta por celda, en orden de lectura */
+    var bolsa = PALABRAS.slice();
+    for (var i = bolsa.length - 1; i > 0; i--) {
+      var j = Math.floor(r() * (i + 1));
+      var tmp = bolsa[i]; bolsa[i] = bolsa[j]; bolsa[j] = tmp;
+    }
+    var celdas = [], n = COLS * FILAS;
+    for (var k = 0; k < n; k++) {
+      celdas.push({
+        col: k % COLS, fila: Math.floor(k / COLS),
+        t: (k / n) * TOTAL,
+        w: bolsa[k % bolsa.length],
+        tinta: TINTAS[Math.floor(r() * TINTAS.length)]
+      });
+    }
+    base = { W: W, H: H, cw: cw, ch: ch, celdas: celdas };
+  }
+
+  function dibujar(t) {
+    var W = base.W, H = base.H;
+    c.clearRect(0, 0, W, H);
+
+    /* la cuadrícula, siempre visible */
+    c.strokeStyle = 'rgba(255,255,255,.07)';
+    c.lineWidth = 1;
+    for (var i = 0; i <= COLS; i++) {
+      var x = Math.round(i * base.cw) + 0.5;
+      c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke();
+    }
+    for (var j = 0; j <= FILAS; j++) {
+      var y = Math.round(j * base.ch) + 0.5;
+      c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke();
+    }
+
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    base.celdas.forEach(function (ce) {
+      if (t < ce.t) return;
+      var p = ease(clamp((t - ce.t) / 420));
+      var cx = (ce.col + 0.5) * base.cw, cy = (ce.fila + 0.5) * base.ch;
+      var fs = Math.min(base.ch * 0.42, base.cw * 0.24);
+      c.font = fs.toFixed(1) + 'px ' + SERIF;
+      /* que ninguna palabra se salga de su celda */
+      var anchoMax = base.cw - 14;
+      if (c.measureText(ce.w).width > anchoMax) {
+        c.font = (fs * anchoMax / c.measureText(ce.w).width).toFixed(1) + 'px ' + SERIF;
+      }
+      c.globalAlpha = p;
+      c.fillStyle = 'rgba(' + ce.tinta + ', ' + (0.55 + p * 0.45).toFixed(3) + ')';
+      c.fillText(ce.w, cx, cy + (1 - p) * 6);
+      c.globalAlpha = 1;
+    });
+  }
+
+  function activo() { return slide.classList.contains('active') && host.classList.contains('on'); }
+
+  function loop(t) {
+    requestAnimationFrame(loop);
+    if (!base) return;
+    if (!activo()) { t0 = -1; return; }      /* al volver, empieza de nuevo */
+    if (reduce) { dibujar(TOTAL); return; }
+    if (t0 < 0) t0 = t;
+    dibujar(Math.min(TOTAL, t - t0));
+  }
+
+  function ajustar() {
+    var cssW = cvs.clientWidth, cssH = cvs.clientHeight;
+    if (!cssW || !cssH) return false;
+    var escala = cvs.getBoundingClientRect().width / cssW || 1;
+    var dpr = Math.min(3, (window.devicePixelRatio || 1) * Math.max(1, escala));
+    cvs.width = Math.round(cssW * dpr);
+    cvs.height = Math.round(cssH * dpr);
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return true;
+  }
+
+  function rebuild() {
+    if (!ajustar()) return;
+    construir(); t0 = -1;
+    dibujar(reduce ? TOTAL : 0);
+  }
+
+  rebuild();
+  window.addEventListener('resize', rebuild);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(rebuild);
+  requestAnimationFrame(loop);
 })();
 
 </script>
