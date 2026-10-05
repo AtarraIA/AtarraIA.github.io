@@ -128,28 +128,28 @@
           data-background-size='contain'
           data-background-color="black"
           data-background-video-muted
-          data-background-video="index_assets/s3_9cbbc2c5ec4058e9.mp4"
+          data-background-video="index_assets/s3_1e1cd3b867578a37.mp4"
           >
         </section>
         <section
           data-background-size='contain'
           data-background-color="black"
           data-background-video-muted
-          data-background-video="index_assets/s3_8a9927482d2d57aa.mp4"
+          data-background-video="index_assets/s3_d467698af7600757.mp4"
           >
         </section>
         <section
           data-background-size='contain'
           data-background-color="black"
           data-background-video-muted
-          data-background-video="index_assets/s3_6fd523ada84bfad0.mp4"
+          data-background-video="index_assets/s3_f4aa9d6b4bea1016.mp4"
           >
         </section>
         <section
           data-background-size='contain'
           data-background-color="black"
           data-background-video-muted
-          data-background-video="index_assets/s3_46ad1f5776e9e217.mp4"
+          data-background-video="index_assets/s3_b5b90fa69d64f139.mp4"
           >
         </section>
         <section
@@ -534,6 +534,7 @@
         preparar(v);
         v.src = blobs[url];
         v.preload = "auto";
+        v.addEventListener("canplay", reproducirActual, { once: true });
         v.load();
       }
       if (i === actual()) reproducirActual();
