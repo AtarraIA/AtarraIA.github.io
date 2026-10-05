@@ -252,9 +252,10 @@ body.fs.bar-show #bar{transform:none}
 .conv .x.vis{opacity:1}
 .conv.quieto, .conv.quieto *{transition:none!important; animation:none!important}
 
-.enc{left:0; right:0; top:52px; text-align:center; font-size:46px; color:var(--ink)}
+.enc{left:0; right:0; top:46px; text-align:center; font-size:54px; color:var(--ink)}
 .enc b{color:var(--gold); font-weight:normal}
-.rot{font-size:22px; color:var(--grey); text-align:center; white-space:nowrap}
+/* flex centra el rótulo aunque sea más ancho que su caja */
+.rot{font-size:30px; color:var(--grey); white-space:nowrap; display:flex; justify-content:center}
 
 .cel{position:absolute; box-sizing:border-box; border:1px solid #555;
   display:flex; align-items:center; justify-content:center;
@@ -274,14 +275,14 @@ body.fs.bar-show #bar{transform:none}
 .caja.vis{opacity:1; transform:none}
 
 .gato{display:block}
-.termos{display:grid; grid-template-columns:repeat(3, auto); gap:6px 34px; font-size:36px; line-height:1.3}
+.termos{display:grid; grid-template-columns:repeat(3, auto); gap:0 38px; font-size:42px; line-height:1.22}
 .termo{opacity:0; transform:translateY(10px); filter:blur(4px);
   transition:opacity .35s ease, transform .35s ease, filter .35s ease}
 .termo.vis{opacity:1; transform:none; filter:none}
 .neg{color:var(--blue)} .pos{color:var(--gold)} .cero{color:var(--grey)}
 .raya{height:2px; background:var(--grey); transform:scaleX(0); transform-origin:left center; transition:transform .4s ease}
 .raya.vis{transform:scaleX(1)}
-.suma{font-size:52px; text-align:center; opacity:0; transition:opacity .45s ease}
+.suma{font-size:60px; line-height:1.2; text-align:center; opacity:0; transition:opacity .45s ease}
 .suma.vis{opacity:1}
 
 .rev{position:absolute; overflow:hidden; height:0}
@@ -680,7 +681,8 @@ body.fs.bar-show #bar{transform:none}
     var d = document.createElement('div');
     d.className = clase;
     if (css) for (var k in css) d.style[k] = typeof css[k] === 'number' ? css[k] + 'px' : css[k];
-    if (html != null) d.innerHTML = html;
+    /* los rótulos van en un span: dentro del flex se perderían los espacios */
+    if (html != null) d.innerHTML = / rot( |$)/.test(' ' + clase) ? '<span>' + html + '</span>' : html;
     padre.appendChild(d);
     return d;
   }
@@ -770,7 +772,7 @@ body.fs.bar-show #bar{transform:none}
     var rot = div(host, 'x rot', { left: 0, right: 0, top: y + w * GATO_H / GATO_W + 22 },
       'Imagen de entrada &nbsp;(H × W × 3)');
     var caja = cajaParche(host, x, y, w);
-    var nota = div(host, 'x rot', { left: 0, right: 0, top: 70, fontSize: 30, color: 'var(--ink)' },
+    var nota = div(host, 'x rot', { left: 0, right: 0, top: 56, fontSize: 40, color: 'var(--ink)' },
       'Vamos a mirar de cerca este parche de <b style="color:var(--gold);font-weight:normal">7 × 7</b> píxeles');
     return {
       reset: function () { [gato, rot, nota].forEach(function (e) { ver(e, false); }); ver(caja, false); },
@@ -793,21 +795,21 @@ body.fs.bar-show #bar{transform:none}
     var PC = 54, PX = 350, PY = 178;
     var parche = [];
     for (var i = 0; i < 7; i++) for (var j = 0; j < 7; j++) {
-      var c = celdaGris(host, PARCHE[i][j], PX + j * PC, PY + i * PC, PC, 17);
+      var c = celdaGris(host, PARCHE[i][j], PX + j * PC, PY + i * PC, PC, 22);
       c.style.transitionDelay = ((i * 7 + j) * 16) + 'ms';
       parche.push(c);
     }
-    var rotP = div(host, 'x rot', { left: PX, width: 7 * PC, top: PY + 7 * PC + 12 }, 'Parche de imagen &nbsp;(7 × 7)');
+    var rotP = div(host, 'x rot', { left: PX, width: 7 * PC, top: PY + 7 * PC + 14 }, 'Parche de imagen &nbsp;(7 × 7)');
 
     var KC = 66, KX = 940 - 1.5 * KC, KY = 214;
-    var kernel = rejillaKernel(host, SOBEL_X, KX, KY, KC, 24);
-    var rotK = div(host, 'x rot', { left: KX - 60, width: 3 * KC + 120, top: KY - 40 }, 'Kernel Sobel-X');
+    var kernel = rejillaKernel(host, SOBEL_X, KX, KY, KC, 30);
+    var rotK = div(host, 'x rot', { left: KX - 60, width: 3 * KC + 120, top: KY - 48 }, 'Kernel Sobel-X');
 
     var MC = 54, MX = 1200, MY = PY + 3.5 * PC - 2.5 * MC;
     var vacias = [], llenas = [];
     for (i = 0; i < 5; i++) for (j = 0; j < 5; j++) {
       vacias.push(div(host, 'cel vacia', { left: MX + j * MC, top: MY + i * MC, width: MC, height: MC }));
-      llenas.push(celdaMapa(host, MAPA[i][j], MX + j * MC, MY + i * MC, MC, 15));
+      llenas.push(celdaMapa(host, MAPA[i][j], MX + j * MC, MY + i * MC, MC, 19));
     }
     var rotM = div(host, 'x rot', { left: MX - 60, width: 5 * MC + 120, top: MY + 5 * MC + 12 }, 'Mapa de características &nbsp;(5 × 5)');
 
@@ -815,7 +817,7 @@ body.fs.bar-show #bar{transform:none}
     var salida = div(host, 'caja', { left: MX, top: MY, width: MC, height: MC, zIndex: 4 });
 
     /* la cuenta, término a término */
-    var cuenta = div(host, 'x', { left: 560, width: 760, top: 600 });
+    var cuenta = div(host, 'x', { left: 720, width: 840, top: 622 });
     var termos = div(cuenta, 'termos');
     termos.style.justifyContent = 'center';
     var tms = [];
@@ -824,7 +826,7 @@ body.fs.bar-show #bar{transform:none}
       tms.push(div(termos, 'termo ' + (w > 0 ? 'pos' : w < 0 ? 'neg' : 'cero'), null,
         (k ? '+ ' : '&nbsp;&nbsp;') + '(' + signo(w) + ')(' + p + ')'));
     }
-    var raya = div(cuenta, 'raya', { margin: '14px 40px 10px' });
+    var raya = div(cuenta, 'raya', { margin: '10px 40px 6px' });
     var suma = div(cuenta, 'suma neg', null, '= ' + signo(MAPA[0][0]));
     cuenta.classList.add('vis');
 
@@ -897,8 +899,8 @@ body.fs.bar-show #bar{transform:none}
     var enc4 = div(host, 'x enc', null, '<b>Paso 4.</b>&nbsp; Aplica Sobel-Y a toda la imagen');
 
     var KC = 52, KX = 70, KY = 196;
-    var kernel = rejillaKernel(host, SOBEL_X, KX, KY, KC, 20);
-    var rotK = div(host, 'x rot', { left: KX - 20, width: 3 * KC + 40, top: KY - 38, fontSize: 20 }, 'Kernel Sobel-X');
+    var kernel = rejillaKernel(host, SOBEL_X, KX, KY, KC, 25);
+    var rotK = div(host, 'x rot', { left: KX - 20, width: 3 * KC + 40, top: KY - 44, fontSize: 26 }, 'Kernel Sobel-X');
 
     var W = 600, H = W * GATO_H / GATO_W, GX = 290, RX = 960, Y = 250;
     var gato = imagenGato(host, GX, Y, W);
@@ -919,7 +921,7 @@ body.fs.bar-show #bar{transform:none}
     var mx = lienzo(), my = lienzo();
     mx.rev.classList.add('miniatura');
     var TS = 200 / W;   /* la miniatura de Sobel-X, arriba a la derecha */
-    var rotMini = div(host, 'x rot', { left: 1350, width: 200, top: 40 + H * TS + 8, fontSize: 18 }, 'Sobel-X');
+    var rotMini = div(host, 'x rot', { left: 1350, width: 200, top: 40 + H * TS + 6, fontSize: 24 }, 'Sobel-X');
 
     var img = new Image();
     img.onload = function () {
