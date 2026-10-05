@@ -22,14 +22,14 @@
           data-background-size='contain'
           data-background-color="black"
           data-background-video-muted
-          data-background-video="index_assets/s0_1c9e8091e528efbe.mp4"
+          data-background-video="index_assets/s0_727d3ca081b8c364.mp4"
           >
         </section>
         <section
           data-background-size='contain'
           data-background-color="black"
           data-background-video-muted
-          data-background-video="index_assets/s0_32c2bf15a81168d9.mp4"
+          data-background-video="index_assets/s0_e5358d45ad6eb21e.mp4"
           data-background-video-loop
           >
         </section>
@@ -58,7 +58,7 @@
           data-background-size='contain'
           data-background-color="black"
           data-background-video-muted
-          data-background-video="index_assets/s1_6be7558e1e0dbf9e.mp4"
+          data-background-video="index_assets/s1_4c354e2e6069b41a.mp4"
           >
         </section>
         <section
@@ -142,14 +142,14 @@
           data-background-size='contain'
           data-background-color="black"
           data-background-video-muted
-          data-background-video="index_assets/s3_f4aa9d6b4bea1016.mp4"
+          data-background-video="index_assets/s3_20f58fcba5fac245.mp4"
           >
         </section>
         <section
           data-background-size='contain'
           data-background-color="black"
           data-background-video-muted
-          data-background-video="index_assets/s3_b5b90fa69d64f139.mp4"
+          data-background-video="index_assets/s3_5828b847bba0c201.mp4"
           >
         </section>
         <section
@@ -248,6 +248,13 @@
           data-background-color="black"
           data-background-video-muted
           data-background-video="index_assets/s7_b3314643c2f79250.mp4"
+          >
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="black"
+          data-background-video-muted
+          data-background-video="index_assets/s8_f1365f50c0500f2c.mp4"
           >
         </section>
       </div>
@@ -478,123 +485,6 @@
       );
     </script>
   <script>
-// Arreglo para los videos de fondo de reveal.js.
-//
-// reveal.js mantiene cargados ~7 <video> alrededor de la diapositiva actual y
-// cada uno deja abierta su descarga en streaming. Firefox deja de abrir
-// descargas nuevas y, desde la ~8.ª diapositiva, los videos se quedan en
-// readyState 0: la diapositiva queda en negro.
-//
-// Solución: cada video se descarga entero una sola vez (fetch → blob) en una
-// cola con prioridad para la diapositiva actual y las siguientes; los <video>
-// solo reproducen desde memoria y nunca abren su propia descarga.
-(function () {
-  var PARALELO = 2;
-  var ADELANTE = 3;  // diapositivas siguientes que se priorizan
-
-  var secciones = Array.prototype.slice.call(
-    document.querySelectorAll(".reveal .slides > section"));
-  var urlDe = secciones.map(function (s) {
-    return s.getAttribute("data-background-video");
-  });
-
-  var blobs = {};      // url original -> blob: url
-  var enCurso = {};
-  var cola = [];
-  var activos = 0;
-
-  function videoDe(i) {
-    var bg = Reveal.getSlideBackground(secciones[i]);
-    return bg && bg.querySelector("video");
-  }
-
-  function actual() {
-    return secciones.indexOf(Reveal.getCurrentSlide());
-  }
-
-  function preparar(v) {
-    if (v.dataset.arreglado) return;
-    v.dataset.arreglado = "1";
-    v.muted = true;            // los videos no tienen audio; evita bloqueos de autoplay
-    v.setAttribute("playsinline", "");
-    var fuente = v.querySelector("source");
-    var url = fuente && fuente.getAttribute("src");
-    if (url && blobs[url]) {
-      v.src = blobs[url];
-    } else {
-      v.preload = "none";      // no abrir descargas propias: espera al blob
-    }
-  }
-
-  function aplicar(url) {
-    for (var i = 0; i < secciones.length; i++) {
-      if (urlDe[i] !== url) continue;
-      var v = videoDe(i);
-      if (v && v.src !== blobs[url]) {
-        preparar(v);
-        v.src = blobs[url];
-        v.preload = "auto";
-        v.addEventListener("canplay", reproducirActual, { once: true });
-        v.load();
-      }
-      if (i === actual()) reproducirActual();
-    }
-  }
-
-  function bombear() {
-    while (activos < PARALELO && cola.length) {
-      var url = cola.shift();
-      if (blobs[url] || enCurso[url]) continue;
-      enCurso[url] = true;
-      activos++;
-      (function (url) {
-        fetch(url)
-          .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
-          .then(function (b) { blobs[url] = URL.createObjectURL(b); aplicar(url); })
-          .catch(function () { /* se reintenta al volver a la diapositiva */ })
-          .then(function () { delete enCurso[url]; activos--; bombear(); });
-      })(url);
-    }
-  }
-
-  function priorizar() {
-    var i = Math.max(0, actual());
-    var primero = [];
-    for (var k = i; k < Math.min(secciones.length, i + 1 + ADELANTE); k++) {
-      if (urlDe[k]) primero.push(urlDe[k]);
-    }
-    cola = primero.concat(cola.filter(function (u) { return primero.indexOf(u) < 0; }));
-    bombear();
-  }
-
-  function reproducirActual() {
-    var v = videoDe(actual());
-    if (!v) return;
-    preparar(v);
-    if (v.readyState >= 2 && (v.paused || v.ended)) {
-      v.currentTime = 0;
-      v.play().catch(function () {});
-    }
-  }
-
-  new MutationObserver(function (ms) {
-    ms.forEach(function (m) {
-      m.addedNodes.forEach(function (n) {
-        if (n.tagName === "VIDEO") preparar(n);
-        else if (n.querySelectorAll) n.querySelectorAll("video").forEach(preparar);
-      });
-    });
-  }).observe(document.querySelector(".reveal") || document.body, { childList: true, subtree: true });
-  document.querySelectorAll(".reveal .backgrounds video").forEach(preparar);
-
-  // todo el deck en orden, empezando por donde se abrió
-  cola = urlDe.filter(Boolean);
-  Reveal.on("ready", function () { priorizar(); reproducirActual(); });
-  Reveal.on("slidechanged", function () { priorizar(); setTimeout(reproducirActual, 60); });
-  if (Reveal.isReady()) { priorizar(); reproducirActual(); }
-})();
-</script>
-<script>
 // Arreglo para los videos de fondo de reveal.js.
 //
 // reveal.js mantiene cargados ~7 <video> alrededor de la diapositiva actual y
