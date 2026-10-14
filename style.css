@@ -538,6 +538,28 @@ footer a:hover { text-decoration: underline; }
   color: var(--gold);
 }
 
+/* Botón EN/ES: como los enlaces del menú, pero con borde */
+.lang-toggle {
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #000;
+  background: transparent;
+  border: 1.5px solid #000;
+  border-radius: 3px;
+  padding: 0.35rem 0.6rem;
+  margin-left: 0.4rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.lang-toggle:hover,
+.lang-toggle:focus-visible {
+  background: #000;
+  color: var(--gold);
+  outline: none;
+}
+
 /* push hero content below fixed nav */
 .hero { padding-top: calc(4rem + 56px); }
 
@@ -684,6 +706,7 @@ footer a:hover { text-decoration: underline; }
     letter-spacing: 0.08em;
     padding: 0.3rem 0.5rem;
   }
+  .lang-toggle { font-size: 0.72rem; padding: 0.2rem 0.45rem; margin-left: 0; }
 
   .hero {
     min-height: 70vh;

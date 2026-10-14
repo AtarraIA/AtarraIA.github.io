@@ -16,11 +16,12 @@
     <div class="nav-inner">
       <a class="nav-logo" href="#inicio">ATARRA<span class="gold">IA</span></a>
       <ul class="nav-links">
-        <li><a href="#inicio">inicio</a></li>
+        <li><a href="#inicio" data-txt="nav.inicio">inicio</a></li>
         <li><a href="#semestre" data-txt="nav.semestre">2026-2</a></li>
-        <li><a href="#cronograma">cronograma</a></li>
+        <li><a href="#cronograma" data-txt="nav.cronograma">cronograma</a></li>
         <li><a href="#presentaciones" data-txt="nav.presentaciones">presentaciones</a></li>
-        <li><a href="#playgrounds">playgrounds</a></li>
+        <li><a href="#playgrounds" data-txt="nav.playgrounds">playgrounds</a></li>
+        <li><button type="button" class="lang-toggle" id="lang-toggle" lang="en" aria-label="Read this page in English">EN</button></li>
       </ul>
     </div>
   </nav>
@@ -32,7 +33,7 @@
       <h1 class="hero-title">
         ATARRA<span class="gold">IA</span>
       </h1>
-      <div class="hero-subtitle">Semillero de Redes Neuronales</div>
+      <div class="hero-subtitle" data-txt="hero.subtitulo">Semillero de Redes Neuronales</div>
     </div>
   </header>
 
@@ -225,21 +226,21 @@
 
     <a class="card" href="https://atarraIA.github.io/convolutional-filters-playground/" target="_blank" rel="noopener noreferrer">
       <div class="card-body">
-        <h3 class="card-title">Filtros convolucionales</h3>
-        <p class="card-desc">Explora de forma interactiva cómo los filtros convolucionales transforman imágenes.</p>
+        <h3 class="card-title" data-txt="playground.filtros.titulo">Filtros convolucionales</h3>
+        <p class="card-desc" data-txt="playground.filtros.desc">Explora de forma interactiva cómo los filtros convolucionales transforman imágenes.</p>
       </div>
       <div class="card-footer">
-        <span class="card-link">Abrir playground →</span>
+        <span class="card-link" data-txt="playground.abrir">Abrir playground →</span>
       </div>
     </a>
 
     <a class="card" href="https://atarraIA.github.io/feedforwardnn-playground/" target="_blank" rel="noopener noreferrer">
       <div class="card-body">
-        <h3 class="card-title">Redes Neuronales feedforward</h3>
-        <p class="card-desc">Visualiza como las redes neuronales feedforward transforman el espacio.</p>
+        <h3 class="card-title" data-txt="playground.feedforward.titulo">Redes Neuronales feedforward</h3>
+        <p class="card-desc" data-txt="playground.feedforward.desc">Visualiza como las redes neuronales feedforward transforman el espacio.</p>
       </div>
       <div class="card-footer">
-        <span class="card-link">Abrir playground →</span>
+        <span class="card-link" data-txt="playground.abrir">Abrir playground →</span>
       </div>
     </a>
 
@@ -509,12 +510,14 @@
       }
 
       let REFRANES = parseRefranes(REFRANES_HTML.join("\n"));
+      let ETIQUETA = "SIGUIENTE PALABRA";
 
-      /* contenido.txt puede reemplazar la lista */
+      /* contenido.txt puede reemplazar la lista; sin texto vuelve a la de arriba */
       window.setRefranes = function (texto) {
-        const nuevos = parseRefranes(texto);
-        if (nuevos.length) { REFRANES = nuevos; idx = 0; elapsed = 0; construirEscena(); }
+        const nuevos = parseRefranes(texto || REFRANES_HTML.join("\n"));
+        if (nuevos.length) { REFRANES = nuevos; idx = 0; elapsed = 0; if (base) { construirEscena(); dibujar(0); } }
       };
+      window.setEtiquetaPrediccion = function (texto) { ETIQUETA = texto || "SIGUIENTE PALABRA"; };
 
       /* ── Escena ─────────────────────────────────────────────────────
          "base" (la red y las cajas del diseño) se construye una sola vez
@@ -824,7 +827,7 @@
         c.textAlign = "left";
         c.font = (base.outFs > 25 ? 10 : 9) + "px 'JetBrains Mono', monospace";
         c.fillStyle = "rgba(" + DIM + ", 0.75)";
-        c.fillText("SIGUIENTE PALABRA", b.x, b.y + 6);
+        c.fillText(ETIQUETA, b.x, b.y + 6);
 
         let y = b.y + 24 + base.outFs / 2;
         scene.cand.forEach((cd, i) => {
@@ -1011,16 +1014,66 @@
       });
     }
 
-    async function loadContenido() {
-      try {
-        const res = await fetch('contenido.txt', { cache: 'no-store' });
-        if (!res.ok) return;
-        CONTENIDO = parseContenido(await res.text());
-        applyContenido(CONTENIDO);
-      } catch (e) {
-        /* se conservan los textos que ya están en el HTML */
+    /* ── Idioma ───────────────────────────────────────────────────────
+       contenido.txt tiene los textos en español y contenido.en.txt los
+       mismos bloques en inglés. El botón EN/ES cambia entre los dos; la
+       elección se recuerda, y ?lang=en abre la página en inglés.
+       Antes de aplicar un idioma se restauran los textos del HTML, así
+       un bloque que falte en un archivo no deja texto del otro idioma.  */
+    const TEXTOS_HTML = new Map();
+    document.querySelectorAll('[data-txt], [data-txt-parrafos], [data-txt-lista]')
+      .forEach(el => TEXTOS_HTML.set(el, el.innerHTML));
+    const TITULO_HTML = document.title;
+    const ARCHIVOS = { es: 'contenido.txt', en: 'contenido.en.txt' };
+    const CARGADOS = {};
+    let IDIOMA = 'es';
+
+    async function leerContenido(idioma) {
+      if (!CARGADOS[idioma]) {
+        try {
+          const res = await fetch(ARCHIVOS[idioma], { cache: 'no-store' });
+          CARGADOS[idioma] = res.ok ? parseContenido(await res.text()) : {};
+        } catch (e) {
+          CARGADOS[idioma] = {};   /* se conservan los textos que ya están en el HTML */
+        }
       }
+      return CARGADOS[idioma];
     }
+
+    async function setIdioma(idioma) {
+      CONTENIDO = await leerContenido(idioma);
+      IDIOMA = idioma;
+      TEXTOS_HTML.forEach((html, el) => { el.innerHTML = html; });
+      applyContenido(CONTENIDO);
+      if (!CONTENIDO.refranes && window.setRefranes) window.setRefranes(null);
+      if (window.setEtiquetaPrediccion) window.setEtiquetaPrediccion(CONTENIDO['texto.siguiente']);
+      document.documentElement.lang = idioma;
+      document.title = CONTENIDO['pagina.titulo'] || TITULO_HTML;
+
+      const boton = document.getElementById('lang-toggle');
+      const otro = idioma === 'en' ? 'es' : 'en';
+      boton.textContent = otro.toUpperCase();
+      boton.lang = otro;
+      boton.setAttribute('aria-label', otro === 'en' ? 'Read this page in English' : 'Ver la página en español');
+
+      CRONOGRAMA_CARGADO.forEach(args => renderSchedule(...args));
+      if (CRONOGRAMA_VIVO !== null) setSourceNote(CRONOGRAMA_VIVO);
+    }
+
+    function idiomaInicial() {
+      const pedido = new URLSearchParams(location.search).get('lang');
+      if (pedido in ARCHIVOS) return pedido;
+      try { return localStorage.getItem('atarraia-idioma') === 'en' ? 'en' : 'es'; } catch (e) { return 'es'; }
+    }
+
+    document.getElementById('lang-toggle').addEventListener('click', () => {
+      const nuevo = IDIOMA === 'en' ? 'es' : 'en';
+      try { localStorage.setItem('atarraia-idioma', nuevo); } catch (e) {}
+      const url = new URL(location.href);
+      url.searchParams.delete('lang');
+      history.replaceState(null, '', url);
+      setIdioma(nuevo);
+    });
 
     /* ── Load Cronograma ─────────────────────────────────────────────
        Fuente en vivo: la hoja de cálculo de Google. Así el cronograma de
@@ -1097,6 +1150,10 @@
       };
     }
 
+    const porDefinir = () => CONTENIDO['cronograma.por.definir'] || 'Por definir';
+    const CRONOGRAMA_CARGADO = [];   // [rows, containerId, openFirst], para redibujar al cambiar de idioma
+    let CRONOGRAMA_VIVO = null;
+
     function renderSchedule(rows, containerId, openFirst) {
       const container = document.getElementById(containerId);
       if (!container) return;
@@ -1109,7 +1166,7 @@
         if (!item.fecha) return;
         /* Blank section cells continue the previous section. */
         if (item.seccion) lastSeccion = item.seccion;
-        const seccion = lastSeccion || 'Por definir';
+        const seccion = lastSeccion || porDefinir();
         if (!sections.has(seccion)) sections.set(seccion, []);
         sections.get(seccion).push(item);
       });
@@ -1123,14 +1180,14 @@
         first = false;
 
         const tableRows = items.map(item => {
-          const tema = item.tema || 'Por definir';
+          const tema = item.tema || porDefinir();
           const temaClass = item.tema ? 'col-topic' : 'col-topic pending';
           const sesion = item.sesion ? `<span class="session-no">${item.sesion}</span> ` : '';
           return `<tr>
                 <td class="${temaClass}">${sesion}${tema}</td>
                 <td class="col-date">${item.fecha}</td>
                 <td class="col-type ${typeClass(item.tipo)}">${item.tipo || '—'}</td>
-                <td class="col-speaker">${item.expositor || 'Por definir'}</td>
+                <td class="col-speaker">${item.expositor || porDefinir()}</td>
               </tr>`;
         }).join('');
 
@@ -1170,14 +1227,18 @@
           allLive = false;
           rows = await fetchBackupRows(cfg.sheet);
         }
-        if (rows) renderSchedule(rows, cfg.container, cfg.openFirst);
+        if (rows) {
+          CRONOGRAMA_CARGADO.push([rows, cfg.container, cfg.openFirst]);
+          renderSchedule(rows, cfg.container, cfg.openFirst);
+        }
       }));
 
+      CRONOGRAMA_VIVO = allLive;
       setSourceNote(allLive);
     }
 
     (async () => {
-      await loadContenido();
+      await setIdioma(idiomaInicial());
       await loadCronograma();
     })();
   </script>

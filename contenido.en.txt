@@ -1,0 +1,242 @@
+# ══════════════════════════════════════════════════════════════════
+#  TEXTOS DE LA PÁGINA DE ATARRAIA, EN INGLÉS
+#
+#  Los mismos bloques de contenido.txt, traducidos. La página los usa
+#  cuando alguien presiona el botón EN (o abre la página con ?lang=en).
+#  Si falta un bloque aquí, la página muestra el texto del HTML, que
+#  está en español.
+#
+#  Se escribe igual que en contenido.txt:
+#    *texto*            resalta en dorado
+#    **texto**          resalta en dorado grande y en negrita
+#    [texto](enlace)    crea un enlace
+#    - item             cada línea con guion es un elemento de lista
+#    Una línea en blanco separa párrafos.
+# ══════════════════════════════════════════════════════════════════
+
+[pagina.titulo]
+AtarraIA – Neural Networks Research Group
+
+
+# ── Menú de arriba ────────────────────────────────────────────────
+
+[nav.inicio]
+home
+
+[nav.semestre]
+2026-2
+
+[nav.cronograma]
+schedule
+
+[nav.presentaciones]
+talks
+
+[nav.playgrounds]
+playgrounds
+
+[hero.subtitulo]
+Neural Networks Research Group
+
+
+# ── Sobre nosotros ────────────────────────────────────────────────
+
+[titulo.sobre]
+about *u*s
+
+[texto.sobre]
+AtarraIA is a meeting point for people interested in neural networks, deep learning and artificial intelligence. It is run mainly by Computer Science, Mathematics and Systems Engineering students at the Universidad Nacional de Colombia, Medellín campus. We take a theoretical and practical approach. Every week we meet to learn about deep learning.
+
+
+# ── El semestre actual ────────────────────────────────────────────
+
+[titulo.semestre]
+2026-*2*
+
+[texto.semestre]
+This semester we dive into the problem of language, and we will learn how to make computers talk with us using LLMs. We will understand in depth how modern AI such as ChatGPT, Claude and Gemini works.
+
+Some of the topics we will cover:
+
+[temas]
+- Tokenization
+- N-grams
+- Embeddings
+- Attention
+- Transformers
+- Interpretability
+
+[texto.inferencia]
+This is exactly what a language model does: it reads the text, turns it into tokens and computes which word comes next.
+
+[texto.siguiente]
+NEXT WORD
+
+# Refranes de la animación, en inglés. Mismo formato que en contenido.txt:
+#   texto del refrán -> palabra que predice | otra opción, otra opción
+[refranes]
+- The early bird catches the -> worm | train, sun
+- Don't count your chickens before they -> hatch | grow, sleep
+- A picture is worth a thousand -> words | dollars, pictures
+- Actions speak louder than -> words | voices, thunder
+- When in Rome, do as the Romans -> do | say, eat
+- Curiosity killed the -> cat | dog, mouse
+- Don't judge a book by its -> cover | title, author
+- An apple a day keeps the doctor -> away | happy, busy
+- Better late than -> never | early, sorry
+- Every cloud has a silver -> lining | edge, moon
+- Birds of a feather flock -> together | south, apart
+- Practice makes -> perfect | progress, sense
+- You can't teach an old dog new -> tricks | words, games
+- The pen is mightier than the -> sword | pencil, word
+- Rome wasn't built in a -> day | week, year
+- Tell me who your friends are and I'll tell you who you -> are | were, love
+- Barking dogs seldom -> bite | sleep, run
+- All that glitters is not -> gold | silver, true
+
+[texto.inicio]
+Sessions start on **Monday, September 7 at 10am** in room **43-110**.
+
+
+# ── Requisitos ────────────────────────────────────────────────────
+
+[requisitos.minimos.titulo]
+Minimum requirements
+
+[requisitos.minimos]
+- Eagerness to learn
+
+[requisitos.recomendados.titulo]
+Recommended background
+
+[requisitos.recomendados]
+- Linear algebra
+- Differential calculus
+
+[requisitos.nota]
+Everyone is welcome!
+
+
+# ── Horario y enlaces ─────────────────────────────────────────────
+
+[info.lineas]
+- *Schedule:* Mondays at 10:00am
+- *Room:* 43-110
+- *First session:* Monday, September 7
+
+[info.enlaces]
+- [WhatsApp group](https://chat.whatsapp.com/)
+- [Session videos](https://youtube.com/playlist?list=PLO-NKK0trBZFwlBqvjj8fpZH4cNpfTKaZ&si=HoBaVFVBO-KCLKRv)
+
+
+# ── Cronograma ────────────────────────────────────────────────────
+
+[cronograma.titulo]
+Schedule
+
+[cronograma.subtitulo]
+Semester 2026-2
+
+[cronograma.intro]
+The goal of this semester is to understand in depth how to model language mathematically and computationally. We will focus on the models known as LLMs (Large Language Models), modern language models built on the deep learning paradigm. There are no prerequisites to attend, and you don't need to have come last semester. [Click here for this semester's textbook](https://web.stanford.edu/~jurafsky/slp3/).
+
+Sessions are on **Mondays at 10am in room 43-110**, starting September 7. The schedule is **tentative** and may change as we see fit. You can also see it in the [schedule spreadsheet](https://docs.google.com/spreadsheets/d/1eosmXTDAsBMHL3bpT-_GoqDiT-bLCEr47ngbs_K0CyA/edit?usp=sharing#gid=333864661). The sessions themselves are in Spanish.
+
+[cronograma.nota]
+* The schedule is tentative and may change according to the group's needs.
+
+[cronograma.fuente.viva]
+Synced with the schedule spreadsheet.
+
+[cronograma.fuente.guardada]
+Couldn't reach the spreadsheet; showing the last saved version.
+
+[cronograma.por.definir]
+To be decided
+
+
+# ── Semestres anteriores ──────────────────────────────────────────
+
+[archivo.titulo]
+Previous semesters
+
+[archivo.nota]
+*2026-1 —* On the theory side, the main goal of that semester was to understand three neural network architectures in depth: feedforward, convolutional and transformers. On the practical side, the goal was to present implementations, pretrained models, use cases, projects, agents and multi-agent systems. The schedule followed the sections of the book [Deep Learning Foundations and Concepts](https://www.bishopbook.com/).
+
+
+# ── Presentaciones ────────────────────────────────────────────────
+
+[titulo.presentaciones]
+talks
+
+[presentacion.abrir]
+Open talk →
+
+[presentacion.intro.titulo]
+Introduction to the group
+
+[presentacion.intro.desc]
+What AtarraIA is: the paradigm shift of neural networks, their applications, our sessions and events. Animated with manim; use the arrow keys to advance. In Spanish.
+
+[presentacion.convolucion.titulo]
+Convolution
+
+[presentacion.convolucion.desc]
+How a kernel slides over an image: the dot product in a window, the feature map, and the Sobel-X and Sobel-Y filters applied to a real photo. Animated with manim; use the arrow keys to advance. In Spanish.
+
+[presentacion.lenguaje.titulo]
+We need to talk
+
+[presentacion.lenguaje.desc]
+Language and LLM seminar: from ELIZA to agents, with an animation for each idea. Use the bar at the bottom or the arrow keys to advance. In Spanish.
+
+[presentacion.tokenizacion.titulo]
+Tokenization
+
+[presentacion.tokenizacion.desc]
+How text is split into tokens: morphemes, characters, ASCII, Unicode, UTF-8 and the BPE algorithm, and why an LLM struggles to count the r's in strawberry. In Spanish.
+
+[presentacion.entropia.titulo]
+Information, Entropy & Language
+
+[presentacion.entropia.desc]
+From the Voyager Golden Record and the Arecibo message to Zipf's law and Shannon's entropy orders: how to tell whether a pulsar, a radio burst or a whale song has the structure of a language. In Spanish.
+
+[presentacion.ngramas.titulo]
+N-grams
+
+[presentacion.ngramas.desc]
+N-gram language models: language as a stochastic process, the Markov assumption, estimating probabilities by counting, perplexity and smoothing, with a bigram playground and a lab for generating text. In Spanish.
+
+[presentacion.coocurrencias.titulo]
+You shall know a word by the company it keeps
+
+[presentacion.coocurrencias.desc]
+Embeddings by counting neighbors: the vocabulary of a real corpus (UNAL chats, Wikipedia, subtitles, Reddit and Colombian literature), the co-occurrence matrix column by column, the cosine similarity between two words, and the columns projected with PCA and UMAP. In Spanish.
+
+
+# ── Playgrounds ───────────────────────────────────────────────────
+
+[titulo.playgrounds]
+playgrounds
+
+[playground.abrir]
+Open playground →
+
+[playground.filtros.titulo]
+Convolutional filters
+
+[playground.filtros.desc]
+Explore interactively how convolutional filters transform images.
+
+[playground.feedforward.titulo]
+Feedforward neural networks
+
+[playground.feedforward.desc]
+See how feedforward neural networks transform space.
+
+
+# ── Pie de página ─────────────────────────────────────────────────
+
+[footer]
+AtarraIA – Neural Networks Research Group · Universidad Nacional de Colombia, Medellín campus · 2026-2
