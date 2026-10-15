@@ -1017,7 +1017,8 @@
     /* ── Idioma ───────────────────────────────────────────────────────
        contenido.txt tiene los textos en español y contenido.en.txt los
        mismos bloques en inglés. El botón EN/ES cambia entre los dos; la
-       elección se recuerda, y ?lang=en abre la página en inglés.
+       elección se recuerda y queda en la dirección (?lang=en), así el enlace
+       en inglés se puede copiar.
        Antes de aplicar un idioma se restauran los textos del HTML, así
        un bloque que falte en un archivo no deja texto del otro idioma.  */
     const TEXTOS_HTML = new Map();
@@ -1070,7 +1071,7 @@
       const nuevo = IDIOMA === 'en' ? 'es' : 'en';
       try { localStorage.setItem('atarraia-idioma', nuevo); } catch (e) {}
       const url = new URL(location.href);
-      url.searchParams.delete('lang');
+      if (nuevo === 'en') url.searchParams.set('lang', 'en'); else url.searchParams.delete('lang');
       history.replaceState(null, '', url);
       setIdioma(nuevo);
     });
