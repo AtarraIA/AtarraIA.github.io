@@ -209,7 +209,7 @@ N-grams
 N-gram language models: language as a stochastic process, the Markov assumption, estimating probabilities by counting, perplexity and smoothing, with a bigram playground and a lab for generating text. In Spanish.
 
 [presentacion.coocurrencias.titulo]
-You shall know a word by the company it keeps
+Embeddings
 
 [presentacion.coocurrencias.desc]
 Embeddings by counting neighbors: the vocabulary of a real corpus (UNAL chats, Wikipedia, subtitles, Reddit and Colombian literature), the co-occurrence matrix column by column, the cosine similarity between two words, and the columns projected with PCA and UMAP. In Spanish.
