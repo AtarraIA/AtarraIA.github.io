@@ -516,7 +516,7 @@ body.fs.bar-show #bar{transform:none}
 .reglas-caja.chica{width:540px; height:600px; flex:none; display:flex; flex-direction:column; padding:44px 26px 16px}
 .reglas-caja.chica .reglas{font-size:26px; flex:1 1 auto; min-height:0}
 .rasgos-fl{width:110px; flex:none; transition:opacity .5s ease}
-.rasgos-tab{border-collapse:collapse; font-size:34px; text-align:left}
+.rasgos-tab{border-collapse:separate; border-spacing:0; font-size:34px; text-align:left}
 .rasgos-tab th{font-weight:normal; color:#ddd; padding:0 22px 8px 0; border-bottom:1.5px solid #ddd}
 .rasgos-tab td{padding:10px 22px 10px 0; vertical-align:middle; white-space:nowrap}
 .rasgos-tab td:first-child{color:var(--blue); text-shadow:0 0 10px var(--blue)}
@@ -544,6 +544,76 @@ body.fs.bar-show #bar{transform:none}
 .resena-tab .v5{color:#58c4dd; text-shadow:0 0 12px #58c4dd}
 .slide:has(.m-x6.on) .hx6{border-color:#58c4dd; background:#58c4dd22; color:#58c4dd; text-shadow:0 0 12px #58c4dd}
 .resena-tab .v6{color:#58c4dd; text-shadow:0 0 12px #58c4dd}
+/* de x a rasgos */
+.feat-sl{gap:60px; text-shadow:0 0 12px rgba(255,255,255,.3)}
+.feat-fila{display:flex; align-items:center; gap:34px; transition:opacity .5s ease}
+.feat-fila .el{transition:opacity .5s ease}
+.feat-fila > .clf-fl{flex:none; width:110px}
+.f-x{display:flex; flex-direction:column; align-items:center; color:var(--blue); text-shadow:0 0 14px var(--blue)}
+.f-x i{font-size:90px; line-height:1}
+.f-x span{font-size:28px; font-style:italic}
+.f-conv{display:flex; flex-direction:column; align-items:center; gap:10px; white-space:nowrap; font-size:26px; font-style:italic; color:#ddd}
+.f-conv .clf-fl{width:220px}
+.clf-fl.mapsto::before{content:""; position:absolute; left:0; top:-10px; width:2.5px; height:22px; background:#ddd}
+.fvecs{display:flex; gap:12px}
+.fvec{display:inline-flex; flex-direction:column; align-items:center; padding:6px 30px; position:relative; font-size:40px; line-height:1.25;
+  color:var(--blue); text-shadow:0 0 12px var(--blue)}
+.fvec::before, .fvec::after{content:""; position:absolute; top:0; bottom:0; width:9px; border:2.5px solid currentColor; box-shadow:0 0 8px currentColor}
+.fvec::before{left:0; border-right:0} .fvec::after{right:0; border-left:0}
+.fvec.cw, .cw{color:var(--orange); text-shadow:0 0 12px var(--orange)}
+.cx{color:var(--blue); text-shadow:0 0 12px var(--blue)}
+.fvec.cw.el{transition:opacity .5s ease, max-width .7s ease, padding .7s ease, margin .7s ease; max-width:200px; overflow:visible}
+.fvec.cw.el:not(.on){max-width:0; padding-left:0; padding-right:0; margin-left:-12px}
+.f-res{display:grid; transition:opacity .5s ease}
+.f-res > .f-suma{grid-area:1 / 1; justify-self:start; transition:opacity .5s ease}
+.f-res > .f-suma.b{opacity:0}
+.slide:has(.marca-w.on) .f-res > .f-suma.a{opacity:0}
+.slide:has(.marca-w.on) .f-res > .f-suma.b{opacity:1}
+.f-objetivo{display:flex; flex-direction:column; align-items:center; gap:22px; font-size:36px; transition:opacity .5s ease}
+.f-objetivo p{margin:0; white-space:nowrap}
+.f-objetivo p:first-child{margin-bottom:10px}
+.f-cond{font-size:38px}
+.f-cond .emo-i{font-size:42px}
+.f-suma{font-size:44px; margin:0; white-space:nowrap}
+.f-clases{font-size:52px; display:flex; flex-direction:column; gap:40px}
+.f-clases p{margin:0; display:flex; align-items:center; gap:18px}
+.f-clases .signo{font-size:70px; width:50px; text-align:center; text-shadow:0 0 16px currentColor}
+.emo-i{font-size:54px; text-shadow:none; margin-left:10px}
+/* forma geométrica */
+.slide.geo-sl{padding:40px 60px; align-items:center; text-shadow:0 0 12px rgba(255,255,255,.3)}
+.geo-tit{font-size:54px; margin:0 0 10px}
+/* la misma lámina, ahora con las dos regiones: sin fundido */
+.slide.geo2-sl{transition:none}
+.geo-fila{display:flex; align-items:center; justify-content:space-between; gap:60px; width:100%; flex:1 1 auto}
+.geo-form{gap:20px; width:880px; flex:none}
+.geo-form .f-x i{font-size:80px}
+.geo-form .clf-fl{width:110px; flex:none}
+.geo-form .fvec{font-size:40px; line-height:1.5}
+.geo-form .f-suma{font-size:40px}
+.geo-izq{display:flex; flex-direction:column; gap:40px}
+/* huecos invisibles: la fórmula queda a la misma altura que en la lámina siguiente */
+.geo-hueco{visibility:hidden}
+.geo-preg{font-size:44px; margin:0}
+.geo-recta{font-size:54px; margin:0 0 0 40px; color:var(--violet); text-shadow:0 0 14px var(--violet); transition:opacity .5s ease}
+/* una dimensión más */
+.slide.d3-sl{transition:none; padding:40px 60px 20px; align-items:center; justify-content:flex-start; gap:10px; text-shadow:0 0 12px rgba(255,255,255,.3)}
+.d3-lienzo{position:relative; width:1480px; height:640px; flex:none; margin-top:auto; transition:none}
+.d3-lienzo canvas{position:absolute; inset:0; width:100%; height:100%}
+.d3-eq{position:absolute; left:70px; top:250px; z-index:1; background:rgba(0,0,0,.7); padding:4px 14px; border-radius:8px; margin:0; font-size:42px; color:var(--violet); text-shadow:0 0 14px var(--violet); transition:opacity .6s ease}
+.d3-form{width:auto; gap:22px; transition:none}
+.d3-form .f-x i{font-size:64px}
+.d3-form .fvec{font-size:34px; line-height:1.35}
+.d3-form .w-in{font-size:32px; width:84px}
+.d3-form .f-suma{font-size:42px}
+.fvec > .fila3{overflow:hidden; max-height:60px; transition:opacity .5s ease, max-height .7s ease}
+.fvec > .fila3:not(.on){max-height:0}
+.fila3h{transition:opacity .5s ease}
+.w-in{width:96px; background:transparent; border:none; border-bottom:2px solid rgba(255,154,60,.5); color:var(--orange);
+  font-family:var(--serif); font-size:42px; text-align:center; outline:none; text-shadow:0 0 12px var(--orange); -moz-appearance:textfield}
+.w-in::-webkit-inner-spin-button, .w-in::-webkit-outer-spin-button{-webkit-appearance:none; margin:0}
+.w-in:focus{border-bottom-color:var(--orange)}
+.geo-lienzo{position:relative; width:600px; height:600px; flex:none; transition:opacity .5s ease}
+.geo-lienzo canvas{position:absolute; inset:0; width:100%; height:100%; cursor:crosshair}
 /* machine learning */
 .slide.ml-sl{padding:44px 60px 30px; align-items:center; text-shadow:0 0 12px rgba(255,255,255,.35)}
 .ml-sl .t-title{font-size:64px}
@@ -978,6 +1048,22 @@ body.fs.bar-show #bar{transform:none}
   </div>
 </section>
 
+<section class="slide ml-sl" data-label="Machine Learning">
+  <span class="st el" data-b="0"></span><span class="st el" data-b="1"></span><span class="st el" data-b="2"></span><span class="st marca-ml el" data-b="3"></span>
+  <h2 class="t-title el m-write" data-b="0">Machine Learning</h2>
+  <div class="ml-escena">
+    <div class="ml-datos" aria-hidden="true"></div>
+    <span class="pc ml-pc el" data-b="0">💻</span>
+    <div class="ml-ini">
+      <div class="clf-in foto ml-gato el" data-b="1"><span class="emo">🐈</span></div>
+      <span class="clf-fl ml-fl1 el" data-b="1"></span>
+      <span class="clf-fl ml-fl2 el" data-b="2"></span>
+      <span class="clf-out ml-mal el" data-b="2">«no gato»</span>
+    </div>
+    <div class="ml-flujo" aria-hidden="true"></div>
+  </div>
+</section>
+
 <section class="slide rasgos-sl" data-label="De reglas a rasgos">
   <span class="st el" data-b="0"></span><span class="st marca-inf el" data-b="1"></span>
   <p class="rasgos-frase el m-fade" data-b="0">«Me gusta el chocolate»</p>
@@ -1011,20 +1097,82 @@ body.fs.bar-show #bar{transform:none}
   </div>
 </section>
 
-<section class="slide ml-sl" data-label="Machine Learning">
-  <span class="st el" data-b="0"></span><span class="st el" data-b="1"></span><span class="st el" data-b="2"></span><span class="st marca-ml el" data-b="3"></span>
-  <h2 class="t-title el m-write" data-b="0">Machine Learning</h2>
-  <div class="ml-escena">
-    <div class="ml-datos" aria-hidden="true"></div>
-    <span class="pc ml-pc el" data-b="0">💻</span>
-    <div class="ml-ini">
-      <div class="clf-in foto ml-gato el" data-b="1"><span class="emo">🐈</span></div>
-      <span class="clf-fl ml-fl1 el" data-b="1"></span>
-      <span class="clf-fl ml-fl2 el" data-b="2"></span>
-      <span class="clf-out ml-mal el" data-b="2">«no gato»</span>
+<section class="slide center feat-sl" data-label="De x a una clase">
+  <div class="feat-fila">
+    <div class="f-x el" data-b="0"><i>x</i><span>input</span></div><div class="f-conv el" data-b="0"><span>Convertimos en features</span><span class="clf-fl mapsto"></span></div>
+    <span class="el" data-b="1"><span class="fvec "><span><i>x</i><sub>1</sub></span><span><i>x</i><sub>2</sub></span><span><i>x</i><sub>3</sub></span><span><i>x</i><sub>4</sub></span><span><i>x</i><sub>5</sub></span><span><i>x</i><sub>6</sub></span></span></span>
+    <span class="clf-fl mapsto el" data-b="2"></span>
+    <div class="f-clases el" data-b="2">
+      <p><span class="signo mas">+</span> si <i class="cx">x</i> es <span class="emo-i">😄</span></p>
+      <p><span class="signo menos">−</span> si <i class="cx">x</i> es <span class="emo-i">😠</span></p>
     </div>
-    <div class="ml-flujo" aria-hidden="true"></div>
   </div>
+</section>
+
+<section class="slide center feat-sl" data-label="Sumar los rasgos">
+  <span class="st marca-w el" data-b="4"></span>
+  <div class="feat-fila">
+    <div class="f-x el" data-b="0"><i>x</i><span>input</span></div><div class="f-conv el" data-b="1"><span>Convertimos en features</span><span class="clf-fl mapsto"></span></div>
+    <span class="fvecs el" data-b="2"><span class="fvec "><span><i>x</i><sub>1</sub></span><span><i>x</i><sub>2</sub></span><span><i>x</i><sub>3</sub></span><span><i>x</i><sub>4</sub></span><span><i>x</i><sub>5</sub></span><span><i>x</i><sub>6</sub></span></span><span class="fvec cw el" data-b="4"><span><i>w</i><sub>1</sub></span><span><i>w</i><sub>2</sub></span><span><i>w</i><sub>3</sub></span><span><i>w</i><sub>4</sub></span><span><i>w</i><sub>5</sub></span><span><i>w</i><sub>6</sub></span></span></span>
+    <span class="clf-fl mapsto el" data-b="3"></span>
+    <div class="f-res el" data-b="3"><p class="f-suma a"><span class="cx"><i>x</i><sub>1</sub></span> + <span class="cx"><i>x</i><sub>2</sub></span> + <span class="cx"><i>x</i><sub>3</sub></span> + <span class="cx"><i>x</i><sub>4</sub></span> + <span class="cx"><i>x</i><sub>5</sub></span> + <span class="cx"><i>x</i><sub>6</sub></span></p><p class="f-suma b"><span class="cx"><i>x</i><sub>1</sub></span><span class="cw"><i>w</i><sub>1</sub></span> + <span class="cx"><i>x</i><sub>2</sub></span><span class="cw"><i>w</i><sub>2</sub></span> + <span class="cx"><i>x</i><sub>3</sub></span><span class="cw"><i>w</i><sub>3</sub></span> + <span class="cx"><i>x</i><sub>4</sub></span><span class="cw"><i>w</i><sub>4</sub></span> + <span class="cx"><i>x</i><sub>5</sub></span><span class="cw"><i>w</i><sub>5</sub></span> + <span class="cx"><i>x</i><sub>6</sub></span><span class="cw"><i>w</i><sub>6</sub></span></p></div>
+  </div>
+  <div class="f-objetivo el" data-b="5">
+    <p>Queremos elegir <span class="cw"><i>w</i><sub>1</sub></span>, <span class="cw"><i>w</i><sub>2</sub></span>, <span class="cw"><i>w</i><sub>3</sub></span>, <span class="cw"><i>w</i><sub>4</sub></span>, <span class="cw"><i>w</i><sub>5</sub></span>, <span class="cw"><i>w</i><sub>6</sub></span> de tal manera que</p>
+    <p class="f-cond"><span class="cx"><i>x</i><sub>1</sub></span><span class="cw"><i>w</i><sub>1</sub></span> + <span class="cx"><i>x</i><sub>2</sub></span><span class="cw"><i>w</i><sub>2</sub></span> + <span class="cx"><i>x</i><sub>3</sub></span><span class="cw"><i>w</i><sub>3</sub></span> + <span class="cx"><i>x</i><sub>4</sub></span><span class="cw"><i>w</i><sub>4</sub></span> + <span class="cx"><i>x</i><sub>5</sub></span><span class="cw"><i>w</i><sub>5</sub></span> + <span class="cx"><i>x</i><sub>6</sub></span><span class="cw"><i>w</i><sub>6</sub></span> <span>&gt; 0</span> si <i class="cx">x</i> es <span class="emo-i">😄</span></p>
+    <p class="f-cond"><span class="cx"><i>x</i><sub>1</sub></span><span class="cw"><i>w</i><sub>1</sub></span> + <span class="cx"><i>x</i><sub>2</sub></span><span class="cw"><i>w</i><sub>2</sub></span> + <span class="cx"><i>x</i><sub>3</sub></span><span class="cw"><i>w</i><sub>3</sub></span> + <span class="cx"><i>x</i><sub>4</sub></span><span class="cw"><i>w</i><sub>4</sub></span> + <span class="cx"><i>x</i><sub>5</sub></span><span class="cw"><i>w</i><sub>5</sub></span> + <span class="cx"><i>x</i><sub>6</sub></span><span class="cw"><i>w</i><sub>6</sub></span> <span>&lt; 0</span> si <i class="cx">x</i> es <span class="emo-i">😠</span></p>
+  </div>
+</section>
+
+<section class="slide geo-sl" data-label="Forma geométrica">
+  <span class="st marca-textos el" data-b="5"></span>
+  <h2 class="geo-tit el m-write" data-b="0">Pensemos en el problema de forma geométrica</h2>
+  <div class="geo-fila">
+    <div class="geo-izq">
+      <div class="feat-fila geo-form">
+      <span class="f-x el" data-b="1"><i>x</i></span>
+      <span class="clf-fl mapsto el" data-b="1"></span>
+      <span class="fvec el" data-b="1"><span><i>x</i><sub>1</sub></span><span><i>x</i><sub>2</sub></span></span>
+      <span class="fvec cw el" data-b="2"><span><input id="geo-w1" class="w-in" type="number" step="0.5" value="1" aria-label="w1"></span><span><input id="geo-w2" class="w-in" type="number" step="0.5" value="2" aria-label="w2"></span></span>
+      <span class="f-suma el" data-b="3">= <span class="cx"><i>x</i><sub>1</sub></span>·<span class="cw w-val" data-w="0">w₁</span> + <span class="cx"><i>x</i><sub>2</sub></span>·<span class="cw w-val" data-w="1">w₂</span></span>
+    </div>
+      <p class="geo-preg geo-hueco" aria-hidden="true">¿A qué corresponde la línea violeta?</p>
+      <p class="geo-recta geo-hueco" aria-hidden="true">0</p>
+    </div>
+    <div class="geo-lienzo el interactivo" data-b="4"><canvas id="geo-canvas" aria-label="El plano x1, x2: el valor de x1·w1 + x2·w2 bajo el cursor"></canvas></div>
+  </div>
+</section>
+
+<section class="slide geo-sl geo2-sl" data-label="Dónde es positivo">
+  <span class="st el" data-b="0"></span><span class="st marca-linea el" data-b="1"></span><span class="st el" data-b="2"></span><span class="st el" data-b="3"></span><span class="st marca-anillo el" data-b="4"></span>
+  <h2 class="geo-tit">Pensemos en el problema de forma geométrica</h2>
+  <div class="geo-fila">
+    <div class="geo-izq">
+      <div class="feat-fila geo-form">
+      <span class="f-x"><i>x</i></span>
+      <span class="clf-fl mapsto"></span>
+      <span class="fvec"><span><i>x</i><sub>1</sub></span><span><i>x</i><sub>2</sub></span></span>
+      <span class="fvec cw"><span><input id="geo2-w1" class="w-in" type="number" step="0.5" value="1" aria-label="w1"></span><span><input id="geo2-w2" class="w-in" type="number" step="0.5" value="2" aria-label="w2"></span></span>
+      <span class="f-suma">= <span class="cx"><i>x</i><sub>1</sub></span>·<span class="cw w-val" data-w="0">w₁</span> + <span class="cx"><i>x</i><sub>2</sub></span>·<span class="cw w-val" data-w="1">w₂</span></span>
+    </div>
+      <p class="geo-preg el m-fade" data-b="2">¿A qué corresponde la línea violeta?</p>
+      <p class="geo-recta el" data-b="3"><span class="cx"><i>x</i><sub>1</sub></span><i>w</i><sub>1</sub> + <span class="cx"><i>x</i><sub>2</sub></span><i>w</i><sub>2</sub> = 0</p>
+    </div>
+    <div class="geo-lienzo interactivo"><canvas id="geo2-canvas" aria-label="El plano x1, x2: verde donde x1·w1 + x2·w2 es positivo, rojo donde es negativo"></canvas></div>
+  </div>
+</section>
+
+<section class="slide d3-sl" data-label="Una dimensión más">
+  <span class="st el" data-b="0"></span><span class="st el" data-b="1"></span><span class="st marca-3d el" data-b="2"></span><span class="st marca-plano el" data-b="3"></span><span class="st marca-rejilla el" data-b="4"></span>
+  <div class="feat-fila geo-form d3-form">
+    <span class="f-x"><i>x</i></span>
+    <span class="clf-fl mapsto"></span>
+    <span class="fvec"><span><i>x</i><sub>1</sub></span><span><i>x</i><sub>2</sub></span><span class="fila3 el" data-b="1"><i>x</i><sub>3</sub></span></span>
+    <span class="fvec cw"><span><input id="d3-w1" class="w-in" type="number" step="0.5" value="0" aria-label="w1"></span><span><input id="d3-w2" class="w-in" type="number" step="0.5" value="0" aria-label="w2"></span><span class="fila3 el" data-b="1"><input id="d3-w3" class="w-in" type="number" step="0.5" value="1" aria-label="w3"></span></span>
+    <span class="f-suma">= <span class="cx"><i>x</i><sub>1</sub></span>·<span class="cw d3-val" data-w="0"></span> + <span class="cx"><i>x</i><sub>2</sub></span>·<span class="cw d3-val" data-w="1"></span><span class="fila3h el" data-b="1"> + <span class="cx"><i>x</i><sub>3</sub></span>·<span class="cw d3-val" data-w="2"></span></span></span>
+  </div>
+  <div class="d3-lienzo interactivo"><canvas id="d3-canvas" aria-label="Del plano x1, x2 al espacio x1, x2, x3 y el plano x1·w1 + x2·w2 + x3·w3 = 0"></canvas></div>
+  <p class="d3-eq el" data-b="3"><span class="cx"><i>x</i><sub>1</sub></span><i>w</i><sub>1</sub> + <span class="cx"><i>x</i><sub>2</sub></span><i>w</i><sub>2</sub> + <span class="cx"><i>x</i><sub>3</sub></span><i>w</i><sub>3</sub> = 0</p>
 </section>
 
 </div>
@@ -1294,7 +1442,7 @@ body.fs.bar-show #bar{transform:none}
 
   viewport.addEventListener('click', function(e){
     if (e.defaultPrevented) return;          /* el lienzo ya usó el clic */
-    if (e.target.closest && e.target.closest('a, .ctl, .interactivo, [contenteditable]')) return;
+    if (e.target.closest && e.target.closest('a, input, button, select, textarea, .ctl, .interactivo, [contenteditable]')) return;
     if (e.clientX > window.innerWidth * 0.5) setIndex(idx + 1, true);
     else setIndex(idx - 1, true);
   });
@@ -3394,6 +3542,584 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     if (on && !activo){ activo = true; despues(400, lluvia); }
     if (!on && activo) parar();
   }).observe(sl, { attributes: true, subtree: true, attributeFilter: ['class'] });
+})();
+</script>
+
+<script>
+/* ── Forma geométrica: el valor de x₁w₁ + x₂w₂ en cada punto del plano ──
+   Dos láminas con el mismo plano; en la segunda se pinta dónde la suma es
+   positiva (verde) y dónde negativa (rojo). w₁ y w₂ se comparten.          */
+(function(){
+  var SERIF = "'LM Roman', Georgia, serif", W = 600, H = 600, O = { x: 300, y: 300 }, U = 50, M = 28;
+  var VERDE = '131,193,103', ROJO = '252,98,85';
+  var entradas = [['geo-w1', 'geo2-w1'], ['geo-w2', 'geo2-w2']].map(function(par){
+    return par.map(function(id){ return document.getElementById(id); }).filter(Boolean);
+  });
+  var redibujar = [];
+  function objetivo(){ return entradas.map(function(g){ return parseFloat(g[0].value) || 0; }); }
+  /* el w que se dibuja: al confirmar (Enter) gira y se estira hacia el nuevo */
+  var wVis = objetivo(), giro = null;
+  function w(){
+    if (!giro) return wVis;
+    var t = Math.min(1, (performance.now() - giro.t0) / 900), e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    var a = giro.a0 + giro.da * e, r = giro.r0 + (giro.r1 - giro.r0) * e;
+    wVis = [r * Math.cos(a), r * Math.sin(a)];
+    if (t >= 1){ wVis = giro.fin; giro = null; }
+    return wVis;
+  }
+  function animando(){ return !!giro; }
+  function confirmar(){
+    var de = w().slice(), a = objetivo();
+    if ((giro ? giro.fin : wVis).every(function(v, i){ return v === a[i]; })) return;   // nada cambió
+    var r0 = Math.hypot(de[0], de[1]), r1 = Math.hypot(a[0], a[1]);
+    var a1 = Math.atan2(a[1], a[0]), a0 = r0 ? Math.atan2(de[1], de[0]) : a1;
+    var da = r1 ? a1 - a0 : 0;
+    while (da > Math.PI) da -= 2 * Math.PI;
+    while (da < -Math.PI) da += 2 * Math.PI;
+    giro = { t0: performance.now(), a0: a0, da: da, r0: r0, r1: r1, fin: a };
+    redibujar.forEach(function(f){ f(); });
+  }
+  /* lo que se escribe en una lámina aparece en la otra; Enter lo confirma */
+  entradas.forEach(function(grupo){
+    grupo.forEach(function(inp){
+      inp.addEventListener('input', function(){ grupo.forEach(function(o){ if (o !== inp) o.value = inp.value; }); });
+      inp.addEventListener('change', confirmar);
+      inp.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); confirmar(); } });
+    });
+  });
+  function num(v){ return (Math.round(v * 100) / 100).toString().replace('.', ',').replace('-', '−'); }
+  function paren(v){ return v < 0 ? '(' + num(v) + ')' : num(v); }
+  /* los valores elegidos reemplazan a w₁ y w₂ en la fórmula */
+  function ponerW(){
+    var ws = objetivo();
+    Array.prototype.forEach.call(document.querySelectorAll('.w-val'), function(el){ el.textContent = paren(ws[+el.dataset.w]); });
+  }
+  redibujar.push(ponerW);
+  ponerW();
+
+  /* datos que ninguna recta separa: los rojos en el centro, los verdes en un anillo.
+     Los usan esta lámina (al final) y la siguiente («Una dimensión más»). */
+  var ANILLO = window.__anillo = (function(){
+    var out = [], sem = 7;
+    function azar(){ sem = (sem * 9301 + 49297) % 233280; return sem / 233280; }
+    /* uno por reseña: seis negativas en el centro, seis positivas en el anillo */
+    for (var i = 0; i < 6; i++){ var r = 0.35 + 0.7 * azar(), a = 6.2832 * i / 6 + 0.5 * azar(); out.push({ x: r * Math.cos(a), y: r * Math.sin(a), clase: -1 }); }
+    for (i = 0; i < 6; i++){ r = 2.2 + 0.6 * azar(); a = 6.2832 * i / 6 + 0.5 + 0.4 * azar(); out.push({ x: r * Math.cos(a), y: r * Math.sin(a), clase: 1 }); }
+    return out;
+  })();
+  /* reseñas de verdad: las positivas caen arriba a la izquierda, las negativas abajo a la derecha */
+  var TEXTOS = [
+    ['Me encantó la película', 1, -3.2, 3.5], ['Qué pérdida de tiempo', -1, 3.0, -2.5],
+    ['¡Qué buen servicio!', 1, -1.5, 4.1], ['La peor película del año', -1, 1.8, -3.6],
+    ['La comida estuvo deliciosa', 1, -4.0, 1.8], ['Llegó tarde y frío', -1, 4.1, -1.4],
+    ['Muy recomendado, volveré', 1, -2.4, 2.2], ['No lo recomiendo para nada', -1, 2.6, -4.2],
+    ['El profe explica genial', 1, -0.8, 2.9], ['Pésima atención', -1, 3.8, -3.3],
+    ['Excelente atención', 1, -3.6, 4.4], ['Me aburrí muchísimo', -1, 1.2, -1.9]
+  ];
+  function plano(id, regiones, conPuntos){
+    var cvs = document.getElementById(id);
+    if (!cvs) return;
+    var c = cvs.getContext('2d'), sl = cvs.closest('.slide'), raton = null, pend = false, t0 = 0;
+    var marcaTxt = sl.querySelector('.marca-textos'), txtOn = false, tTxt = 0;
+    var marcaAn = sl.querySelector('.marca-anillo'), anOn = false, tAn = 0;
+    /* a cada reseña le toca un punto del anillo (positivas) o del centro (negativas) */
+    var destinoAnillo = (function(){
+      var kp = 0, kn = 0;
+      return TEXTOS.map(function(t){ return t[1] > 0 ? 6 + kp++ : kn++; });
+    })();
+    function progresoAnillo(now){
+      var on = marcaAn && marcaAn.classList.contains('on');
+      if (on !== anOn){ anOn = on; tAn = marcaAn.classList.contains('instant') ? -1e9 : now; }
+      if (!on) return { f: 0, m: 0 };
+      /* primero se van la línea y las regiones; después se mueven los puntos */
+      var dt = now - tAn, f = Math.min(1, dt / 600), t = Math.max(0, Math.min(1, (dt - 700) / 1400));
+      if (t < 1) pedir();
+      return { f: f, m: t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2 };
+    }
+    var CADA = 750, VIAJE = 1300;
+    /* cada reseña aparece junto al borde, se encoge y vuela a su punto */
+    function textos(now, an){
+      var on = conPuntos || (marcaTxt && marcaTxt.classList.contains('on'));
+      if (conPuntos) tTxt = -1e9;
+      else if (on !== txtOn){ txtOn = on; tTxt = marcaTxt.classList.contains('instant') ? -1e9 : now; }
+      if (!on) return [];
+      var hechos = [];
+      TEXTOS.forEach(function(t, i){
+        var dt = now - tTxt - i * CADA;
+        if (dt < 0) return;
+        var col = t[1] > 0 ? VERDE : ROJO, q = ANILLO[destinoAnillo[i]];
+        var dest = { x: O.x + (t[2] + (q.x - t[2]) * an) * U, y: O.y - (t[3] + (q.y - t[3]) * an) * U };
+        var ori = t[1] > 0 ? { x: 150, y: 50 + (i % 3) * 40 } : { x: W - 150, y: H - 50 - (i % 3) * 40 };
+        if (dt < VIAJE){
+          var a = Math.min(1, dt / 250), m = Math.max(0, (dt - 450) / (VIAJE - 450)), e = m < 0.5 ? 2 * m * m : 1 - Math.pow(-2 * m + 2, 2) / 2;
+          var x = ori.x + (dest.x - ori.x) * e, y = ori.y + (dest.y - ori.y) * e, size = 24 * (1 - e) + 4 * e;
+          c.globalAlpha = a;
+          texto(t[0], x, y, size, 'rgb(' + col + ')', 'center');
+          c.globalAlpha = 1;
+        } else {
+          c.save(); c.shadowColor = 'rgb(' + col + ')'; c.shadowBlur = 12;
+          c.fillStyle = 'rgb(' + col + ')'; c.beginPath(); c.arc(dest.x, dest.y, 7, 0, 6.2832); c.fill(); c.restore();
+          hechos.push({ t: t[0], x: dest.x, y: dest.y, col: col });
+        }
+      });
+      if (now - tTxt < TEXTOS.length * CADA + VIAJE + 50) pedir();
+      return hechos;
+    }
+    function texto(t, x, y, size, col, align, italic){
+      c.font = (italic ? 'italic ' : '') + size + 'px ' + SERIF; c.textAlign = align || 'center'; c.textBaseline = 'middle';
+      c.fillStyle = col; c.save(); c.shadowColor = col; c.shadowBlur = 14; c.fillText(t, x, y); c.restore(); c.fillText(t, x, y);
+    }
+    function flecha(x1, y1, x2, y2){
+      c.strokeStyle = '#ddd'; c.fillStyle = '#ddd'; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+      var a = Math.atan2(y2 - y1, x2 - x1);
+      c.beginPath(); c.moveTo(x2, y2); c.lineTo(x2 - 16 * Math.cos(a - 0.4), y2 - 16 * Math.sin(a - 0.4));
+      c.lineTo(x2 - 16 * Math.cos(a + 0.4), y2 - 16 * Math.sin(a + 0.4)); c.closePath(); c.fill();
+    }
+    /* un semiplano pintado de un color */
+    function region(ws, signo, col, al){
+      var n = Math.hypot(ws[0], ws[1]);
+      if (!n) return;
+      var nx = ws[0] / n * signo, ny = -ws[1] / n * signo, dx = -ny, dy = nx, L = 900;
+      c.save();
+      c.beginPath(); c.rect(M, M, W - 2 * M, H - 2 * M); c.clip();
+      c.beginPath();
+      c.moveTo(O.x + dx * L, O.y + dy * L); c.lineTo(O.x + dx * L + nx * L, O.y + dy * L + ny * L);
+      c.lineTo(O.x - dx * L + nx * L, O.y - dy * L + ny * L); c.lineTo(O.x - dx * L, O.y - dy * L); c.closePath();
+      c.clip();
+      c.fillStyle = 'rgba(' + col + ',' + (0.55 * al).toFixed(3) + ')'; c.fillRect(0, 0, W, H);
+      c.restore();
+    }
+    /* un renglón con trozos de distintos colores */
+    function tira(partes, x, y, size){
+      partes.forEach(function(p){
+        texto(p[0], x, y, size, p[1], 'left', /x/.test(p[0]) && p[0].length <= 2);
+        c.font = size + 'px ' + SERIF; x += c.measureText(p[0]).width;
+      });
+    }
+    /* la frontera x₁w₁ + x₂w₂ = 0, en violeta, con punta en los dos extremos */
+    function frontera(ws, al){
+      var n = Math.hypot(ws[0], ws[1]);
+      if (!n) return;
+      var dx = -ws[1] / n, dy = -ws[0] / n, L = (W / 2 - M) / Math.max(Math.abs(dx), Math.abs(dy)) - 4;
+      var col = 'rgba(180,140,255,' + al.toFixed(3) + ')';
+      c.save(); c.shadowColor = col; c.shadowBlur = 14; c.strokeStyle = col; c.fillStyle = col; c.lineWidth = 4;
+      c.beginPath(); c.moveTo(O.x - dx * L, O.y - dy * L); c.lineTo(O.x + dx * L, O.y + dy * L); c.stroke();
+      [1, -1].forEach(function(sg){
+        var x = O.x + sg * dx * L, y = O.y + sg * dy * L, a = Math.atan2(sg * dy, sg * dx);
+        c.beginPath(); c.moveTo(x + 6 * Math.cos(a), y + 6 * Math.sin(a));
+        c.lineTo(x - 18 * Math.cos(a - 0.45), y - 18 * Math.sin(a - 0.45));
+        c.lineTo(x - 18 * Math.cos(a + 0.45), y - 18 * Math.sin(a + 0.45)); c.closePath(); c.fill();
+      });
+      c.restore();
+    }
+    function dibujar(now){
+      pend = false;
+      var r = cvs.getBoundingClientRect(), e = (r.width / W) * (window.devicePixelRatio || 1);
+      var bw = Math.round(W * e), bh = Math.round(H * e);
+      if (cvs.width !== bw || cvs.height !== bh){ cvs.width = bw; cvs.height = bh; }
+      c.setTransform(e, 0, 0, e, 0, 0); c.clearRect(0, 0, W, H);
+      var ws = w();
+      var pa = progresoAnillo(now), an = pa.m;
+      if (regiones){
+        var al = Math.min(1, (now - t0) / 900) * (1 - pa.f);
+        region(ws, 1, VERDE, al); region(ws, -1, ROJO, al);
+        var linea = sl.querySelector('.marca-linea');
+        if (linea && linea.classList.contains('on') && pa.f < 1) frontera(ws, 1 - pa.f);
+        if (al < 1) pedir();
+      }
+      if (animando()) pedir();
+      c.strokeStyle = 'rgba(255,255,255,.07)'; c.lineWidth = 1;
+      for (var k = -5; k <= 5; k++){
+        c.beginPath(); c.moveTo(O.x + k * U + .5, M); c.lineTo(O.x + k * U + .5, H - M); c.stroke();
+        c.beginPath(); c.moveTo(M, O.y + k * U + .5); c.lineTo(W - M, O.y + k * U + .5); c.stroke();
+      }
+      flecha(O.x, O.y, W - 14, O.y); flecha(O.x, O.y, 14, O.y);
+      flecha(O.x, O.y, O.x, 14); flecha(O.x, O.y, O.x, H - 14);
+      texto('x₁', W - 20, O.y + 30, 34, 'rgb(88,196,221)', 'center', true);
+      texto('x₂', O.x + 34, 22, 34, 'rgb(88,196,221)', 'center', true);
+      var puntos = textos(now, an);
+      if (!raton) return;
+      /* sobre un punto: su reseña */
+      var cerca = puntos.filter(function(p){ return Math.hypot(p.x - raton.x, p.y - raton.y) < 12; })[0];
+      if (cerca){
+        c.font = '28px ' + SERIF;
+        var anchoT = c.measureText('«' + cerca.t + '»').width;
+        var tx = Math.max(6, Math.min(W - anchoT - 26, cerca.x - anchoT / 2 - 10)), ty = cerca.y - 58;
+        if (ty < 4) ty = cerca.y + 16;
+        c.fillStyle = 'rgba(0,0,0,.85)'; c.fillRect(tx, ty, anchoT + 20, 42);
+        texto('«' + cerca.t + '»', tx + 10, ty + 21, 28, 'rgb(' + cerca.col + ')', 'left');
+        return;
+      }
+      var x1 = (raton.x - O.x) / U, x2 = (O.y - raton.y) / U, v = x1 * ws[0] + x2 * ws[1];
+      var col = v > 0 ? 'rgb(' + VERDE + ')' : v < 0 ? 'rgb(' + ROJO + ')' : 'rgb(235,235,235)';
+      c.fillStyle = col; c.beginPath(); c.arc(raton.x, raton.y, 6, 0, 6.2832); c.fill();
+      /* arriba del cursor: dónde está y cuánto vale, con los w elegidos */
+      var AZ = 'rgb(88,196,221)', NA = 'rgb(255,154,60)', BL = 'rgb(235,235,235)';
+      var l1 = [['x₁ = ' + num(x1) + ',  x₂ = ' + num(x2), AZ]];
+      var l2 = [['x₁', AZ], ['·', BL], [paren(ws[0]), NA], [' + ', BL], ['x₂', AZ], ['·', BL], [paren(ws[1]), NA], [' = ', BL], [num(v), col]];
+      var ancho = function(l, size){ c.font = size + 'px ' + SERIF; return l.reduce(function(a, p){ return a + c.measureText(p[0]).width; }, 0); };
+      var a1 = ancho(l1, 26), a2 = ancho(l2, 30), aw = Math.max(a1, a2);
+      var bx = Math.max(4, Math.min(W - aw - 24, raton.x + 14)), by = raton.y - 92;
+      if (by < 4) by = raton.y + 18;
+      c.fillStyle = 'rgba(0,0,0,.78)'; c.fillRect(bx, by, aw + 20, 80);
+      tira(l1, bx + 10, by + 22, 26); tira(l2, bx + 10, by + 58, 30);
+    }
+    function pedir(){ if (!pend){ pend = true; requestAnimationFrame(dibujar); } }
+    redibujar.push(pedir);
+    cvs.addEventListener('mousemove', function(ev){
+      var r = cvs.getBoundingClientRect();
+      raton = { x: (ev.clientX - r.left) * W / r.width, y: (ev.clientY - r.top) * H / r.height }; pedir();
+    });
+    cvs.addEventListener('mouseleave', function(){ raton = null; pedir(); });
+    cvs.addEventListener('click', function(ev){ ev.preventDefault(); });
+    var activa = false;
+    new MutationObserver(function(){
+      var a = sl.classList.contains('active');
+      if (a && !activa) t0 = performance.now();
+      activa = a; pedir();
+    }).observe(sl, { attributes: true, subtree: true, attributeFilter: ['class'] });
+    window.addEventListener('resize', pedir);
+    pedir();
+  }
+  plano('geo-canvas', false);
+  plano('geo2-canvas', true, true);   // las reseñas siguen ahí cuando aparecen las regiones
+})();
+</script>
+
+<script>
+/* ── Una dimensión más: el plano x₁, x₂ con sus dos regiones y, al pasar,
+   la cámara gira hasta ver el espacio x₁, x₂, x₃ y el plano w·x = 0.      */
+(function(){
+  var cvs = document.getElementById('d3-canvas');
+  if (!cvs) return;
+  var c = cvs.getContext('2d'), sl = cvs.closest('.slide'), marca3d = sl.querySelector('.marca-3d'), marcaPl = sl.querySelector('.marca-plano');
+  var marcaRej = sl.querySelector('.marca-rejilla'), rejOn = false, tRej = -1e9;
+  var ins = [1, 2, 3].map(function(k){ return document.getElementById('d3-w' + k); });
+  var SERIF = "'LM Roman', Georgia, serif", W = 1480, H = 640, O = { x: 740, y: 330 }, S = 80, LIM = 5, S0 = 80;
+  var VERDE = '131,193,103', ROJO = '252,98,85', VIOLETA = '180,140,255', AZUL = '88,196,221';
+  function clamp(v){ return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function ease(t){ t = clamp(t); return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+  function num(v){ return (Math.round(v * 100) / 100).toString().replace('.', ',').replace('-', '−'); }
+  function paren(v){ return v < 0 ? '(' + num(v) + ')' : num(v); }
+  function norm(v){ var n = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / n, v[1] / n, v[2] / n]; }
+  function cruz(a, b){ return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+  function punto(a, b){ return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+
+  /* dos cámaras: mirando el plano x₁x₂ de frente, y en diagonal con x₃ arriba */
+  /* la cámara en 3D se describe con azimut y elevación; arrastrar los cambia */
+  var AZ0 = Math.atan2(0.55, 0.75), EL0 = 0.42, az = AZ0, el = EL0;
+  function camara3d(){
+    var F = [Math.cos(el) * Math.cos(az), Math.cos(el) * Math.sin(az), Math.sin(el)], R = norm(cruz([0, 0, 1], F));
+    return [R, cruz(F, R), F];
+  }
+  var cam0 = [[1, 0, 0], [0, 1, 0], [0, 0, 1]], cam1 = camara3d();
+  /* matriz → cuaternión → interpolación esférica: la cámara gira sin deformar */
+  function aCuat(m){
+    var r = m[0], u = m[1], f = m[2], tr = r[0] + u[1] + f[2], q;
+    if (tr > 0){ var s = Math.sqrt(tr + 1) * 2; q = [0.25 * s, (u[2] - f[1]) / s, (f[0] - r[2]) / s, (r[1] - u[0]) / s]; }
+    else if (r[0] > u[1] && r[0] > f[2]){ s = Math.sqrt(1 + r[0] - u[1] - f[2]) * 2; q = [(u[2] - f[1]) / s, 0.25 * s, (u[0] + r[1]) / s, (f[0] + r[2]) / s]; }
+    else if (u[1] > f[2]){ s = Math.sqrt(1 + u[1] - r[0] - f[2]) * 2; q = [(f[0] - r[2]) / s, (u[0] + r[1]) / s, 0.25 * s, (f[1] + u[2]) / s]; }
+    else { s = Math.sqrt(1 + f[2] - r[0] - u[1]) * 2; q = [(r[1] - u[0]) / s, (f[0] + r[2]) / s, (f[1] + u[2]) / s, 0.25 * s]; }
+    return q;
+  }
+  function deCuat(q){
+    var w = q[0], x = q[1], y = q[2], z = q[3];
+    return [[1 - 2 * (y * y + z * z), 2 * (x * y + w * z), 2 * (x * z - w * y)],
+            [2 * (x * y - w * z), 1 - 2 * (x * x + z * z), 2 * (y * z + w * x)],
+            [2 * (x * z + w * y), 2 * (y * z - w * x), 1 - 2 * (x * x + y * y)]];
+  }
+  function slerp(a, b, t){
+    var d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+    if (d < 0){ b = b.map(function(v){ return -v; }); d = -d; }
+    if (d > 0.9995) return norm4(a.map(function(v, i){ return v + (b[i] - v) * t; }));
+    var th = Math.acos(d), s0 = Math.sin((1 - t) * th) / Math.sin(th), s1 = Math.sin(t * th) / Math.sin(th);
+    return a.map(function(v, i){ return v * s0 + b[i] * s1; });
+  }
+  function norm4(q){ var n = Math.hypot(q[0], q[1], q[2], q[3]); return q.map(function(v){ return v / n; }); }
+  var q0 = aCuat(cam0), q1 = aCuat(cam1);
+
+  var cam = cam0, tCam = 0, desde = 0, hacia = 0, tIni = -1e9, pend = false, raton = null, quiere3d = false, planoOn = false, tPl = -1e9;
+  function proy(p){
+    /* ortográfica, como GeoGebra 3D */
+    return { x: O.x + S * punto(p, cam[0]), y: O.y - S * punto(p, cam[1]) };
+  }
+  /* w: el que se ve gira hacia el elegido al confirmar */
+  function leerW(){ return ins.map(function(i){ return parseFloat(i.value) || 0; }); }
+  var wVis = leerW(), wDe = wVis, wA = wVis, tW = -1e9;
+  function wActual(now){
+    var t = ease((now - tW) / 800);
+    wVis = norm(wDe).map(function(v, i){ return v; });
+    var mDe = Math.hypot.apply(null, wDe), mA = Math.hypot.apply(null, wA);
+    var d = norm(wDe.map(function(v, i){ return v + (wA[i] - v) * t; })), m = mDe + (mA - mDe) * t;
+    wVis = d.map(function(v){ return v * m; });
+    return wVis;
+  }
+  function ponerVal(){
+    var a = leerW();
+    Array.prototype.forEach.call(sl.querySelectorAll('.d3-val'), function(el){ el.textContent = paren(a[+el.dataset.w]); });
+  }
+  ins.forEach(function(i){
+    function confirmar(){
+      var a = leerW();
+      if (a.every(function(v, k){ return v === wA[k]; })) return;
+      wDe = wVis.slice(); wA = a; tW = performance.now(); ponerVal(); pedir();
+    }
+    i.addEventListener('change', confirmar);
+    i.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); confirmar(); } });
+  });
+  ponerVal();
+
+  function texto(t, x, y, size, col, align, italic){
+    c.font = (italic ? 'italic ' : '') + size + 'px ' + SERIF; c.textAlign = align || 'center'; c.textBaseline = 'middle';
+    c.fillStyle = col; c.save(); c.shadowColor = col; c.shadowBlur = 14; c.fillText(t, x, y); c.restore(); c.fillText(t, x, y);
+  }
+  function flecha(a, b, col, ancho){
+    var p = proy(a), q = proy(b);
+    c.strokeStyle = col; c.fillStyle = col; c.lineWidth = ancho || 2;
+    c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(q.x, q.y); c.stroke();
+    var ang = Math.atan2(q.y - p.y, q.x - p.x);
+    if (Math.hypot(q.x - p.x, q.y - p.y) < 20) return;
+    c.beginPath(); c.moveTo(q.x, q.y); c.lineTo(q.x - 16 * Math.cos(ang - 0.4), q.y - 16 * Math.sin(ang - 0.4));
+    c.lineTo(q.x - 16 * Math.cos(ang + 0.4), q.y - 16 * Math.sin(ang + 0.4)); c.closePath(); c.fill();
+  }
+  /* el cuadrado del plano x₁x₂ recortado por un semiplano (Sutherland–Hodgman) */
+  function recorte(w2, signo){
+    var pol = [[-LIM, -LIM], [LIM, -LIM], [LIM, LIM], [-LIM, LIM]], out = [];
+    function f(p){ return signo * (p[0] * w2[0] + p[1] * w2[1]); }
+    for (var i = 0; i < pol.length; i++){
+      var a = pol[i], b = pol[(i + 1) % pol.length], fa = f(a), fb = f(b);
+      if (fa >= 0) out.push(a);
+      if ((fa >= 0) !== (fb >= 0)){ var t = fa / (fa - fb); out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); }
+    }
+    return out;
+  }
+  function region(w3, signo, col, al){
+    if (al <= 0 || (!w3[0] && !w3[1])) return;
+    var pol = recorte(w3, signo);
+    if (pol.length < 3) return;
+    var pts = pol.map(function(p){ return proy([p[0], p[1], 0]); });
+    c.save();
+    c.beginPath(); pts.forEach(function(p, i){ i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y); }); c.closePath(); c.clip();
+    c.fillStyle = 'rgba(' + col + ',' + (0.55 * al).toFixed(3) + ')'; c.fillRect(0, 0, W, H);
+    c.restore();
+  }
+  /* datos que ninguna recta separa: los rojos en el centro, los verdes en un anillo.
+     Con una tercera coordenada x₃ = 1,8 − ½(x₁² + x₂²) los rojos suben y los verdes bajan */
+  /* x₃ = ½(x₁² + x₂²) − 1,6: el anillo (positivas) sube por encima del plano, el centro (negativas) queda debajo */
+  var PUNTOS = (window.__anillo || []).map(function(p){ return { x: p.x, y: p.y, z: 0.5 * (p.x * p.x + p.y * p.y) - 1.6, clase: p.clase }; });
+  function puntos(sube){
+    PUNTOS.forEach(function(p){
+      var q = proy([p.x, p.y, p.z * sube]), col = p.clase > 0 ? VERDE : ROJO;
+      c.save(); c.shadowColor = 'rgb(' + col + ')'; c.shadowBlur = 10; c.fillStyle = 'rgb(' + col + ')';
+      c.beginPath(); c.arc(q.x, q.y, 7, 0, 6.2832); c.fill(); c.restore();
+    });
+  }
+  /* la caja de recorte, como en GeoGebra: la mayor que, vista desde la cámara,
+     cabe entera en el lienzo; así el plano siempre se ve completo */
+  function extension(w3){
+    /* la mayor caja cuyo corte con el plano cabe entero en el lienzo */
+    var lo = 0.2, hi = 4 * Math.max(W, H) / S;
+    for (var i = 0; i < 26; i++){
+      var m = (lo + hi) / 2, pol = poligono(w3, m), cabe = pol.every(function(p){
+        var q = proy(p); return q.x > 50 && q.x < W - 50 && q.y > 30 && q.y < H - 30;
+      });
+      if (cabe) lo = m; else hi = m;
+    }
+    return lo;
+  }
+  /* un paso «redondo» (1, 2, 5 × 10ᵏ) para la rejilla y las marcas de los ejes */
+  function pasoRedondo(x){
+    var e = Math.pow(10, Math.floor(Math.log10(x))), m = x / e;
+    return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * e;
+  }
+  /* el plano w·x = 0 recortado por la caja: un polígono de 3 a 6 lados */
+  function poligono(w3, E){
+    if (!w3[0] && !w3[1] && !w3[2]) return [];
+    var n = norm(w3), pts = [];
+    function f(p){ return punto(p, n); }
+    var vs = [-E, E];
+    for (var eje = 0; eje < 3; eje++){
+      vs.forEach(function(a){ vs.forEach(function(b){
+        var p = [0, 0, 0], q = [0, 0, 0], o1 = (eje + 1) % 3, o2 = (eje + 2) % 3;
+        p[eje] = -E; q[eje] = E; p[o1] = q[o1] = a; p[o2] = q[o2] = b;
+        var fp = f(p), fq = f(q);
+        if ((fp > 0) !== (fq > 0) || fp === 0){
+          var t = fp / (fp - fq || 1);
+          pts.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t]);
+        }
+      }); });
+    }
+    var aux = Math.abs(n[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0], u = norm(cruz(n, aux)), v = cruz(n, u);
+    pts.sort(function(p, q){ return Math.atan2(punto(p, v), punto(p, u)) - Math.atan2(punto(q, v), punto(q, u)); });
+    return pts;
+  }
+  function planoW(w3, al, E){
+    if (al <= 0) return;
+    var pts = poligono(w3, E);
+    if (pts.length < 3) return;
+    var pp = pts.map(proy);
+    c.save();
+    c.beginPath(); pp.forEach(function(p, i){ i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y); }); c.closePath();
+    c.fillStyle = 'rgba(' + VIOLETA + ',' + (0.16 * al).toFixed(3) + ')'; c.fill();
+    c.shadowColor = 'rgba(' + VIOLETA + ',' + al.toFixed(3) + ')'; c.shadowBlur = 14;
+    c.strokeStyle = 'rgba(' + VIOLETA + ',' + (0.8 * al).toFixed(3) + ')'; c.lineWidth = 2; c.stroke();
+    c.restore();
+  }
+
+  /* rejilla tenue del espacio: verde donde w·x > 0, roja donde w·x < 0;
+     cada segmento que cruza el plano se parte en el cruce */
+  function rejilla(w3, al, E, paso){
+    if (al <= 0) return;
+    var V = [], seg = { v: [], r: [] }, k0 = Math.ceil(-E / paso), k1 = Math.floor(E / paso);
+    for (var k = k0; k <= k1; k++) V.push(k * paso);
+    function f(p){ return p[0] * w3[0] + p[1] * w3[1] + p[2] * w3[2]; }
+    function poner(p, q){
+      var fp = f(p), fq = f(q);
+      if ((fp >= 0) === (fq >= 0)){ (fp + fq >= 0 ? seg.v : seg.r).push([p, q]); return; }
+      var t = fp / (fp - fq), m = [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t];
+      (fp > 0 ? seg.v : seg.r).push([p, m]); (fq > 0 ? seg.v : seg.r).push([m, q]);
+    }
+    for (var eje = 0; eje < 3; eje++){
+      V.forEach(function(a){ V.forEach(function(b){
+        var p = [0, 0, 0], q = [0, 0, 0], o1 = (eje + 1) % 3, o2 = (eje + 2) % 3;
+        p[eje] = -E; q[eje] = E; p[o1] = q[o1] = a; p[o2] = q[o2] = b;
+        poner(p, q);
+      }); });
+    }
+    [['v', VERDE], ['r', ROJO]].forEach(function(k){
+      c.strokeStyle = 'rgba(' + k[1] + ',' + (0.42 * al).toFixed(3) + ')'; c.lineWidth = 1.2;
+      c.beginPath();
+      seg[k[0]].forEach(function(sg){ var a = proy(sg[0]), b = proy(sg[1]); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); });
+      c.stroke();
+    });
+  }
+  /* los ejes atraviesan toda la caja, con marcas numeradas */
+  function ejes(E, paso, t3){
+    var EJE = 'rgba(221,221,221,.95)', nombres = ['x₁', 'x₂', 'x₃'];
+    /* hasta dónde se ve cada semieje dentro del lienzo */
+    function alcance(k, sg){
+      var lo = 0, hi = E;
+      for (var i = 0; i < 30; i++){
+        var m = (lo + hi) / 2, p = [0, 0, 0]; p[k] = sg * m;
+        var q = proy(p);
+        if (q.x > 46 && q.x < W - 46 && q.y > 40 && q.y < H - 40) lo = m; else hi = m;
+      }
+      return lo;
+    }
+    for (var k = 0; k < 3; k++){
+      c.globalAlpha = k === 2 ? clamp((t3 - 0.15) / 0.5) : 1;
+      if (!c.globalAlpha) continue;
+      var a = [0, 0, 0], b = [0, 0, 0], tMas = alcance(k, 1); a[k] = -alcance(k, -1); b[k] = tMas;
+      flecha(a, b, EJE, 1.8);
+      var dir = proy(b), o = proy([0, 0, 0]), dx = dir.x - o.x, dy = dir.y - o.y, L = Math.hypot(dx, dy) || 1;
+      var nx = -dy / L * 14, ny = dx / L * 14;
+      c.strokeStyle = EJE; c.lineWidth = 1.2; c.beginPath();
+      for (var t = Math.ceil(a[k] / paso); t * paso <= tMas - paso * 0.3; t++){
+        if (!t) continue;
+        var p = [0, 0, 0]; p[k] = t * paso;
+        var q = proy(p);
+        c.moveTo(q.x - nx * 0.4, q.y - ny * 0.4); c.lineTo(q.x + nx * 0.4, q.y + ny * 0.4);
+        if (L > 60){
+          c.font = '17px ' + SERIF; c.fillStyle = 'rgba(200,200,200,.75)'; c.textAlign = 'center'; c.textBaseline = 'middle';
+          c.fillText(num(t * paso), q.x + nx * 1.4, q.y + ny * 1.4);
+        }
+      }
+      c.stroke();
+      var pe = proy(b), ux = dx / L, uy = dy / L;
+      texto(nombres[k], pe.x - ux * 30 + nx * 1.9, pe.y - uy * 30 + ny * 1.9, 36, 'rgb(' + AZUL + ')', 'center', true);
+    }
+    c.globalAlpha = 1;
+  }
+  function dibujar(now){
+    pend = false;
+    var r = cvs.getBoundingClientRect(), e = (r.width / W) * (window.devicePixelRatio || 1);
+    var bw = Math.round(W * e), bh = Math.round(H * e);
+    if (cvs.width !== bw || cvs.height !== bh){ cvs.width = bw; cvs.height = bh; }
+    c.setTransform(e, 0, 0, e, 0, 0); c.clearRect(0, 0, W, H);
+    /* paso 1: la cámara pasa de mirar el plano x₁x₂ desde arriba a la vista 3D */
+    var en3d = marca3d.classList.contains('on');
+    if (en3d !== quiere3d){
+      quiere3d = en3d; desde = tCam; hacia = en3d ? 1 : 0;
+      tIni = marca3d.classList.contains('instant') ? -1e9 : now;
+    }
+    var u = ease((now - tIni) / 1600);
+    tCam = desde + (hacia - desde) * u;
+    if (u < 1) pedir();
+    cam = deCuat(slerp(q0, q1, tCam));
+    var plOn = marcaPl.classList.contains('on');
+    if (plOn !== planoOn){ planoOn = plOn; tPl = marcaPl.classList.contains('instant') ? -1e9 : now; }
+    var aPl = plOn ? clamp((now - tPl) / 700) : 0;
+    if (plOn && aPl < 1) pedir();
+    var w3 = wActual(now), E = Math.min(extension(w3), 3.4 * 80 / S * 1.6), paso = pasoRedondo(E / 2.2);
+    var rOn = marcaRej.classList.contains('on');
+    if (rOn !== rejOn){ rejOn = rOn; tRej = marcaRej.classList.contains('instant') ? -1e9 : now; }
+    var aRej = rOn ? clamp((now - tRej) / 900) : 0;
+    if (rOn && aRej < 1) pedir();
+    /* la rejilla vive en un cubo que cabe entero en el lienzo */
+    var r0 = cam[0], u0 = cam[1];
+    var Ec = Math.min((W / 2 - 50) / (S * (Math.abs(r0[0]) + Math.abs(r0[1]) + Math.abs(r0[2]))),
+                      (H / 2 - 30) / (S * (Math.abs(u0[0]) + Math.abs(u0[1]) + Math.abs(u0[2]))));
+    rejilla(w3, aRej, Ec, pasoRedondo(Ec / 2.5));
+    planoW(w3, aPl, E);
+    ejes(E, paso, tCam);
+    puntos(tCam);
+    if (now - tW < 850) pedir();
+  }
+  function pedir(){ if (!pend){ pend = true; requestAnimationFrame(dibujar); } }
+  /* en 3D: arrastrar gira la cámara; doble clic la devuelve a su sitio */
+  var arr = null;
+  cvs.addEventListener('mousedown', function(ev){
+    if (tCam < 0.99) return;
+    arr = { x: ev.clientX, y: ev.clientY, az: az, el: el }; ev.preventDefault();
+  });
+  window.addEventListener('mousemove', function(ev){
+    if (!arr) return;
+    az = arr.az - (ev.clientX - arr.x) * 0.008;
+    el = Math.max(-1.45, Math.min(1.45, arr.el + (ev.clientY - arr.y) * 0.006));
+    cam1 = camara3d(); q1 = aCuat(cam1); pedir();
+  });
+  window.addEventListener('mouseup', function(){ arr = null; });
+  cvs.addEventListener('dblclick', function(ev){
+    ev.preventDefault(); az = AZ0; el = EL0; S = S0; cam1 = camara3d(); q1 = aCuat(cam1); pedir();
+  });
+  /* la rueda acerca y aleja */
+  cvs.addEventListener('wheel', function(ev){
+    ev.preventDefault();
+    S = Math.max(6, Math.min(600, S * Math.exp(-ev.deltaY * (ev.deltaMode === 1 ? 0.05 : 0.0015))));
+    pedir();
+  }, { passive: false });
+  cvs.addEventListener('mousemove', function(ev){
+    var r = cvs.getBoundingClientRect();
+    raton = { x: (ev.clientX - r.left) * W / r.width, y: (ev.clientY - r.top) * H / r.height };
+    cvs.style.cursor = arr ? 'grabbing' : 'grab';
+    pedir();
+  });
+  cvs.addEventListener('mouseleave', function(){ raton = null; pedir(); });
+  cvs.addEventListener('click', function(ev){ ev.preventDefault(); });
+  new MutationObserver(pedir).observe(sl, { attributes: true, subtree: true, attributeFilter: ['class'] });
+  window.addEventListener('resize', pedir);
+  /* al llegar desde «Dónde es positivo», el plano y la fórmula salen de donde estaban allá */
+  var vuelos = [];
+  sl.addEventListener('lamina', function(ev){
+    vuelos.forEach(function(a){ a.cancel(); }); vuelos = [];
+    var antes = document.querySelectorAll('.slide')[ev.detail.desde];
+    if (!ev.detail.anim || !antes || !antes.classList.contains('geo2-sl')) return;
+    var lienzo = cvs.parentNode, gC = antes.querySelector('canvas').getBoundingClientRect(), dC = lienzo.getBoundingClientRect();
+    var esc = dC.width / W;
+    var gPx = 50 * gC.width / 600, dPx = S * esc, k = gPx / dPx;
+    var gO = { x: gC.left + gC.width / 2, y: gC.top + gC.height / 2 }, dO = { x: dC.left + O.x * esc, y: dC.top + O.y * esc };
+    lienzo.style.transformOrigin = O.x + 'px ' + O.y + 'px';
+    var t = { duration: 1100, easing: 'cubic-bezier(.45,.05,.25,1)' };
+    vuelos.push(lienzo.animate([{ transform: 'translate(' + (gO.x - dO.x) / esc + 'px,' + (gO.y - dO.y) / esc + 'px) scale(' + k + ')' }, { transform: 'none' }], t));
+    var gF = antes.querySelector('.geo-form'), dF = sl.querySelector('.d3-form');
+    if (gF && dF){
+      var a = gF.getBoundingClientRect(), b = dF.getBoundingClientRect(), kf = a.height / b.height;
+      dF.style.transformOrigin = '0 0';
+      vuelos.push(dF.animate([{ transform: 'translate(' + (a.left - b.left) / esc + 'px,' + (a.top - b.top) / esc + 'px) scale(' + kf + ')' }, { transform: 'none' }], t));
+    }
+  });
+  pedir();
 })();
 </script>
 
