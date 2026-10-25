@@ -412,6 +412,11 @@ body.fs #hint{display:none}
 /* la primera lámina (la entrada de cine) ocupa toda la pantalla: sin barra ni ayuda, ni siquiera al pasar el ratón */
 body:has(.zh-sl.active) #bar, body:has(.zh-sl.active) #hint{display:none}
 body:has(.zh-sl.active) #viewport{bottom:0}
+body.video #bar, body.video #hint, body.video .zh-botones{display:none !important}
+body.video #viewport{bottom:0}
+/* en el video (vertical, para ver en el teléfono) los versos van más grandes */
+body.video .zh .han{font-size:56px} body.video .zh .es{font-size:31px} body.video .zh .fuente{font-size:31px} body.video .zh .fuente .han{font-size:35px}
+body.video .slide.zh-sl{padding:110px 70px}
 /* en la primera lámina, durante la cuenta regresiva: botones discretos abajo a la derecha para empezar de nuevo y para
    pantalla completa (este no se muestra si ya estamos en pantalla completa); desaparecen cuando empieza la animación */
 .zh-botones{position:fixed; right:18px; bottom:16px; z-index:20; display:none; gap:10px}
@@ -2198,9 +2203,14 @@ body.fs.bar-show #bar{transform:none}
   });
 
   /* ---------- fit stage ---------- */
+  /* ?video: modo para grabar la entrada en formato vertical (Instagram, 1080×1920): escenario vertical, sin barra */
+  var VIDEO = /[?&]video\b/.test(location.search), SW = VIDEO ? 1080 : 1600, SH = VIDEO ? 1920 : 900;
+  if (VIDEO){ document.body.classList.add('video'); stage.style.width = SW + 'px'; stage.style.height = SH + 'px'; }
+  /* al grabar, el reloj lo pone quien graba (window.__vt, en segundos): cada cuadro dura exactamente lo mismo */
+  if (VIDEO){ window.__vt = 0; performance.now = function(){ return window.__vt * 1000; }; }
   function fit(){
     var w = viewport.clientWidth, h = viewport.clientHeight;
-    var s = Math.min(w / 1600, h / 900);
+    var s = Math.min(w / SW, h / SH);
     stage.style.transform = 'scale(' + s + ')';
   }
   window.addEventListener('resize', fit);
@@ -5221,7 +5231,9 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
 (function(){
   var cvs = document.getElementById('zh-umap');
   if (!cvs) return;
-  var c = cvs.getContext('2d'), sl = cvs.closest('.slide'), W = 1600, H = 900, P = null, F = null, n = 0;
+  var VIDEO = document.body.classList.contains('video');
+  /* en el modo video (vertical) el lienzo es 1080×1920 y la nube se ve un poco más chica para caber de ancho (FS) */
+  var c = cvs.getContext('2d'), sl = cvs.closest('.slide'), W = VIDEO ? 1080 : 1600, H = VIDEO ? 1920 : 900, FS = VIDEO ? 0.8 : 1, P = null, F = null, n = 0;
   function preparar(cols, frec){
     n = cols[0].length;
     var est = cols.map(function(v){ var o = Array.from(v).sort(function(a, b){ return a - b; }); return [o[Math.floor(n * .02)], o[Math.floor(n * .98)], o[n >> 1]]; });
@@ -5323,9 +5335,9 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
       if (j === i) continue;
       var ox = P[3 * j] - P[3 * i], oy = P[3 * j + 1] - P[3 * i + 1], oz = P[3 * j + 2] - P[3 * i + 2];
       var x2 = ox * ca - oz * sa, z2 = ox * sa + oz * ca, y2 = oy * ce - z2 * se, zz = oy * se + z2 * ce;
-      var ax = Math.abs(620 * x2), ay = Math.abs(620 * y2), b = tam(j);             // vista plana (ortográfica) al comienzo
+      var ax = Math.abs(620 * FS * x2), ay = Math.abs(620 * FS * y2), b = tam(j);   // vista plana (ortográfica) al comienzo
       if (zz < 0 && Math.sqrt(ax * ax + ay * ay) + b < tam(i)) continue;            // tapado por el punto de partida
-      var zx = ax > b ? 800 / (ax - b) : Infinity, zy = ay > b ? 450 / (ay - b) : Infinity, zj = Math.min(zx, zy);
+      var zx = ax > b ? (W / 2) / (ax - b) : Infinity, zy = ay > b ? (H / 2) / (ay - b) : Infinity, zj = Math.min(zx, zy);
       if (zj >= zi) return null;                                                     // se vería desde el comienzo
       if (zj > 0) zs.push(zj);
     }
@@ -5353,7 +5365,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     if (on && !corriendo){
       corriendo = true;
       if (volviendo){ tc = FIN + 15; [0, 1, 2].forEach(function(k){ mostrar(k, false); }); }
-      else { tc = 0; cuenta = 11; sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3'); }
+      else { tc = 0; cuenta = VIDEO ? 0 : 11; sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3'); }
     }
     if (activa && mTit.classList.contains('on')) corriendo = corriendo || tc > 0;
     if (!activa){ corriendo = false; volviendo = false; tc = 0; sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3'); }
@@ -5379,6 +5391,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
   }
   window.__cineInfo = function(){ return { foco: foco, Z0: Z0, Z33: Z33, Z108: Z108, dibujados: window.__dib }; };   // para revisar: lee o salta el reloj de la entrada          // para revisar: salta a un momento de la entrada
   function cuadro(now){
+    if (VIDEO) now = performance.now();
     requestAnimationFrame(cuadro);
     var real = Math.min(1, (now - antes) / 1000), dt = Math.min(0.05, real); antes = now;      // el reloj de la entrada va en tiempo real
     if (!sl.classList.contains('active') || !P) return;
@@ -5482,8 +5495,8 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     var fx = P[3 * foco] * (1 - m), fy = P[3 * foco + 1] * (1 - m), fz = P[3 * foco + 2] * (1 - m);
     var el = EL0;
     var ca = Math.cos(az), sa = Math.sin(az), ce = Math.cos(el), se = Math.sin(el);
-    var foc = (620 + 200 * pt) * D * Z;
-    var cx = lerp(800, 1120, m) - 320 * pt, cy = lerp(450, 470, m) - 20 * pt;
+    var foc = (620 + 200 * pt) * FS * D * Z;
+    var cx = lerp(W / 2, VIDEO ? W / 2 : 1120, m) - 320 * pt, cy = lerp(H / 2, VIDEO ? H * 0.62 : 470, m) - 20 * pt;
     /* la zambullida: la cámara acelera hacia la nube, la atraviesa (los puntos pasan rápido a los lados) y sale por detrás */
     var avance = tZoom == null ? 0 : sz < 2 ? 0.25 * sz * sz : 1 + 1 * (sz - 2);       // ~3 s cruzando la nube
     var grande = null; var dib = 0, NIV = 32, grupos2 = [], grandes = [];
