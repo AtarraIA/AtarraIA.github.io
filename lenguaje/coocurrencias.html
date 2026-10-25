@@ -187,6 +187,19 @@ h1,h2,h3,p{margin:0}
 .zh .es{margin-bottom:22px}
 .zh .fuente{justify-self:start}
 .slide.zh-sl{padding:60px 70px; align-items:flex-start; justify-content:flex-start}
+.zh-barra{position:absolute; left:60px; right:60px; bottom:22px; z-index:5; accent-color:#58c4dd; opacity:.6}
+.zh-barra:hover{opacity:1}
+/* después de los versos: el texto se va y queda el título al frente, con la nube girando detrás */
+.zh{transition:opacity .7s ease}
+.zh-sl:has(.marca-titulo.on) .zh{opacity:0}
+/* los versos aparecen solos al terminar la entrada de cine (el JS pone zh-e1, zh-e2, zh-e3) */
+.zh-sl .zh .g1, .zh-sl .zh .g2, .zh-sl .zh .g3{visibility:hidden}
+.zh-sl.zh-e1 .zh .g1, .zh-sl.zh-e2 .zh .g2, .zh-sl.zh-e3 .zh .g3{visibility:visible}
+.zh-portada{position:absolute; inset:0; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+  text-shadow:0 0 14px #000, 0 0 30px #000; pointer-events:none}
+.zh-portada .t-hero{font-size:130px}
+.zh-atarraia{font-size:58px; margin-top:44px; color:var(--orange); text-shadow:0 0 18px var(--orange), 0 0 30px #000}
+.zh-sem{font-size:40px; margin-top:14px; color:#ddd}
 .zh .han{font-family:'Noto Serif SC sub','Noto Serif CJK SC',var(--serif); font-size:36px; line-height:1.3; letter-spacing:.05em; white-space:nowrap}
 .zh .es{font-size:22px; line-height:1.55; white-space:nowrap}
 .zh .fuente{ font-size:22px; color:var(--grey); margin-top:18px}
@@ -1077,20 +1090,22 @@ body.fs.bar-show #bar{transform:none}
 </div>
 <div id="stage">
 
-<section class="slide center zh-sl" data-label="Zhuangzi">
+<section class="slide center zh-sl interactivo" data-label="Zhuangzi">
   <div class="el" data-b="0" style="position:absolute; inset:0"><canvas id="zh-umap" aria-hidden="true"></canvas></div>
   <div class="zh">
-    <div class="han el m-write" data-b="0">荃者所以在鱼，得鱼而忘荃</div>
-    <div class="es el m-fade" data-b="0">Las redes son para los peces;<br>una vez que tienes el pez, puedes olvidar la red.</div>
-    <div class="han el m-write" data-b="1">言者所以在意，得意而忘言</div>
-    <div class="es el m-fade" data-b="1">Las palabras son para el significado;<br>una vez que tienes el significado, puedes olvidar las palabras.</div>
-    <div class="fuente el m-fade" data-b="2"><span class="han">庄子</span> (Zhuangzi), capítulo 26</div>
+    <div class="han el m-write g1" data-b="0">荃者所以在鱼，得鱼而忘荃</div>
+    <div class="es el m-fade g1" data-b="0">Las redes son para los peces;<br>una vez que tienes el pez, puedes olvidar la red.</div>
+    <div class="han el m-write g2" data-b="0">言者所以在意，得意而忘言</div>
+    <div class="es el m-fade g2" data-b="0">Las palabras son para el significado;<br>una vez que tienes el significado, puedes olvidar las palabras.</div>
+    <div class="fuente el m-fade g3" data-b="0"><span class="han">庄子</span> (Zhuangzi), capítulo 26</div>
   </div>
+  <!-- con → o Enter: los versos se van, la cámara se zambulle en la nube y se pasa sola a la portada -->
+  <span class="st marca-cine el" data-b="0"></span><span class="st marca-titulo el" data-b="1"></span><span class="st marca-zoom el" data-b="1"></span>
 </section>
 
 <section class="slide center" data-label="Portada">
   <h1 class="t-hero el m-write" data-b="0">Embeddings</h1>
-  <p class="t-lead dim el m-fade" data-b="1" style="margin-top:40px">Seminario de Lenguaje y LLM</p>
+  <p class="t-lead dim el m-fade" data-b="1" style="margin-top:40px">Seminario de Lenguaje y LLMs</p>
 </section>
 
 <!-- el laboratorio de la presentación de N-gramas, tal cual (lámina 55) -->
@@ -5221,29 +5236,238 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
   s.src = 'mapas/palabras.js';
   s.onerror = desdeConteos;
   document.head.appendChild(s);
-  var az = 0.4, antes = performance.now();
+  /* ── la entrada de cine (segundos desde que llega la lámina):
+     0–33     un solo punto grande, la cámara pegada a él
+     33–108   la cámara se aleja y aparecen los puntos vecinos
+     108–216  se ve que es parte de una nube gigante; a los 216 queda la vista completa
+     216, 221, 226  aparecen el primer verso, el segundo y la cita
+     La cámara siempre gira alrededor del punto que mira. Con → se adelanta rápido. ── */
+  var FIN = 140, TEXTOS = [140, 145, 150];          // 2:17 la vista completa; 2:20 empiezan los versos
+  var REVELA = 137, SALE = 132;                   // 2:12 la cámara empieza a emerger de la nube; 2:17 ya está afuera
+  var RELOJ = false;                             // reloj y barra de depuración (abajo); true para verlos
+  var pasado = false, cuenta = 0, az = 0.4, azExtra = 0, antes = performance.now(), mCine = sl.querySelector('.marca-cine'), mTit = sl.querySelector('.marca-titulo'), mZoom = sl.querySelector('.marca-zoom');
+  var tTit = null, tZoom = null, tc = 0, corriendo = false, foco = -1;
+  var grupos = [1, 2, 3].map(function(g){ return sl.querySelectorAll('.zh .g' + g); });
+  function momento(m, t){ var on = m.classList.contains('on') && sl.classList.contains('active');
+    return !on ? null : t != null ? t : m.classList.contains('instant') ? -1e9 : performance.now(); }
+  function ease(t){ t = Math.max(0, Math.min(1, t)); return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+  function lerp(a, b, t){ return a + (b - a) * t; }
+  function mostrar(k, animar){
+    if (sl.classList.contains('zh-e' + (k + 1))) return;
+    sl.classList.add('zh-e' + (k + 1));
+    if (animar) grupos[k].forEach(function(e){ e.classList.remove('on', 'instant'); void e.offsetWidth; e.classList.add('on'); });   // vuelve a correr la animación
+  }
+  /* el punto donde empieza: una palabra frecuente cerca del centro de la nube */
+  /* la cámara de la entrada está siempre a la misma distancia (la de la vista final) y solo cambia el
+     aumento Z: así los puntos se ven casi del mismo tamaño y los vecinos entran por los bordes solo por
+     dónde están. El punto de partida se elige en una zona poco poblada: a los 33 s, cuando él mide
+     ~35 px, en el cuadro solo deben caber unos pocos vecinos (cerca de los bordes). */
+  var AZ0 = 0.4, EL0 = 0.35, Z0 = 100, Z33 = 10, Z108 = 3;
+  /* spline cúbica monótona (Fritsch–Carlson) de ln Z por los nudos; pendiente 0 al principio y al final */
+  var NUDOS = null;
+  function curvaZ(t){
+    if (!NUDOS){
+      /* un nudo a 3/4 del último tramo (Z = 2) para que el final se alcance recién a las 2:15 */
+      var x = [0, ENTRA, 68, SALE, REVELA], y = [Math.log(Z0), Math.log(Z33), Math.log(Z108), Math.log(1.7), 0], n3 = x.length, dl = [], ms = [];
+      for (var q = 0; q < n3 - 1; q++) dl.push((y[q + 1] - y[q]) / (x[q + 1] - x[q]));
+      ms[0] = 0; ms[n3 - 1] = 0;
+      for (q = 1; q < n3 - 1; q++) ms[q] = dl[q - 1] * dl[q] <= 0 ? 0 : 2 / (1 / dl[q - 1] + 1 / dl[q]);   // media armónica: sin rebotes
+      NUDOS = { x: x, y: y, m: ms };
+    }
+    var X = NUDOS.x, Y = NUDOS.y, M = NUDOS.m, k = 0;
+    while (k < X.length - 2 && t > X[k + 1]) k++;
+    var h = X[k + 1] - X[k], u = Math.max(0, Math.min(1, (t - X[k]) / h));
+    return Y[k] * (2 * u * u * u - 3 * u * u + 1) + M[k] * h * (u * u * u - 2 * u * u + u) + Y[k + 1] * (-2 * u * u * u + 3 * u * u) + M[k + 1] * h * (u * u * u - u * u);
+  }
+  /* tramos rectos entre nudos [t, valor] (constante antes del primero y después del último),
+     empalmados con un promedio móvil del último segundo: el ritmo es parejo dentro de cada tramo */
+  function tramos(N, t){
+    if (t <= N[0][0]) return N[0][1];
+    for (var q = 1; q < N.length; q++) if (t <= N[q][0]) return N[q - 1][1] + (N[q][1] - N[q - 1][1]) * (t - N[q - 1][0]) / (N[q][0] - N[q - 1][0]);
+    return N[N.length - 1][1];
+  }
+  /* el empalme mira solo hacia atrás (1 s): cada cambio empieza exactamente en su momento clave, nunca antes */
+  function suave(N, t){ var s2 = 0; for (var q = 0; q <= 4; q++) s2 += tramos(N, t - q * 0.25); return s2 / 5; }
+  function tam(i){ return 0.7 + 2.6 * F[i] * F[i]; }
+  /* El punto de partida y el ritmo del alejamiento. Con la cámara quieta, la posición y el tamaño en
+     pantalla de cada vecino crecen ambos con el aumento Z, así que cada vecino j entra al cuadro cuando Z
+     baja de un umbral Zj, y uno tapado por el punto de partida sigue tapado. Se elige un punto que al
+     comienzo no deje ver a nadie y cuyo primer vecino entre cuando el punto se ha achicado unas
+     RAZON veces: así el alejamiento hasta los 32 s es lento. */
+  var RAZON = 2.2, ENTRA = 34;
+  function umbralEntrada(i){
+    var ca = Math.cos(AZ0), sa = Math.sin(AZ0), ce = Math.cos(EL0), se = Math.sin(EL0), D = 2.1, zi = 330 / tam(i), zs = [];
+    for (var j = 0; j < n; j++){
+      if (j === i) continue;
+      var ox = P[3 * j] - P[3 * i], oy = P[3 * j + 1] - P[3 * i + 1], oz = P[3 * j + 2] - P[3 * i + 2];
+      var x2 = ox * ca - oz * sa, z2 = ox * sa + oz * ca, y2 = oy * ce - z2 * se, zz = oy * se + z2 * ce;
+      var ax = Math.abs(620 * x2), ay = Math.abs(620 * y2), b = tam(j);             // vista plana (ortográfica) al comienzo
+      if (zz < 0 && Math.sqrt(ax * ax + ay * ay) + b < tam(i)) continue;            // tapado por el punto de partida
+      var zx = ax > b ? 800 / (ax - b) : Infinity, zy = ay > b ? 450 / (ay - b) : Infinity, zj = Math.min(zx, zy);
+      if (zj >= zi) return null;                                                     // se vería desde el comienzo
+      if (zj > 0) zs.push(zj);
+    }
+    return zs.sort(function(a, b){ return b - a; }).slice(0, 4);                  // los umbrales de los 4 primeros en entrar
+  }
+  function elegirFoco(){
+    var mejor = -1, mejorErr = Infinity, mejorZs = null;
+    for (var i = 0; i < n; i += 4){
+      if (F[i] < 0.3 || F[i] > 0.85) continue;
+      var zs = umbralEntrada(i);
+      if (!zs || zs.length < 4) continue;
+      var err = Math.abs(Math.log((330 / tam(i)) / zs[0] / RAZON));
+      if (err < mejorErr){ mejorErr = err; mejor = i; mejorZs = zs; if (err < 0.03) break; }
+    }
+    foco = mejor < 0 ? 0 : mejor;
+    Z0 = 330 / tam(foco);                                      // 0 s: el punto mide ~330 px
+    var ZE = mejorZs ? mejorZs[0] : Z0 / RAZON;
+    Z33 = ZE * 1.005;  /* el primer vecino entra justo a los ENTRA s */                                          // el aumento justo cuando entra el primer vecino (a los ENTRA s)
+    Z108 = Math.min(Z33, 4);                                   // la vista densa de la 1:08                                   // a los 108 s ya se ve un buen pedazo de la nube
+  }
+  var volviendo = false;                         // se vuelve con ← desde el título: la entrada ya se vio
+  function revisar(){
+    var activa = sl.classList.contains('active'), on = activa && mCine.classList.contains('on') && !mTit.classList.contains('on');
+    if (activa && mTit.classList.contains('on')) volviendo = true;
+    if (on && !corriendo){
+      corriendo = true;
+      if (volviendo){ tc = FIN + 15; [0, 1, 2].forEach(function(k){ mostrar(k, false); }); }
+      else { tc = 0; cuenta = 6; sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3'); }
+    }
+    if (activa && mTit.classList.contains('on')) corriendo = corriendo || tc > 0;
+    if (!activa){ corriendo = false; volviendo = false; tc = 0; sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3'); }
+  }
+  window.__cine = function(t){ if (t != null) tc = t; return tc; };
+  /* barra de depuración (con el reloj): arrastrarla salta a ese momento de la entrada y sigue desde ahí */
+  if (RELOJ){
+    var barra = document.createElement('input');
+    barra.type = 'range'; barra.min = 0; barra.max = FIN + 20; barra.step = 0.1; barra.value = 0;
+    barra.className = 'zh-barra interactivo'; barra.setAttribute('aria-label', 'Momento de la entrada');
+    sl.appendChild(barra);
+    barra.addEventListener('input', function(){
+      tc = +barra.value; corriendo = true; cuenta = 0;
+      sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3');
+      TEXTOS.forEach(function(t, k){ if (tc >= t + 3) mostrar(k, false); });     // los versos ya pasados, sin animar
+    });
+    setInterval(function(){ if (document.activeElement !== barra) barra.value = tc; }, 200);
+  }
+  window.__cineInfo = function(){ return { foco: foco, Z0: Z0, Z33: Z33, Z108: Z108, dibujados: window.__dib }; };   // para revisar: lee o salta el reloj de la entrada          // para revisar: salta a un momento de la entrada
   function cuadro(now){
     requestAnimationFrame(cuadro);
-    var dt = Math.min(0.05, (now - antes) / 1000); antes = now;
+    var real = Math.min(1, (now - antes) / 1000), dt = Math.min(0.05, real); antes = now;      // el reloj de la entrada va en tiempo real
     if (!sl.classList.contains('active') || !P) return;
-    az += dt * 0.05;
+    if (foco < 0){ elegirFoco(); console.log('entrada: punto de partida', foco); }
+    revisar();
+    tTit = momento(mTit, tTit); tZoom = momento(mZoom, tZoom);
+    if (tZoom != null && tZoom < 0) tZoom = now;                          // la zambullida siempre empieza desde el principio
+    /* después de unos segundos de zambullida se pasa sola a la lámina siguiente */
+    if (tZoom != null && !pasado && now - tZoom > 3800 && mZoom.classList.contains('on') && !mZoom.classList.contains('instant')){
+      pasado = true; document.getElementById('next').click();
+    }
+    if (tZoom == null) pasado = false;
+    /* el reloj de la entrada; con el título ya puesto, corre 60 veces más rápido hasta el final */
+    /* cuenta regresiva de 5 a 0 antes de la entrada (abajo a la derecha, muy pequeña); mientras dura, el reloj no corre */
+    if (cuenta > 0 && corriendo && tTit == null){ cuenta -= real; }
+    else if (corriendo || tTit != null) tc += real * (tTit != null && tc < FIN ? 60 : 1);
+    if (tTit != null && tTit < 0) tc = Math.max(tc, FIN + 15);
+    TEXTOS.forEach(function(t, k){ if (corriendo && tc >= t) mostrar(k, true); });
+    var pt = tTit == null ? 0 : ease((now - tTit) / 1500);              // la nube se corre al centro, detrás del título
+    var sz = tZoom == null ? 0 : Math.max(0, (now - tZoom) / 1000), acel = Math.min(1, sz * sz / 36);   // zambullida: cada vez más rápido
+    /* después del título la zambullida acelera el giro (fuera de la entrada) */
+    azExtra += dt * 0.9 * acel;
     var r = cvs.getBoundingClientRect(), e = (r.width / W) * (window.devicePixelRatio || 1);
     var bw = Math.round(W * e), bh = Math.round(H * e);
     if (cvs.width !== bw || cvs.height !== bh){ cvs.width = bw; cvs.height = bh; }
     c.setTransform(e, 0, 0, e, 0, 0); c.clearRect(0, 0, W, H);
-    /* cámara cerca de la nube y corrida a la derecha: se ve en perspectiva y llena ese lado */
-    var ca = Math.cos(az), sa = Math.sin(az), el = 0.35, ce = Math.cos(el), se = Math.sin(el);
-    var D = 2.1, S = 620, cx = 1120, cy = 470;
+    if (cuenta > 0 && corriendo && tTit == null){
+      c.font = "20px 'LM Mono', ui-monospace, monospace"; c.textAlign = 'right'; c.textBaseline = 'alphabetic';
+      c.fillStyle = 'rgba(255,255,255,0.55)'; c.fillText(String(Math.max(0, Math.ceil(cuenta) - 1)), W - 30, H - 30);
+      return;
+    }
+    /* la cámara mira al punto de partida desde una distancia d, con un aumento Z (zoom óptico):
+       con Z grande el punto llena la pantalla y los vecinos quedan fuera del cuadro; al bajar Z
+       entran desde los bordes. Al final, d y Z llegan a la vista de siempre. */
+    /* LA CÁMARA. Todo su movimiento se define por tramos entre los momentos clave
+         0:00 · 0:35 (entra el primer vecino) · 1:08 (empieza a girar) · 2:10 (empieza a emerger) · 2:15 (afuera)
+       y dentro de cada tramo cada parámetro cambia a ritmo constante: la cámara solo cambia de movimiento en
+       esos momentos (con un empalme de 1 s después de cada uno para que no dé un tirón), nunca antes ni después.
+         ln Zef   escala alrededor del punto mirado (lo que se aleja)
+         ω        velocidad de giro: 0 hasta 1:08, luego constante
+         w        perspectiva: 0 (vista plana, podría ser algo 2D) hasta 1:08; crece pareja hasta 2:10
+         ln d     distancia al punto mirado: adentro de la nube hasta 2:10; de 2:10 a 2:15 sale (emerge)
+         m        acomodo a la vista final: de 2:10 a 2:15 */
+    var D = 2.1, DENTRO = 0.3, Z, d, m;
+    var K0 = [0, ENTRA, 68, SALE, REVELA];
+    /* la salida (2:12 → 2:17) es una curva muy suave: arranca con la velocidad que traía y frena hasta detenerse,
+       sin cambios bruscos de velocidad ni de aceleración */
+    var ue = Math.max(0, Math.min(1, (tc - SALE) / (REVELA - SALE))), se5 = ue * ue * ue * (ue * (6 * ue - 15) + 10);   // velocidad y aceleración cero al empezar y al terminar
+    var lnZef;
+    var NZ = [[0, Math.log(Z0)], [ENTRA, Math.log(Z33)], [68, Math.log(Z108)], [SALE, Math.log(1.7)]];
+    if (tc < SALE) lnZef = suave(NZ, tc);
+    else {
+      /* arranca exactamente donde quedó (el valor suavizado a las 2:12, no el del nudo) y con la misma velocidad: sin salto */
+      var v1 = (Math.log(1.7) - Math.log(Z108)) / (SALE - 68) * (REVELA - SALE), L1 = suave(NZ, SALE);
+      lnZef = L1 * (2 * ue * ue * ue - 3 * ue * ue + 1) + v1 * (ue * ue * ue - 2 * ue * ue + ue);
+      lnZef = lerp(lnZef, L1 * (1 - se5), se5);                                                     // y se asienta suave al final
+    }
+    var Zef = Math.exp(lnZef);
+    var OMEGA = 0.042;                                                    // a las 2:10 la cámara mira hacia el centro de la nube
+    az = AZ0 + suave([[0, 0], [68, 0], [68 + 1000, OMEGA * 1000]], tc) + azExtra;
+    /* la perspectiva crece pareja desde 1:08 y, al emerger, sigue creciendo y se asienta suave en 1 (sin quiebre a las 2:12) */
+    var w;
+    var NW = [[68, 0], [SALE, 0.94]];
+    if (tc < SALE) w = suave(NW, tc);
+    else { var w1 = suave(NW, SALE), vw = 0.94 / (SALE - 68) * (REVELA - SALE); w = w1 * (2 * ue * ue * ue - 3 * ue * ue + 1) + vw * (ue * ue * ue - 2 * ue * ue + ue) + (-2 * ue * ue * ue + 3 * ue * ue); }
+    d = Math.exp(lerp(Math.log(DENTRO), Math.log(D), se5));
+    m = se5;
+    Z = Zef * d / D;
+    if (RELOJ) window.__cam = [tc, Zef, w, d, m, az];                   // depuración
+    var fx = P[3 * foco] * (1 - m), fy = P[3 * foco + 1] * (1 - m), fz = P[3 * foco + 2] * (1 - m);
+    var el = EL0;
+    var ca = Math.cos(az), sa = Math.sin(az), ce = Math.cos(el), se = Math.sin(el);
+    var foc = (620 + 200 * pt) * D * Z;
+    var cx = lerp(800, 1120, m) - 320 * pt, cy = lerp(450, 470, m) - 20 * pt;
+    var avance = tZoom == null ? 0 : sz < 5 ? 0.07 * sz * sz : 1.75 + 0.7 * (sz - 5);   // acelera 5 s y después sigue cayendo a velocidad constante, sin fin
+    var grande = null; var dib = 0, NIV = 32, grupos2 = [], grandes = [];
     for (var i = 0; i < n; i++){
-      var x = P[3 * i], y = P[3 * i + 1], z = P[3 * i + 2];
-      var x2 = x * ca - z * sa, z2 = x * sa + z * ca, y2 = y * ce - z2 * se, zz = y * se + z2 * ce;
-      if (zz > D - 0.25) continue;                              // detrás de la cámara
-      var k = D / (D - zz), px = cx + x2 * S * k, py = cy - y2 * S * k;
-      if (px < -10 || px > W + 10 || py < -10 || py > H + 10) continue;
-      var f = F[i], a = Math.min(1, 1.2 * Math.max(0.15, Math.min(0.9, 0.35 + 0.35 * zz + 0.3 * f)));      // 20 % más brillantes
-      c.fillStyle = 'rgba(88,196,221,' + a.toFixed(3) + ')';
-      var rad = (0.7 + 2.6 * f * f) * k;
-      c.beginPath(); c.arc(px, py, rad, 0, 6.2832); c.fill();
+      var ox = P[3 * i] - fx, oy = P[3 * i + 1] - fy, oz = P[3 * i + 2] - fz;
+      var x2 = ox * ca - oz * sa, z2 = ox * sa + oz * ca, y2 = oy * ce - z2 * se, zz = oy * se + z2 * ce;
+      /* los puntos que pasan la cámara vuelven a aparecer al fondo: seguimos cayendo dentro de la nube */
+      if (avance > 0){ zz += avance + 1.4; zz -= 3.2 * Math.floor(zz / 3.2); zz -= 1.4; }
+      var prof = d - zz;
+      var pe = lerp(d, prof, w);                                          // w = 0: todos a la misma profundidad (plano)
+      if (pe < (avance > 0 ? 0.25 : 0.002)) continue;                     // solo se dejan de dibujar al pasar detrás de la cámara
+      var f = F[i], k = D / pe, rad = (0.7 + 2.6 * f * f) * k * Z;
+      if (i !== foco) rad = Math.min(avance > 0 ? 14 * Zef : 160, rad);   // los cercanos crecen y salen del cuadro por los bordes; no desaparecen
+      var px = cx + foc * x2 / pe, py = cy - foc * y2 / pe;
+      if (px < -rad || px > W + rad || py < -rad || py > H + rad) continue;
+      var a = Math.min(1, 1.2 * Math.max(0.15, Math.min(0.9, 0.35 + 0.35 * w * Math.max(-1, Math.min(1, zz / Math.max(d, 0.3) * 0.9)) + 0.3 * f)));
+      if (i === foco){ grande = [px, py, rad]; continue; }                // el punto de partida va encima de todos
+      dib++;
+      if (a < 0.02) continue;
+      /* para que la animación no se trabe, los puntos se agrupan por opacidad y cada grupo se pinta de una vez;
+         solo los grandes (con resplandor) van uno por uno */
+      if (rad > 16){ grandes.push([px, py, rad, a]); continue; }
+      var b = Math.min(NIV - 1, Math.round(a * (NIV - 1))), g = grupos2[b] || (grupos2[b] = new Path2D());
+      g.moveTo(px + rad, py); g.arc(px, py, rad, 0, 6.2832);
+    }
+    grupos2.forEach(function(g, b){ if (g){ c.fillStyle = 'rgba(88,196,221,' + (b / (NIV - 1)).toFixed(3) + ')'; c.fill(g); } });
+    grandes.forEach(function(q){
+      c.fillStyle = 'rgba(88,196,221,' + q[3].toFixed(3) + ')'; c.shadowColor = 'rgba(88,196,221,0.8)'; c.shadowBlur = Math.min(40, q[2]);
+      c.beginPath(); c.arc(q[0], q[1], q[2], 0, 6.2832); c.fill();
+    });
+    c.shadowBlur = 0;
+    if (grande){
+      c.fillStyle = 'rgba(88,196,221,1)';
+      if (grande[2] > 8){ c.shadowColor = 'rgba(88,196,221,0.8)'; c.shadowBlur = Math.min(60, grande[2]); }
+      c.beginPath(); c.arc(grande[0], grande[1], grande[2], 0, 6.2832); c.fill(); c.shadowBlur = 0;
+    }
+    window.__dib = dib;
+    /* reloj de depuración: el segundo de la entrada, abajo a la derecha */
+    if (RELOJ){
+      var mm = Math.floor(tc / 60), ss = tc - 60 * mm;
+      c.font = "26px 'LM Mono', ui-monospace, monospace"; c.textAlign = 'right'; c.textBaseline = 'alphabetic';
+      c.fillStyle = 'rgba(255,255,255,0.75)';
+      c.fillText(mm + ':' + (ss < 10 ? '0' : '') + ss.toFixed(1) + '  (' + tc.toFixed(1) + ' s)', W - 30, H - 70);
     }
   }
   requestAnimationFrame(cuadro);
