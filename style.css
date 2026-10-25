@@ -612,6 +612,17 @@ footer a:hover { text-decoration: underline; }
   flex: 1;
 }
 
+/* vista previa de la presentación, arriba de la tarjeta */
+.card-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-bottom: 1px solid var(--border);
+  background: #000;
+}
+
 .card-title {
   color: var(--gold);
   font-size: 1.1rem;
