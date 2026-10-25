@@ -409,6 +409,18 @@ h1,h2,h3,p{margin:0}
 
 body.fs #viewport{bottom:0}
 body.fs #hint{display:none}
+/* la primera lámina (la entrada de cine) ocupa toda la pantalla: sin barra ni ayuda, ni siquiera al pasar el ratón */
+body:has(.zh-sl.active) #bar, body:has(.zh-sl.active) #hint{display:none}
+body:has(.zh-sl.active) #viewport{bottom:0}
+/* en la primera lámina, durante la cuenta regresiva: botones discretos abajo a la derecha para empezar de nuevo y para
+   pantalla completa (este no se muestra si ya estamos en pantalla completa); desaparecen cuando empieza la animación */
+.zh-botones{position:fixed; right:18px; bottom:16px; z-index:20; display:none; gap:10px}
+body:has(.zh-sl.active.zh-cuenta) .zh-botones{display:flex}
+body.fs .zh-full{display:none}
+.zh-b{width:38px; height:38px; border-radius:50%; border:1px solid #2b2b2b; background:transparent; color:#777; font-size:18px; line-height:1;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; transition:border-color .18s, color .18s}
+.zh-b svg{width:16px; height:16px; fill:currentColor}
+.zh-b:hover{border-color:var(--blue); color:var(--blue)}
 body.fs #bar{transform:translateY(100%); transition:transform .28s ease}
 body.fs.bar-show #bar{transform:none}
 
@@ -1099,6 +1111,10 @@ body.fs.bar-show #bar{transform:none}
     <div class="es el m-fade g2" data-b="0">Las palabras son para el significado;<br>una vez que tienes el significado, puedes olvidar las palabras.</div>
     <div class="fuente el m-fade g3" data-b="0"><span class="han">庄子</span> (Zhuangzi), capítulo 26</div>
   </div>
+  <div class="zh-botones interactivo">
+    <button class="zh-b zh-play" type="button" title="Empezar de nuevo" aria-label="Empezar de nuevo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+    <button class="zh-b zh-full" type="button" title="Pantalla completa (F)" aria-label="Pantalla completa" onclick="document.getElementById('full').click()">⛶</button>
+  </div>
   <!-- con → o Enter: los versos se van, la cámara se zambulle en la nube y se pasa sola a la portada -->
   <span class="st marca-cine el" data-b="0"></span><span class="st marca-titulo el" data-b="1"></span><span class="st marca-zoom el" data-b="1"></span>
 </section>
@@ -1116,9 +1132,9 @@ body.fs.bar-show #bar{transform:none}
 <section class="slide mid" data-label="Rosario Tijeras">
   <div class="rosario" id="rosario-texto">
     <p class="el m-fade" data-b="0">Como a Rosario le pegaron un tiro a quemarropa mientras le daban un beso, confundió el dolor del amor con el de la muerte. Pero salió de dudas cuando despegó los labios y vio la pistola.</p>
-    <p class="el m-fade" data-b="1">—Sentí un corrientazo por todo el cuerpo. Yo pensé que era el beso… —me dijo desfallecida camino al hospital.</p>
-    <p class="el m-fade" data-b="2">—No hablés más, Rosario —le dije, y ella apretándome la mano me pidió que no la dejara morir.</p>
-    <p class="el m-fade" data-b="3">—No me quiero morir, no quiero.</p>
+    <p class="el m-fade" data-b="0">—Sentí un corrientazo por todo el cuerpo. Yo pensé que era el beso… —me dijo desfallecida camino al hospital.</p>
+    <p class="el m-fade" data-b="0">—No hablés más, Rosario —le dije, y ella apretándome la mano me pidió que no la dejara morir.</p>
+    <p class="el m-fade" data-b="0">—No me quiero morir, no quiero.</p>
   </div>
   <p class="t-tiny el m-fade" data-b="4" style="margin-top:34px; text-align:right">Jorge Franco, <i>Rosario Tijeras</i> (1999)</p>
 </section>
@@ -5327,7 +5343,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     foco = mejor < 0 ? 0 : mejor;
     Z0 = 330 / tam(foco);                                      // 0 s: el punto mide ~330 px
     var ZE = mejorZs ? mejorZs[0] : Z0 / RAZON;
-    Z33 = ZE * 1.005;  /* el primer vecino entra justo a los ENTRA s */                                          // el aumento justo cuando entra el primer vecino (a los ENTRA s)
+    Z33 = ZE * 0.99;   /* el primer vecino entra justo a los ENTRA s */                                          // el aumento justo cuando entra el primer vecino (a los ENTRA s)
     Z108 = Math.min(Z33, 4);                                   // la vista densa de la 1:08                                   // a los 108 s ya se ve un buen pedazo de la nube
   }
   var volviendo = false;                         // se vuelve con ← desde el título: la entrada ya se vio
@@ -5337,11 +5353,16 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     if (on && !corriendo){
       corriendo = true;
       if (volviendo){ tc = FIN + 15; [0, 1, 2].forEach(function(k){ mostrar(k, false); }); }
-      else { tc = 0; cuenta = 6; sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3'); }
+      else { tc = 0; cuenta = 11; sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3'); }
     }
     if (activa && mTit.classList.contains('on')) corriendo = corriendo || tc > 0;
     if (!activa){ corriendo = false; volviendo = false; tc = 0; sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3'); }
   }
+  /* el botón ▶ de la cuenta regresiva: vuelve a empezar todo (cuenta de 10 y entrada desde 0) */
+  sl.querySelector('.zh-play').addEventListener('click', function(){
+    tc = 0; cuenta = 11; corriendo = true; pasado = false; negroDesde = 0; volviendo = false;
+    sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3');
+  });
   window.__cine = function(t){ if (t != null) tc = t; return tc; };
   /* barra de depuración (con el reloj): arrastrarla salta a ese momento de la entrada y sigue desde ahí */
   if (RELOJ){
@@ -5372,7 +5393,8 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     }
     if (tZoom == null) pasado = false;
     /* el reloj de la entrada; con el título ya puesto, corre 60 veces más rápido hasta el final */
-    /* cuenta regresiva de 5 a 0 antes de la entrada (abajo a la derecha, muy pequeña); mientras dura, el reloj no corre */
+    sl.classList.toggle('zh-cuenta', cuenta > 0 && corriendo && tTit == null);
+    /* cuenta regresiva de 10 a 0 antes de la entrada (abajo a la derecha, muy pequeña); mientras dura, el reloj no corre */
     if (cuenta > 0 && corriendo && tTit == null){ cuenta -= real; }
     else if (corriendo || tTit != null) tc += real * (tTit != null && tc < FIN ? 60 : 1);
     if (tTit != null && tTit < 0) tc = Math.max(tc, FIN + 15);
@@ -5387,7 +5409,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     c.setTransform(e, 0, 0, e, 0, 0); c.clearRect(0, 0, W, H);
     if (cuenta > 0 && corriendo && tTit == null){
       c.font = "20px 'LM Mono', ui-monospace, monospace"; c.textAlign = 'right'; c.textBaseline = 'alphabetic';
-      c.fillStyle = 'rgba(255,255,255,0.55)'; c.fillText(String(Math.max(0, Math.ceil(cuenta) - 1)), W - 30, H - 30);
+      c.fillStyle = 'rgba(255,255,255,0.55)'; c.fillText(String(Math.max(0, Math.ceil(cuenta) - 1)), W - 130, H - 30);
       return;
     }
     /* la cámara mira al punto de partida desde una distancia d, con un aumento Z (zoom óptico):
@@ -5419,7 +5441,11 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     function crudoZ(t){
       if (t <= 0) return L0;
       if (t < ENTRA) return L0 + (L33 - L0) * t / ENTRA;
-      if (t < PARA){ var u = (t - ENTRA) / (PARA - ENTRA); return L33 + (L67 - L33) * (1 - (1 - u) * (1 - u)); }
+      if (t < PARA){
+        /* curva de Hermite: arranca con la misma velocidad que traía antes de la 0:34 (sin salto) y llega quieta a la 1:07 */
+        var T1 = PARA - ENTRA, u = (t - ENTRA) / T1, m0 = (L33 - L0) / ENTRA * T1;
+        return L33 * (2 * u * u * u - 3 * u * u + 1) + m0 * (u * u * u - 2 * u * u + u) + L67 * (-2 * u * u * u + 3 * u * u);
+      }
       if (t < AVANZA) return L67;
       var u3 = Math.max(0, Math.min(1, (t - GIRA) / (SALE - GIRA)));
       return L67 + (LG - L67) * avance01(t) + (LS - LG) * u3 * u3;
