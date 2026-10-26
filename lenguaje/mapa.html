@@ -82,6 +82,15 @@ body.solo .solo-txt{display:block}
 #letras:hover, #letras.si{border-color:#58c4dd; color:#58c4dd}
 body.solo #letras{position:fixed; right:4.4vw; bottom:1.4vw; width:2.4vw; height:2.4vw; font-size:1.05vw}
 body.solo #girar{position:fixed; right:1.6vw; bottom:1.4vw; width:2.4vw; height:2.4vw}
+/* en ?solo el modelo se escoge bajo el título */
+#s-modelo{display:none}
+body.solo #s-modelo{display:flex; align-items:center; gap:.6vw; position:fixed; left:2.3vw; top:6vw; z-index:4;
+  font-family:var(--mono); font-size:1.05vw; color:#999}
+#s-modelo select{font:inherit; font-family:var(--serif); font-size:1.35vw; color:#fff; background:rgba(0,0,0,.7); cursor:pointer;
+  border:1.5px solid #555; border-radius:.5vw; padding:.25vw .6vw; outline:none; transition:border-color .18s}
+#s-modelo select:hover, #s-modelo select:focus{border-color:#58c4dd}
+#s-modelo option{background:#000}
+body.solo #aviso{position:fixed; left:2.3vw; top:9vw; font-family:var(--mono); font-size:.95vw; color:#999}
 @media (max-width:1000px){
   main{padding:24px 16px}
   .cuerpo{grid-template-columns:1fr}
@@ -119,7 +128,7 @@ body.solo #girar{position:fixed; right:1.6vw; bottom:1.4vw; width:2.4vw; height:
   </div>
 </main>
 <div class="tip" id="tip"></div>
-<div class="solo-txt" id="s-tit"></div><div class="solo-txt" id="s-sub"></div><div class="solo-txt" id="s-pie"></div>
+<div id="s-modelo"><span>modelo</span></div><div class="solo-txt" id="s-tit"></div><div class="solo-txt" id="s-sub"></div><div class="solo-txt" id="s-pie"></div>
 
 <script>
 const MODELOS = [{"id": "palabras", "nombre": "Nuestro corpus (word2vec)"}, {"id": "bpe-8000", "nombre": "Nuestro corpus con BPE, k = 8000 (word2vec)"}, {"id": "bpe-20000", "nombre": "Nuestro corpus con BPE, k = 20000 (word2vec)"}, {"id": "fasttext-wiki-es", "nombre": "fastText wiki.es (preentrenado)"}];
@@ -336,7 +345,7 @@ function ponerProy(nueva, animada){
   $('s-tit').textContent = {pca: 'PCA', umap: 'UMAP', pca3: 'PCA en 3D', umap3: 'UMAP en 3D'}[proy];
   $('s-sub').textContent = proy.startsWith('pca') ? `lineal · explica el ${Math.round(100 * (es3() ? v3 : M.varianza[0] + M.varianza[1]))} % de la varianza`
                                                    : 'no lineal · conserva los vecindarios';
-  $('s-pie').textContent = `cada punto es una palabra (fila de W) · ${M.nombre} · ${M.n.toLocaleString('es').replace(/\./g, ' ')} palabras · ${M.d} dimensiones → ${es3() ? 3 : 2}` +
+  $('s-pie').textContent = `cada punto es ${activo && activo.startsWith('bpe') ? 'un token' : 'una palabra'} (fila de W) · ${SOLO ? '' : M.nombre + ' · '}${M.n.toLocaleString('es').replace(/\./g, ' ')} ${activo && activo.startsWith('bpe') ? 'tokens' : 'palabras'} · ${M.d} dimensiones → ${es3() ? 3 : 2}` +
                            (es3() ? ' · arrastra para rotar' : '');
   $('girar').hidden = $('letras').hidden = !es3();
   if (!es3()) ponerLetras(true);
@@ -499,6 +508,16 @@ function cargar(id){
 sel.addEventListener('change', () => cargar(sel.value));
 medir();
 if (PARAM.get('modelo') && MODELOS.some(m => m.id === PARAM.get('modelo'))) sel.value = PARAM.get('modelo');
+/* en ?solo el selector va en la lámina, y las cuatro láminas (PCA, UMAP y sus 3D) comparten el modelo escogido */
+if (SOLO){
+  $('s-modelo').appendChild(sel);
+  const CLAVE = 'mapa-modelo';
+  try { const g = localStorage.getItem(CLAVE); if (!PARAM.get('modelo') && g && MODELOS.some(m => m.id === g)) sel.value = g; } catch (e) {}
+  sel.addEventListener('change', () => { try { localStorage.setItem(CLAVE, sel.value); } catch (e) {} });
+  window.addEventListener('storage', e => {
+    if (e.key === CLAVE && e.newValue && e.newValue !== sel.value && MODELOS.some(m => m.id === e.newValue)){ sel.value = e.newValue; cargar(sel.value); }
+  });
+}
 cargar(sel.value);
 </script>
 </body>
