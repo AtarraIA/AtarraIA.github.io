@@ -235,6 +235,12 @@ Feedforward neural networks
 [playground.feedforward.desc]
 See how feedforward neural networks transform space.
 
+[playground.featurevis.titulo]
+Feature visualization
+
+[playground.featurevis.desc]
+Browse the InceptionV1 atlas: which image activates each channel of the network and which ImageNet photos activate it most.
+
 
 # ── Pie de página ─────────────────────────────────────────────────
 
