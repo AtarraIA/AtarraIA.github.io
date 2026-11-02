@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Strudel Visual</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #000;
+      --panel: #0b0b0b;
+      --gold: #f5c542;
+      --text: #e0e0e0;
+      --dim: #8a8a8a;
+      --border: #2a2a2a;
+      --err: #ff6b6b;
+      --lh: 26px;
+      --fs: 14px;
+      --pad: 12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    header {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px;
+      padding: 10px 16px; border-bottom: 1px solid var(--border);
+    }
+    .logo { font-weight: 700; letter-spacing: .5px; margin-right: auto; white-space: nowrap; }
+    .logo a { color: inherit; text-decoration: none; }
+    .gold { color: var(--gold); }
+    button, select {
+      font: inherit; font-size: 13px; color: var(--text); background: var(--panel);
+      border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; cursor: pointer;
+    }
+    button:hover, select:hover { border-color: var(--gold); }
+    button.primary { background: var(--gold); color: #000; border-color: var(--gold); font-weight: 700; }
+    button:disabled { opacity: .5; cursor: wait; }
+    label.zoom { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--dim); }
+    input[type=range] { accent-color: var(--gold); width: 90px; }
+
+    .stage { flex: 1; overflow: auto; position: relative; }
+    .grid {
+      display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      min-height: 100%;
+    }
+    .code-col { overflow-x: auto; overflow-y: hidden; border-right: 1px solid var(--border); }
+    .editor { position: relative; min-width: 100%; min-height: 100%; width: max-content; }
+    .editor pre, .editor textarea {
+      font-family: inherit; font-size: var(--fs); line-height: var(--lh);
+      padding: var(--pad); tab-size: 2; white-space: pre; letter-spacing: 0;
+      font-variant-ligatures: none;
+    }
+    .editor pre { pointer-events: none; color: var(--text); min-height: 100%; }
+    .editor textarea {
+      position: absolute; inset: 0; width: 100%; height: 100%; resize: none; overflow: hidden;
+      background: transparent; color: transparent; caret-color: var(--gold);
+      border: 0; outline: none;
+    }
+    .editor textarea::selection { background: rgba(245, 197, 66, .3); }
+    .tk-com { color: #5e6b5e; font-style: italic; }
+    .tk-str { color: #a8d38f; }
+    .tk-num { color: #f0a868; }
+    .tk-fn  { color: #7fb8ff; }
+    .tk-lbl { color: var(--gold); font-weight: 700; }
+    .hl { border-radius: 3px; color: #000 !important; font-style: normal; }
+
+    .lanes-col { position: relative; }
+    .lanes-col canvas { position: absolute; left: 0; top: 0; display: block; }
+
+    footer {
+      display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center;
+      padding: 7px 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--dim);
+    }
+    #status.err { color: var(--err); }
+    #status.ok { color: var(--gold); }
+    footer .keys { margin-left: auto; }
+    kbd { border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; font-family: inherit; }
+    footer a { color: var(--dim); }
+
+    @media (max-width: 700px) {
+      :root { --fs: 11.5px; --lh: 19px; --pad: 8px; }
+      header { padding: 8px 16px; }
+      .logo { width: 100%; }
+      footer .keys { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><a href="../">ATARRA<span class="gold">IA</span></a> · strudel visual</div>
+    <select id="examples" aria-label="Ejemplos"></select>
+    <label class="zoom">ventana <input id="zoom" type="range" min="1" max="8" step="0.5" value="2.5" /></label>
+    <button id="play" class="primary" disabled>cargando…</button>
+    <button id="stop">■ parar</button>
+  </header>
+
+  <main class="stage" id="stage">
+    <div class="grid">
+      <div class="code-col">
+        <div class="editor" id="editor">
+          <pre id="pre" aria-hidden="true"></pre>
+          <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" aria-label="Código Strudel"></textarea>
+        </div>
+      </div>
+      <div class="lanes-col" id="lanesCol"><canvas id="lanes"></canvas></div>
+    </div>
+  </main>
+
+  <footer>
+    <span id="status">iniciando audio…</span>
+    <span id="cycle">ciclo 0.00</span>
+    <span class="keys"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> tocar/actualizar · <kbd>Ctrl</kbd>+<kbd>.</kbd> parar · motor: <a href="https://strudel.cc" target="_blank" rel="noopener">strudel.cc</a></span>
+  </footer>
+
+  <script src="https://unpkg.com/@strudel/web@1.3.0"></script>
+  <script>
+  (() => {
+    const EXAMPLES = {
+      'Ritmo + bajo + acordes': `// Ctrl+Enter para tocar · Ctrl+. para parar
+// cada línea tiene su carril de tiempo a la derecha
+setcpm(30)
+
+$: s("bd ~ bd ~, ~ sd ~ sd, hh*8").gain(.8)
+
+$: note("<c2 a1 f1 g1>*2 [~ c3]")
+  .s("sawtooth").lpf(700).decay(.18).sustain(0)
+
+$: note("<[c4,e4,g4] [a3,c4,e4] [f3,a3,c4] [g3,b3,d4]>")
+  .s("triangle").gain(.25).room(.6)
+
+$: n("0 2 4 <7 9> 4 2").scale("C:minor")
+  .s("square").fast(2).gain(.12).delay(.3)`,
+      'Polirritmo': `setcpm(28)
+
+$: s("bd(3,8)").gain(1)
+$: s("cp(5,8,2)").gain(.6)
+$: s("hh*<8 12>").gain(.4)
+$: note("c3 eb3 g3 bb3 c4".fast(2/3)).s("sine").decay(.15).sustain(0)
+$: note("[g4 f4] [eb4 d4] c4 ~").s("triangle").slow(2).gain(.3)`,
+      'Melodía con escala': `setcpm(32)
+
+$: n("<0 [2 4] 3 [5 7]>*2").scale("D:dorian")
+  .s("sawtooth").lpf(sine.range(400, 2000).slow(4))
+  .decay(.2).sustain(.1).gain(.3)
+
+$: n("0 ~ ~ 0 ~ 0 ~ ~").scale("D1:dorian").s("square").gain(.3)
+
+$: s("bd*2, ~ [sd sd?], hh*4")`,
+      'Mínimo': `$: s("bd sd [~ bd] sd")`,
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const ta = $('code'), pre = $('pre'), canvas = $('lanes'), ctx = canvas.getContext('2d');
+    const playBtn = $('play'), stopBtn = $('stop'), statusEl = $('status'), cycleEl = $('cycle');
+    const lanesCol = $('lanesCol'), editorEl = $('editor'), zoomEl = $('zoom');
+
+    let repl = null;
+    let pattern = null;       // patrón evaluado
+    let activeCode = '';      // código que generó el patrón
+    let lineStarts = [0];     // offsets de inicio de línea en activeCode
+    let laneRows = new Map(); // línea -> Map(label -> {rank})
+    let lastHlKey = '';
+    let playing = false;
+
+    // ── ejemplos ──────────────────────────────────────────
+    for (const name of Object.keys(EXAMPLES)) {
+      const o = document.createElement('option'); o.textContent = name; $('examples').append(o);
+    }
+    let saved = null;
+    try { saved = localStorage.getItem('strudel-visual-code'); } catch {}
+    ta.value = saved || EXAMPLES['Ritmo + bajo + acordes'];
+    $('examples').addEventListener('change', (e) => {
+      ta.value = EXAMPLES[e.target.value]; onInput(); if (playing) play();
+    });
+    try { const z = localStorage.getItem('strudel-visual-zoom'); if (z) zoomEl.value = z; } catch {}
+    zoomEl.addEventListener('input', () => { try { localStorage.setItem('strudel-visual-zoom', zoomEl.value); } catch {} });
+
+    // ── utilidades ────────────────────────────────────────
+    const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const hueOf = (start) => (start * 137.508) % 360;
+    function computeLineStarts(code) {
+      const ls = [0];
+      for (let i = 0; i < code.length; i++) if (code[i] === '\n') ls.push(i + 1);
+      return ls;
+    }
+    function lineOf(offset) {
+      let lo = 0, hi = lineStarts.length - 1;
+      while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (lineStarts[mid] <= offset) lo = mid; else hi = mid - 1; }
+      return lo;
+    }
+    const toNum = (x) => (typeof x === 'number' ? x : NaN);
+    function pitchRank(v) {
+      if (!v || typeof v !== 'object') return NaN;
+      if (typeof v.note === 'string' && typeof noteToMidi === 'function') { try { return noteToMidi(v.note); } catch {} }
+      if (typeof v.freq === 'number') return 12 * Math.log2(v.freq / 440) + 69;
+      const n = toNum(v.note); if (!isNaN(n)) return n;
+      return toNum(v.n);
+    }
+    // la ubicación "principal" de un evento: el token que aparece primero en el código
+    function mainLoc(hap) {
+      const locs = hap.context?.locations;
+      if (!locs || !locs.length) return null;
+      let best = locs[0];
+      for (const l of locs) if (l.start < best.start) best = l;
+      return best;
+    }
+    function hapLabel(hap) {
+      const loc = mainLoc(hap);
+      if (loc) return activeCode.slice(loc.start, loc.end);
+      const v = hap.value;
+      return v && typeof v === 'object' ? String(v.s ?? v.note ?? v.n ?? '·') : String(v);
+    }
+
+    // ── resaltado del editor: sintaxis + tokens sonando ───
+    const TOKEN_RE = /(\/\/[^\n]*)|("(?:[^"\\\n]|\\.)*"?|'(?:[^'\\\n]|\\.)*'?|`(?:[^`\\]|\\.)*`?)|(\b\d+(?:\.\d+)?\b|\.\d+\b)|(\$\w*:|^\s*[a-zA-Z_]\w*:(?=\s))|([a-zA-Z_]\w*)(?=\s*\()/gm;
+    function syntaxClasses(code) {
+      const cls = new Array(code.length).fill('');
+      let m;
+      TOKEN_RE.lastIndex = 0;
+      while ((m = TOKEN_RE.exec(code))) {
+        const c = m[1] ? 'tk-com' : m[2] ? 'tk-str' : m[3] ? 'tk-num' : m[4] ? 'tk-lbl' : 'tk-fn';
+        for (let i = m.index; i < m.index + m[0].length; i++) cls[i] = c;
+      }
+      return cls;
+    }
+    let synCache = { code: null, cls: null };
+    function renderPre(highlights) {
+      const code = ta.value;
+      if (synCache.code !== code) synCache = { code, cls: syntaxClasses(code) };
+      const cls = synCache.cls;
+      const hl = new Array(code.length).fill(-1);
+      for (const h of highlights) for (let i = h.start; i < h.end && i < code.length; i++) hl[i] = h.hue;
+      let out = '', i = 0;
+      while (i < code.length) {
+        let j = i + 1;
+        while (j < code.length && cls[j] === cls[i] && hl[j] === hl[i]) j++;
+        const text = esc(code.slice(i, j));
+        if (hl[i] >= 0) {
+          out += `<span class="hl" style="background:hsl(${hl[i].toFixed(0)} 85% 62%);box-shadow:0 0 10px hsl(${hl[i].toFixed(0)} 85% 55%)">${text}</span>`;
+        } else if (cls[i]) out += `<span class="${cls[i]}">${text}</span>`;
+        else out += text;
+        i = j;
+      }
+      pre.innerHTML = out + '\n ';
+    }
+
+    // ── tamaño del lienzo alineado con el editor ──────────
+    let cw = 0, ch = 0, dpr = 1;
+    function resizeCanvas() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      cw = lanesCol.clientWidth;
+      ch = Math.max(editorEl.offsetHeight, lanesCol.clientHeight);
+      canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr);
+      canvas.style.width = cw + 'px'; canvas.style.height = ch + 'px';
+    }
+    new ResizeObserver(resizeCanvas).observe(lanesCol);
+    new ResizeObserver(resizeCanvas).observe(editorEl);
+
+    function cssNum(name) { return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)); }
+
+    // ── carriles: etiquetas por línea, ordenadas por altura ─
+    function registerHap(line, label, rank) {
+      let rows = laneRows.get(line);
+      if (!rows) laneRows.set(line, (rows = new Map()));
+      if (!rows.has(label)) rows.set(label, { rank, idx: 0 });
+      else return;
+      const sorted = [...rows.entries()].sort((a, b) => {
+        const ra = a[1].rank, rb = b[1].rank;
+        if (!isNaN(ra) && !isNaN(rb) && ra !== rb) return rb - ra;
+        return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0;
+      });
+      sorted.forEach(([, r], i) => (r.idx = i));
+    }
+    function prescan() {
+      laneRows = new Map();
+      if (!pattern) return;
+      try {
+        for (const hap of pattern.queryArc(0, 8)) {
+          const loc = mainLoc(hap);
+          if (!loc || !hap.whole) continue;
+          registerHap(lineOf(loc.start), hapLabel(hap), pitchRank(hap.value));
+        }
+      } catch (e) { /* patrones con estado pueden fallar aquí; se llena en vivo */ }
+    }
+
+    // ── bucle de dibujo ───────────────────────────────────
+    function now() { return repl && playing ? repl.scheduler.now() : 0; }
+
+    function draw() {
+      requestAnimationFrame(draw);
+      const t = now();
+      cycleEl.textContent = `ciclo ${t.toFixed(2)}`;
+      const lh = cssNum('--lh'), pad = cssNum('--pad');
+      const span = parseFloat(zoomEl.value);
+      const past = span * 0.3, t0 = t - past, t1 = t0 + span;
+      const xOf = (c) => ((c - t0) / span) * cw;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, cw, ch);
+
+      const nLines = activeCode ? lineStarts.length : ta.value.split('\n').length;
+      // cada carril empieza en su línea y se extiende hacia abajo hasta el siguiente carril
+      const owners = [...laneRows.keys()].sort((a, b) => a - b);
+      const laneSpan = new Map();
+      owners.forEach((l, k) => {
+        const next = k + 1 < owners.length ? owners[k + 1] : Math.max(nLines, l + 1);
+        laneSpan.set(l, Math.max(1, next - l));
+      });
+      owners.forEach((l, k) => {
+        ctx.fillStyle = k % 2 ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.055)';
+        ctx.fillRect(0, pad + l * lh + 1, cw, laneSpan.get(l) * lh - 2);
+      });
+      // rejilla de ciclos y pulsos
+      for (let c = Math.floor(t0 * 4) / 4; c <= t1; c += 0.25) {
+        const whole = Math.abs(c - Math.round(c)) < 1e-6;
+        ctx.fillStyle = whole ? 'rgba(245,197,66,0.28)' : 'rgba(255,255,255,0.07)';
+        ctx.fillRect(Math.round(xOf(c)), 0, 1, ch);
+        if (whole) {
+          ctx.fillStyle = 'rgba(245,197,66,0.6)';
+          ctx.font = '10px JetBrains Mono, monospace';
+          ctx.fillText(String(Math.round(c)), xOf(c) + 3, 10);
+        }
+      }
+
+      const highlights = [];
+      if (pattern) {
+        let haps = [];
+        try { haps = pattern.queryArc(Math.max(0, t0), t1); } catch (e) { setStatus(e.message, 'err'); }
+        ctx.font = `${Math.max(9, lh * 0.42)}px JetBrains Mono, monospace`;
+        ctx.textBaseline = 'middle';
+        for (const hap of haps) {
+          if (!hap.whole || !hap.hasOnset()) continue;
+          const locs = hap.context?.locations || [];
+          const loc = mainLoc(hap);
+          if (!loc) continue;
+          const line = lineOf(loc.start);
+          const label = hapLabel(hap);
+          registerHap(line, label, pitchRank(hap.value));
+          const rows = laneRows.get(line);
+          const nRows = rows.size, idx = rows.get(label).idx;
+          const rowTop = pad + line * lh + 2, rowH = (laneSpan.get(line) || 1) * lh - 4;
+          const subH = rowH / nRows;
+          const b = hap.whole.begin.valueOf(), e = hap.whole.end.valueOf();
+          const x0 = xOf(b), x1 = xOf(e);
+          const y = rowTop + idx * subH;
+          const active = playing && b <= t && t < e;
+          const hue = hueOf(loc.start);
+          const gain = typeof hap.value?.gain === 'number' ? Math.min(1, 0.35 + hap.value.gain * 0.65) : 1;
+          const alpha = (b > t ? 0.55 : active ? 1 : 0.28) * gain;
+          ctx.fillStyle = `hsla(${hue}, 85%, ${active ? 65 : 55}%, ${alpha})`;
+          if (active) { ctx.shadowColor = `hsl(${hue}, 90%, 60%)`; ctx.shadowBlur = 12; }
+          const w = Math.max(2, x1 - x0 - 1.5), h = Math.max(2, subH - (nRows > 1 ? 1 : 0));
+          ctx.beginPath();
+          ctx.roundRect ? ctx.roundRect(x0, y, w, h, Math.min(3, h / 2)) : ctx.rect(x0, y, w, h);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          if (h >= 9 && w > ctx.measureText(label).width + 6) {
+            ctx.fillStyle = active ? '#000' : 'rgba(0,0,0,0.75)';
+            ctx.fillText(label, x0 + 3, y + h / 2 + 0.5);
+          }
+          if (active && ta.value === activeCode) {
+            for (const l of locs) highlights.push({ start: l.start, end: l.end, hue: hueOf(l.start) });
+          }
+        }
+      }
+      // cabeza de reproducción
+      const px = xOf(t);
+      ctx.fillStyle = '#f5c542';
+      ctx.fillRect(Math.round(px) - 1, 0, 2, ch);
+
+      const key = highlights.map((h) => h.start + ':' + h.end).sort().join(',');
+      if (key !== lastHlKey) { lastHlKey = key; renderPre(highlights); }
+    }
+
+    // ── control ───────────────────────────────────────────
+    function setStatus(msg, cls = '') { statusEl.textContent = msg; statusEl.className = cls; }
+
+    async function play() {
+      if (!repl) return;
+      const code = ta.value;
+      setStatus('evaluando…');
+      const pat = await repl.evaluate(code);
+      if (!pat) return; // el error ya se mostró en onEvalError
+      pattern = pat; activeCode = code; lineStarts = computeLineStarts(code);
+      playing = true;
+      prescan();
+      lastHlKey = '!';
+      playBtn.textContent = '↻ actualizar';
+      setStatus('sonando', 'ok');
+    }
+    function stop() {
+      if (repl) repl.stop();
+      playing = false;
+      playBtn.textContent = '▶ tocar';
+      setStatus('detenido');
+      lastHlKey = '!';
+    }
+
+    function onInput() {
+      try { localStorage.setItem('strudel-visual-code', ta.value); } catch {}
+      lastHlKey = '!';
+      renderPre([]);
+      if (playing && ta.value !== activeCode) setStatus('modificado — Ctrl+Enter para actualizar', '');
+    }
+    ta.addEventListener('input', onInput);
+    ta.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); play(); }
+      else if ((e.ctrlKey || e.metaKey) && e.key === '.') { e.preventDefault(); stop(); }
+      else if (e.key === 'Tab' && !e.shiftKey) {
+        e.preventDefault();
+        const s = ta.selectionStart, en = ta.selectionEnd;
+        ta.setRangeText('  ', s, en, 'end'); onInput();
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.target === ta) return;
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); play(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === '.') { e.preventDefault(); stop(); }
+    });
+    playBtn.addEventListener('click', play);
+    stopBtn.addEventListener('click', stop);
+
+    renderPre([]);
+    requestAnimationFrame(draw);
+
+    initStrudel({
+      prebake: async () => {
+        try { await (window.samples || strudel.samples)('github:tidalcycles/dirt-samples'); }
+        catch (e) { console.warn('no se pudieron cargar las muestras', e); }
+      },
+      onEvalError: (err) => setStatus('error: ' + err.message, 'err'),
+    }).then((r) => {
+      repl = r;
+      playBtn.disabled = false;
+      playBtn.textContent = '▶ tocar';
+      setStatus('listo — pulsa tocar o Ctrl+Enter');
+    }).catch((e) => setStatus('no se pudo iniciar strudel: ' + e.message, 'err'));
+  })();
+  </script>
+</body>
+</html>
