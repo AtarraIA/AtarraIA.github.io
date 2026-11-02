@@ -6751,9 +6751,9 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     tc = 0; cuenta = 11; corriendo = true; pasado = false; negroDesde = 0; volviendo = false;
     sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3');
   });
-  /* de ENTRA (0:34, entra el primer vecino) a AVANZA (1:07,5, empieza el vuelo) el reloj corre al doble (RAPIDO), con
+  /* de ENTRA (0:34, entra el primer vecino) a AVANZA (1:07,5, empieza el vuelo) el reloj corre RAPIDO veces más rápido, con
      rampas suaves de RAMPA_R s en cada punta que quedan dentro del tramo: a la 1:07,5 ya va otra vez a ritmo normal */
-  var RAPIDO = 2, RAMPA_R = 1.5;
+  var RAPIDO = 4, RAMPA_R = 1.5;
   function ritmo(t){
     if (t <= ENTRA || t >= AVANZA) return 1;
     var a = Math.min(1, (t - ENTRA) / RAMPA_R, (AVANZA - t) / RAMPA_R), k = a * a * (3 - 2 * a);
