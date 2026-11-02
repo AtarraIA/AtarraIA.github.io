@@ -2201,6 +2201,10 @@ box-shadow:0 0 12px rgba(255,255,255,.25)}
   </div>
 </section>
 
+<section class="slide center sin-barra" data-label="word2vec: W y C en 3D">
+  <span class="webmark el m-fade" data-b="0" data-src="wc.html?3d" aria-hidden="true"></span>
+</section>
+
 <section class="slide center zh-sl gracias-sl" data-label="Gracias">
   <div class="el" data-b="0" style="position:absolute; inset:0"><canvas id="gracias-umap" aria-hidden="true"></canvas></div>
   <div class="zh"><div class="han gracias">¡Gracias!</div></div>
@@ -6075,6 +6079,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     return s;
   }
   var cargando = false;
+  var GX = null, GY = null, GR = null, GB = null, GO = null, GC = new Int32Array(25), GP = new Int32Array(25);   // búferes de la nube, reutilizados
   function cargar(){
     if (cargando || M) return;
     cargando = true;
@@ -6104,21 +6109,30 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
        igual se ve, muy tenue (brillo base 0,11). Sin sombras del lienzo (son muy caras con 10 000 puntos): los encendidos
        llevan un halo, un círculo más grande y transparente */
     var az = 0.6 + GIRO * t, el = 0.35, ca = Math.cos(az), sa = Math.sin(az), ce = Math.cos(el), se = Math.sin(el), D = 1.84, foc = 1150, cx = 1020, cy = 470;      // la cámara cerca: la nube llena casi toda la lámina
-    var NIV = 24, grupos = [], halo = new Path2D(), P = M.P;
+    /* sin Path2D nuevos en cada cuadro (en Firefox su memoria se acumula y la pestaña se cae): los puntos van a
+       búferes reutilizados, ordenados por grupo de opacidad, y cada grupo se pinta con el camino del lienzo */
+    var NIV = 24, P = M.P, m2 = 0;
+    if (!GX){ GX = new Float32Array(M.n); GY = new Float32Array(M.n); GR = new Float32Array(M.n); GB = new Uint8Array(M.n); GO = new Int32Array(M.n); }
+    GC.fill(0);
+    c.beginPath();
     for (i = 0; i < M.n; i++){
       var x = P[3 * i], y = P[3 * i + 1], z = P[3 * i + 2], x2 = x * ca - z * sa, z2 = x * sa + z * ca, y2 = y * ce - z2 * se, zz = y * se + z2 * ce;
       var pe = D - zz; if (pe < 0.15) continue;
       var b = brillo[i], px = cx + foc * x2 / pe, py = cy - foc * y2 / pe, rad = (1.2 + 3.2 * Math.pow(b, 1.6)) * D / pe;
-      var al = 0.11 + 0.89 * Math.pow(b, 1.6), nv = Math.min(NIV - 1, Math.round(al * (NIV - 1))), g = grupos[nv] || (grupos[nv] = new Path2D());
-      g.moveTo(px + rad, py); g.arc(px, py, rad, 0, 6.2832);
-      if (b > 0.25){ halo.moveTo(px + rad * 2.6, py); halo.arc(px, py, rad * 2.6, 0, 6.2832); }
+      var al = 0.11 + 0.89 * Math.pow(b, 1.6), nv = Math.min(NIV - 1, Math.round(al * (NIV - 1)));
+      GX[m2] = px; GY[m2] = py; GR[m2] = rad; GB[m2] = nv; GC[nv + 1]++; m2++;
+      if (b > 0.25){ c.moveTo(px + rad * 2.6, py); c.arc(px, py, rad * 2.6, 0, 6.2832); }
     }
-    c.fillStyle = 'rgba(255,154,60,0.08)'; c.fill(halo);
-    grupos.forEach(function(g, nv){
-      if (!g) return;
-      c.fillStyle = 'rgba(255,154,60,' + (nv / (NIV - 1)).toFixed(3) + ')';
-      c.fill(g);
-    });
+    c.fillStyle = 'rgba(255,154,60,0.08)'; c.fill();
+    for (var b1 = 1; b1 <= NIV; b1++) GC[b1] += GC[b1 - 1];
+    GP.set(GC);
+    for (var j2 = 0; j2 < m2; j2++) GO[GP[GB[j2]]++] = j2;
+    for (nv = 0; nv < NIV; nv++){
+      if (GC[nv + 1] === GC[nv]) continue;
+      c.fillStyle = 'rgba(255,154,60,' + (nv / (NIV - 1)).toFixed(3) + ')'; c.beginPath();
+      for (var q2 = GC[nv]; q2 < GC[nv + 1]; q2++){ var o2 = GO[q2]; c.moveTo(GX[o2] + GR[o2], GY[o2]); c.arc(GX[o2], GY[o2], GR[o2], 0, 6.2832); }
+      c.fill();
+    }
   }
   requestAnimationFrame(cuadro);
 })();
@@ -6664,13 +6678,17 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     var g = giroEn(t), l = miradaGiro(t);
     return { p: g, l: l };                                                         // el giro, la salida y la vista final
   }
+  /* búferes de pintarNube, reutilizados en cada cuadro: posición, radio y grupo de opacidad de cada punto chico */
+  var BX = null, BY = null, BR = null, BB = null, BO = null, BC = new Int32Array(33), BP = new Int32Array(33);
   /* pinta la nube en el lienzo del contexto c, vista desde la cámara (mira hacia az, el; a distancia d del punto f) */
   function pintarNube(c, fx, fy, fz, az, el, d, w, Z, m, pt, avance, fwd, foco){
     var D = 2.1;
     var ca = Math.cos(az), sa = Math.sin(az), ce = Math.cos(el), se = Math.sin(el);
     var foc = (620 + 200 * pt) * FS * D * Z;
     var cx = lerp(W / 2, VIDEO ? W / 2 : 1120, m) - 320 * pt, cy = lerp(H / 2, VIDEO ? H * 0.62 : 470, m) - 20 * pt;
-    var grande = null; var dib = 0, NIV = 32, grupos2 = [], grandes = [];
+    var grande = null; var dib = 0, NIV = 32, grandes = [], m2 = 0;
+    if (!BX || BX.length < n){ BX = new Float32Array(n); BY = new Float32Array(n); BR = new Float32Array(n); BB = new Uint8Array(n); BO = new Int32Array(n); }
+    for (var b0 = 0; b0 <= NIV; b0++) BC[b0] = 0;
     for (var i = 0; i < n; i++){
       var ox = P[3 * i] - fx, oy = P[3 * i + 1] - fy, oz = P[3 * i + 2] - fz;
       var x2 = ox * ca - oz * sa, z2 = ox * sa + oz * ca, y2 = oy * ce - z2 * se, zz = oy * se + z2 * ce;
@@ -6688,12 +6706,22 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
       dib++;
       if (a < 0.02) continue;
       /* para que la animación no se trabe, los puntos se agrupan por opacidad y cada grupo se pinta de una vez;
-         solo los grandes (con resplandor) van uno por uno */
+         solo los grandes (con resplandor) van uno por uno. Sin Path2D nuevos en cada cuadro: Firefox guarda su
+         memoria fuera del recolector y, con ~21 000 arcos por cuadro, la pestaña se cae al rato */
       if (rad > 16){ grandes.push([px, py, rad, a]); continue; }
-      var b = Math.min(NIV - 1, Math.round(a * (NIV - 1))), g = grupos2[b] || (grupos2[b] = new Path2D());
-      g.moveTo(px + rad, py); g.arc(px, py, rad, 0, 6.2832);
+      var b = Math.min(NIV - 1, Math.round(a * (NIV - 1)));
+      BX[m2] = px; BY[m2] = py; BR[m2] = rad; BB[m2] = b; BC[b + 1]++; m2++;
     }
-    grupos2.forEach(function(g, b){ if (g){ c.fillStyle = 'rgba(88,196,221,' + (b / (NIV - 1)).toFixed(3) + ')'; c.fill(g); } });
+    /* orden por grupo (conteo): BC queda con dónde empieza cada grupo en BO */
+    for (var b1 = 1; b1 <= NIV; b1++) BC[b1] += BC[b1 - 1];
+    for (var b2 = 0; b2 <= NIV; b2++) BP[b2] = BC[b2];
+    for (var j2 = 0; j2 < m2; j2++) BO[BP[BB[j2]]++] = j2;
+    for (var b3 = 0; b3 < NIV; b3++){
+      if (BC[b3 + 1] === BC[b3]) continue;
+      c.fillStyle = 'rgba(88,196,221,' + (b3 / (NIV - 1)).toFixed(3) + ')'; c.beginPath();
+      for (var q2 = BC[b3]; q2 < BC[b3 + 1]; q2++){ var o2 = BO[q2]; c.moveTo(BX[o2] + BR[o2], BY[o2]); c.arc(BX[o2], BY[o2], BR[o2], 0, 6.2832); }
+      c.fill();
+    }
     grandes.forEach(function(q){
       c.fillStyle = 'rgba(88,196,221,' + q[3].toFixed(3) + ')'; c.shadowColor = 'rgba(88,196,221,0.8)'; c.shadowBlur = Math.min(40, q[2]);
       c.beginPath(); c.arc(q[0], q[1], q[2], 0, 6.2832); c.fill();

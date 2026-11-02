@@ -268,201 +268,132 @@
   </footer>
 
   <!-- ── SCRIPTS ───────────────────────────── -->
+  <script src="nube.js"></script>
   <script>
-    /* ── Neural Network Canvas ── */
-    const canvas = document.getElementById("network");
-    const ctx = canvas.getContext("2d");
+    /* ── Fondo: la vista final de la nube de embeddings ──
+       La misma cámara con que termina la entrada de lenguaje/coocurrencias.html (lámina 0):
+       la nube de UMAP en 3D de word2vec, vista desde afuera, girando despacio alrededor de
+       su centro. Los datos y la cámara vienen de nube.js; aquí solo se sigue la parte final
+       de giroEn (desde REVELA) y se pinta igual que pintarNube, en un cuadro de 1600×900
+       que cubre el encabezado. */
+    (function () {
+      const canvas = document.getElementById("network");
+      const N = window.NUBE;
+      if (!canvas || !N) return;
+      const ctx = canvas.getContext("2d");
+      const W = 1600, H = 900, D = 2.1, FOC = 620 * D, CX = 1120, CY = 470, NIV = 32;
+      const RECTA = 100, SALE = 133, REVELA = 135, RAMPA_G = 10, OMEGA_G = -0.12, OMEGA_FIN = -0.06;
+      const CURVA = 0.8, D_FIN = 2.5, ELEVA = 0.05, EMPALME = 6;
 
-    const layers = [4, 6, 6, 4];
-    let nodes = [];
-    let connections = [];
-    let pulseTime = 0;
-    const PULSE_SPEED = 0.005;
-
-    class Node {
-      constructor(x, y, layer, indexInLayer) {
-        this.baseX = x;
-        this.baseY = y;
-        this.x = x;
-        this.y = y;
-        this.vx = (Math.random() - 0.5) * 0.3;
-        this.vy = (Math.random() - 0.5) * 0.3;
-        this.layer = layer;
-        this.indexInLayer = indexInLayer;
-        this.r = 3.5;
-        this.activation = 0;
+      /* los puntos (16 bits por eje) y su frecuencia (8 bits) */
+      const bytes = b64 => { const s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u.buffer; };
+      const n = N.n, q = new Uint16Array(bytes(N.P)), fq = new Uint8Array(bytes(N.F));
+      const P = new Float32Array(3 * n), F = new Float32Array(n);
+      for (let i = 0; i < n; i++) {
+        for (let k = 0; k < 3; k++) P[3 * i + k] = N.lo[k] + q[3 * i + k] / 65535 * (N.hi[k] - N.lo[k]);
+        F[i] = fq[i] / 255;
       }
 
-      update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        const maxDrift = 20;
-        if (Math.abs(this.x - this.baseX) > maxDrift) this.vx *= -1;
-        if (Math.abs(this.y - this.baseY) > maxDrift) this.vy *= -1;
+      function integralRampa(x, T) {
+        if (x <= 0) return 0;
+        if (x >= T) return T / 2 + (x - T);
+        const u = x / T; return T * (u * u * u * u * u * u - 3 * u * u * u * u * u + 2.5 * u * u * u * u);
+      }
+      function rotar(v, k, fi) {
+        const cs = Math.cos(fi), sn = Math.sin(fi), kv = k[0] * v[0] + k[1] * v[1] + k[2] * v[2];
+        const kxv = [k[1] * v[2] - k[2] * v[1], k[2] * v[0] - k[0] * v[2], k[0] * v[1] - k[1] * v[0]];
+        return [0, 1, 2].map(c => v[c] * cs + kxv[c] * sn + k[c] * kv * (1 - cs));
+      }
+      /* el ángulo del giro y la posición de la cámara para t ≥ REVELA (la vista final) */
+      function anguloGiro(t) {
+        const e = t - SALE;
+        return OMEGA_G * integralRampa(SALE - RECTA, RAMPA_G) + OMEGA_G * e
+             + (OMEGA_FIN - OMEGA_G) * integralRampa(e, REVELA - SALE) + (OMEGA_G < 0 ? -1 : 1) * CURVA;
+      }
+      const up = N.nrm[1] >= 0 ? N.nrm : N.nrm.map(v => -v);
+      function camara(t) {
+        const r0 = rotar(N.atras0, N.nrm, anguloGiro(t)), kn = r0[0] * up[0] + r0[1] * up[1] + r0[2] * up[2];
+        const rp = [0, 1, 2].map(c => r0[c] - kn * up[c]), lp = Math.hypot(rp[0], rp[1], rp[2]) || 1;
+        const r = [0, 1, 2].map(c => Math.cos(ELEVA) * rp[c] / lp + Math.sin(ELEVA) * up[c]);
+        const x = t - RECTA, e = x * Math.exp(-x / EMPALME);
+        return [0, 1, 2].map(c => N.piv[c] + D_FIN * r[c] + e * N.dv[c]);
       }
 
-      draw() {
-        const brightness = 0.3 + this.activation * 0.7;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(245, 197, 66, ${brightness})`;
-        ctx.fill();
-
-        if (this.activation > 0.5) {
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.r + 3, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(245, 197, 66, ${(this.activation - 0.5) * 0.4})`;
-          ctx.lineWidth = 2;
-          ctx.stroke();
+      /* sin Path2D nuevos en cada cuadro (en Firefox su memoria se acumula fuera del recolector y la pestaña
+         se cae, el mismo arreglo de la presentación): los puntos van a búferes reutilizados */
+      const BX = new Float32Array(n), BY = new Float32Array(n), BR = new Float32Array(n), BB = new Uint8Array(n), BO = new Int32Array(n);
+      const BC = new Int32Array(NIV + 1), BP = new Int32Array(NIV + 1);
+      function pintar(t) {
+        /* mira justo al centro de la nube (piv) */
+        const cam = camara(t), dp = [0, 1, 2].map(c => N.piv[c] - cam[c]), ld = Math.hypot(dp[0], dp[1], dp[2]);
+        const g = dp.map(v => -v / ld), az = Math.atan2(g[0], g[2]), el = Math.asin(g[1]);
+        const fx = cam[0] - D * g[0], fy = cam[1] - D * g[1], fz = cam[2] - D * g[2];
+        const ca = Math.cos(az), sa = Math.sin(az), ce = Math.cos(el), se = Math.sin(el);
+        const grandes = [];
+        let grande = null, m = 0;
+        BC.fill(0);
+        for (let i = 0; i < n; i++) {
+          const ox = P[3 * i] - fx, oy = P[3 * i + 1] - fy, oz = P[3 * i + 2] - fz;
+          const x2 = ox * ca - oz * sa, z2 = ox * sa + oz * ca, y2 = oy * ce - z2 * se, zz = oy * se + z2 * ce;
+          const pe = D - zz;
+          if (pe < 0.002) continue;
+          const f = F[i];
+          let rad = (0.7 + 2.6 * f * f) * D / pe;
+          if (i !== N.foco) rad = Math.min(160, rad);
+          const px = CX + FOC * x2 / pe, py = CY - FOC * y2 / pe;
+          if (px < -rad || px > W + rad || py < -rad || py > H + rad) continue;
+          const a = Math.min(1, 1.2 * Math.max(0.15, Math.min(0.9, 0.35 + 0.35 * Math.max(-1, Math.min(1, zz / D * 0.9)) + 0.3 * f)));
+          if (i === N.foco) { grande = [px, py, rad]; continue; }
+          if (a < 0.02) continue;
+          if (rad > 16) { grandes.push([px, py, rad, a]); continue; }
+          const b = Math.min(NIV - 1, Math.round(a * (NIV - 1)));
+          BX[m] = px; BY[m] = py; BR[m] = rad; BB[m] = b; BC[b + 1]++; m++;
         }
-      }
-    }
-
-    function initNetwork() {
-      nodes.length = 0;
-      connections.length = 0;
-
-      const w = canvas.width;
-      const h = canvas.height;
-      const margin = Math.min(w, h) * 0.08;
-      const layerSpacing = (w - 2 * margin) / (layers.length - 1);
-
-      layers.forEach((count, layerIdx) => {
-        const x = margin + layerIdx * layerSpacing;
-        const verticalSpacing = (h - 2 * margin) / (count + 1);
-        for (let i = 0; i < count; i++) {
-          const y = margin + (i + 1) * verticalSpacing;
-          nodes.push(new Node(x, y, layerIdx, i));
+        /* orden por grupo de opacidad (conteo) y un camino del lienzo por grupo */
+        for (let b = 1; b <= NIV; b++) BC[b] += BC[b - 1];
+        BP.set(BC);
+        for (let j = 0; j < m; j++) BO[BP[BB[j]]++] = j;
+        for (let b = 0; b < NIV; b++) {
+          if (BC[b + 1] === BC[b]) continue;
+          ctx.fillStyle = `rgba(88,196,221,${(b / (NIV - 1)).toFixed(3)})`; ctx.beginPath();
+          for (let k = BC[b]; k < BC[b + 1]; k++) { const o = BO[k]; ctx.moveTo(BX[o] + BR[o], BY[o]); ctx.arc(BX[o], BY[o], BR[o], 0, 6.2832); }
+          ctx.fill();
         }
-      });
-
-      let nodeIndex = 0;
-      for (let l = 0; l < layers.length - 1; l++) {
-        const currentLayerNodes = nodes.slice(nodeIndex, nodeIndex + layers[l]);
-        const nextLayerStart = nodeIndex + layers[l];
-        const nextLayerNodes = nodes.slice(nextLayerStart, nextLayerStart + layers[l + 1]);
-
-        currentLayerNodes.forEach(n1 => {
-          nextLayerNodes.forEach(n2 => {
-            connections.push({ from: n1, to: n2, weight: 0.5 + Math.random() * 0.5 });
-          });
+        grandes.forEach(q => {
+          ctx.fillStyle = `rgba(88,196,221,${q[3].toFixed(3)})`; ctx.shadowColor = "rgba(88,196,221,0.8)"; ctx.shadowBlur = Math.min(40, q[2]);
+          ctx.beginPath(); ctx.arc(q[0], q[1], q[2], 0, 6.2832); ctx.fill();
         });
-        nodeIndex += layers[l];
+        ctx.shadowBlur = 0;
+        if (grande) {
+          ctx.fillStyle = "rgba(88,196,221,1)";
+          ctx.beginPath(); ctx.arc(grande[0], grande[1], grande[2], 0, 6.2832); ctx.fill();
+        }
       }
-    }
 
-    function updateActivations() {
-      const cycle = pulseTime % 2;
-      const isForward = cycle < 1;
-      const progress = cycle < 1 ? cycle : cycle - 1;
+      /* el cuadro de 1600×900 cubre el encabezado (como background-size: cover) */
+      function cuadro(t) {
+        const r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+        const bw = Math.round(r.width * dpr), bh = Math.round(r.height * dpr);
+        if (canvas.width !== bw || canvas.height !== bh) { canvas.width = bw; canvas.height = bh; }
+        const e = Math.max(bw / W, bh / H);
+        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, bw, bh);
+        ctx.setTransform(e, 0, 0, e, (bw - W * e) / 2, (bh - H * e) / 2);
+        pintar(t);
+      }
 
-      nodes.forEach(node => {
-        const currentLayer = node.layer;
-        const totalLayers = layers.length - 1;
-
-        if (isForward) {
-          const layerProgress = progress * totalLayers;
-          if (layerProgress >= currentLayer - 0.3 && layerProgress <= currentLayer + 0.3) {
-            const diff = Math.abs(layerProgress - currentLayer);
-            node.activation = Math.max(0, 1 - diff / 0.3);
-          } else {
-            node.activation *= 0.95;
-          }
-        } else {
-          const reverseLayer = totalLayers - currentLayer;
-          const neuronsInLayer = layers[currentLayer];
-          const neuronProgress = progress * totalLayers * neuronsInLayer;
-
-          let layerStartNeuron = 0;
-          for (let i = layers.length - 1; i > currentLayer; i--) {
-            layerStartNeuron += layers[i];
-          }
-
-          const currentNeuronIndex = layerStartNeuron + node.indexInLayer;
-          const neuronWindow = 0.15;
-
-          if (neuronProgress >= currentNeuronIndex - neuronWindow &&
-              neuronProgress <= currentNeuronIndex + neuronWindow) {
-            const diff = Math.abs(neuronProgress - currentNeuronIndex);
-            node.activation = Math.max(0, 1 - diff / neuronWindow);
-          } else {
-            node.activation *= 0.92;
-          }
-        }
-      });
-    }
-
-    function drawConnections() {
-      const cycle = pulseTime % 2;
-      const isForward = cycle < 1;
-      const progress = cycle < 1 ? cycle : cycle - 1;
-      const totalLayers = layers.length - 1;
-
-      connections.forEach(conn => {
-        ctx.strokeStyle = `rgba(245, 197, 66, 0.35)`;
-        ctx.lineWidth = 0.8;
-        ctx.beginPath();
-        ctx.moveTo(conn.from.x, conn.from.y);
-        ctx.lineTo(conn.to.x, conn.to.y);
-        ctx.stroke();
-
-        const fromLayer = conn.from.layer;
-        const toLayer = conn.to.layer;
-        let intensity = 0;
-
-        if (isForward) {
-          const layerProgress = progress * totalLayers;
-          if (layerProgress >= fromLayer && layerProgress <= toLayer) {
-            const localProgress = (layerProgress - fromLayer) / (toLayer - fromLayer);
-            intensity = Math.sin(localProgress * Math.PI);
-          }
-        } else {
-          let neuronsSoFar = 0;
-          for (let i = layers.length - 1; i > toLayer; i--) {
-            neuronsSoFar += layers[i];
-          }
-          const targetNeuronIndex = neuronsSoFar + conn.to.indexInLayer;
-          const totalNeurons = layers.reduce((sum, count) => sum + count, 0);
-          const currentNeuronProgress = progress * totalNeurons;
-          const neuronWindow = 1.5;
-          if (currentNeuronProgress >= targetNeuronIndex - neuronWindow &&
-              currentNeuronProgress <= targetNeuronIndex + neuronWindow) {
-            const diff = Math.abs(currentNeuronProgress - targetNeuronIndex);
-            intensity = Math.max(0, 1 - diff / neuronWindow);
-          }
-        }
-
-        if (intensity > 0.05) {
-          const alpha = intensity * 0.5 * conn.weight;
-          ctx.strokeStyle = `rgba(245, 197, 66, ${alpha})`;
-          ctx.lineWidth = 1 + intensity * 0.8;
-          ctx.beginPath();
-          ctx.moveTo(conn.from.x, conn.from.y);
-          ctx.lineTo(conn.to.x, conn.to.y);
-          ctx.stroke();
-        }
-      });
-    }
-
-    function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      pulseTime += PULSE_SPEED;
-      updateActivations();
-      drawConnections();
-      nodes.forEach(n => { n.update(); n.draw(); });
-      requestAnimationFrame(animate);
-    }
-
-    function resizeCanvas() {
-      const hero = document.querySelector('.hero');
-      canvas.width = hero.offsetWidth;
-      canvas.height = hero.offsetHeight;
-      initNetwork();
-    }
-
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
-    animate();
+      const quieto = window.matchMedia("(prefers-reduced-motion: reduce)");
+      let visible = true, t = REVELA, antes = null;
+      new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe(canvas);
+      function animar(now) {
+        requestAnimationFrame(animar);
+        const dt = antes == null ? 0 : Math.min(0.05, (now - antes) / 1000); antes = now;
+        if (!visible || document.hidden) return;
+        if (!quieto.matches) t += dt;
+        cuadro(t);
+      }
+      window.addEventListener("resize", () => cuadro(t));
+      requestAnimationFrame(animar);
+    })();
 
 
     /* ── Demo de inferencia: la red completa el refrán ───────────────

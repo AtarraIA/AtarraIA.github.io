@@ -45,6 +45,13 @@ body{background:var(--bg); color:var(--ink); font-family:var(--serif)}
 #letras{position:fixed; right:1.6vw; bottom:1.4vw; width:2.4vw; height:2.4vw; z-index:4; border-radius:50%; border:1.5px solid #555; background:rgba(0,0,0,.6);
   color:#bbb; cursor:pointer; padding:0; font:italic 1.05vw var(--serif); transition:border-color .18s, color .18s}
 #letras:hover, #letras.si{border-color:var(--blue); color:var(--blue)}
+/* en 3D (?3d): el botón de girar abajo a la derecha y el de las palabras a su izquierda, como en mapa.html */
+#girar{position:fixed; right:1.6vw; bottom:1.4vw; width:2.4vw; height:2.4vw; z-index:4; border-radius:50%; border:1.5px solid #555; background:rgba(0,0,0,.6);
+  color:#bbb; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; transition:border-color .18s, color .18s}
+#girar svg{width:55%; height:55%; fill:currentColor}
+#girar:hover, #girar.si{border-color:var(--blue); color:var(--blue)}
+#girar[hidden]{display:none}
+body.tres #letras{right:4.4vw}
 /* al hacer clic en un azul: recorrer la palabra y sus vecinas */
 #nav{position:fixed; left:50%; bottom:4.6vw; transform:translateX(-50%); z-index:4; display:flex; align-items:center; gap:.8vw;
   font-family:var(--serif); font-size:1.35vw; color:#ddd; white-space:nowrap}
@@ -69,12 +76,15 @@ body{background:var(--bg); color:var(--ink); font-family:var(--serif)}
 <div id="nav" hidden><button id="ant" title="Anterior" aria-label="Anterior">‹</button><span id="nav-t"></span><button id="sig" title="Siguiente" aria-label="Siguiente">›</button></div>
 <div class="txt" id="s-pie"></div>
 <button id="letras" class="si" title="Mostrar u ocultar las palabras" aria-label="Mostrar u ocultar las palabras">Aa</button>
+<button id="girar" class="si" hidden title="Rotar" aria-label="Rotar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg></button>
 <div class="tip" id="tip"></div>
 
 <script>
 const MODELOS = [{"id": "palabras", "nombre": "Nuestro corpus (word2vec)"}, {"id": "bpe-8000", "nombre": "Nuestro corpus con BPE, k = 8000 (word2vec)"}, {"id": "bpe-20000", "nombre": "Nuestro corpus con BPE, k = 20000 (word2vec)"}, {"id": "fasttext-wiki-es", "nombre": "fastText wiki.es (preentrenado)"}];
-// ?modelo=id&vista=junto|w|c
+// ?modelo=id&vista=junto|w|c&3d
 const PARAM = new URLSearchParams(location.search);
+const TRES = PARAM.has('3d');                // la misma página con los UMAP en 3D: la nube gira y se rota arrastrando
+if (TRES){ document.body.classList.add('tres'); document.title = 'W y C en 3D'; }
 const F = 1.7;                               // letra y puntos del tamaño de las láminas
 const datos = {};
 window.registrarWC = (id, d) => { datos[id] = d; };
@@ -93,6 +103,15 @@ function coords(par){
   for (let i = 0; i < n; i++){ P[2 * i] = (v[0][i] - (est[0][0] + est[0][1]) / 2) * e; P[2 * i + 1] = (v[1][i] - (est[1][0] + est[1][1]) / 2) * e; }
   return P;
 }
+// lo mismo con tres coordenadas: los tres ejes con la misma escala, para no deformar la nube
+function coords3(par){
+  const v = par.map(c => Array.from(new Uint16Array(bytes(c.q)), q => c.lo + q / 65535 * (c.hi - c.lo))), n = v[0].length;
+  const est = v.map(a => { const o = a.slice().sort((x, y) => x - y); return [o[Math.floor(n * .02)], o[Math.floor(n * .98)]]; });
+  const e = 2 / Math.max(...est.map(([lo, hi]) => hi - lo));
+  const P = new Float32Array(3 * n);
+  for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) P[3 * i + k] = (v[k][i] - (est[k][0] + est[k][1]) / 2) * e;
+  return P;
+}
 function matriz(q, s, n, d){
   const Q = new Int8Array(bytes(q)), S = new Float32Array(bytes(s)), M = new Float32Array(n * d);
   for (let i = 0; i < n; i++) for (let j = 0; j < d; j++) M[i * d + j] = Q[i * d + j] * S[i];
@@ -105,6 +124,11 @@ function preparar(M){
   const N = M.n, J = coords(M.junto), Pw = coords(M.w), Pc = coords(M.c);
   const una = (azules, naranjas) => { const P = new Float32Array(4 * N); P.set(azules); P.set(naranjas, 2 * N); return P; };
   M.P = {junto: J, w: una(Pw, J.subarray(2 * N)), c: una(J.subarray(0, 2 * N), Pc)};
+  if (TRES && M.junto3){
+    const J3 = coords3(M.junto3), Pw3 = coords3(M.w3), Pc3 = coords3(M.c3);
+    const una3 = (azules, naranjas) => { const Q = new Float32Array(6 * N); Q.set(azules); Q.set(naranjas, 3 * N); return Q; };
+    M.Q = {junto: J3, w: una3(Pw3, J3.subarray(3 * N)), c: una3(J3.subarray(0, 3 * N), Pc3)};
+  }
   M.Wf = matriz(M.W, M.Ws, N, M.d); M.Cf = matriz(M.C, M.Cs, N, M.d);
   const lf = M.frec.map(f => Math.log(f)), lo = Math.min(...lf), hi = Math.max(...lf);
   M.nivel = lf.map(v => (v - lo) / (hi - lo || 1));
@@ -123,6 +147,68 @@ function medir(){
   lienzo.width = Math.round(ancho * dpr); lienzo.height = Math.round(alto * dpr);
 }
 const aPantalla = i => [(P[2 * i] - cam.x) * cam.s + ancho / 2, -(P[2 * i + 1] - cam.y) * cam.s + alto / 2];
+/* en 3D, P3 tiene las coordenadas de la nube (cambian durante una transición) y P es su vista rotada y llevada
+   al plano (ortográfica), en las mismas unidades: todo lo demás (dibujo, ratón, etiquetas) trabaja con P */
+let P3 = null, rot = {az: .6, el: .3}, girando = true, animando = false;
+/* LA ENTRADA (en 3D, al llegar a la lámina). Mientras dura hay perspectiva: la cámara mira hacia el punto T desde D radios
+   de la nube (R = cam.r), por detrás de él; con D < 0 ya lo pasó y sigue de frente (lo que queda detrás no se dibuja).
+     0 → T_BAJA        empieza lejos (D_LEJOS·D_CERCA) y justo encima de las nubes, mirando hacia abajo, y baja dando
+                       media vuelta (ORBITA) a su alrededor mientras siguen girando, hasta la altura de siempre (EL_FIN)
+     T_BAJA → T_SALE   se va hacia el centro de C (T pasa del centro de las dos nubes al de C hasta T_ENTRA), entra y la
+                       recorre de frente hasta un poco pasado su centro (SALE); como las nubes siguen girando, el camino se
+                       curva con ellas
+     T_SALE → T_VUELVE da media vuelta y se aleja hasta ver las dos nubes (D_CERCA)
+     T_VUELVE → T_FIN  la vista pasa, pareja, a la ortográfica de siempre (orto de 0 a 1)
+   Arrastrar la termina. ?sin-entrada la salta */
+const T_BAJA = 10, T_ENTRA = 13, T_SALE = 19, T_VUELVE = 24, T_FIN = 26;
+/* SALE: hasta dónde llega por dentro de C (D en radios, pasado su centro). Vista de frente C es delgada: con D = −0,08 aún
+   quedan adelante unos 4 500 de sus puntos; más allá se acaban enseguida (−0,2: menos de 900) y la pantalla queda negra */
+const EL_FIN = .3, ORBITA = Math.PI, D_CERCA = 3, D_LEJOS = 7, SALE = .08;
+let entrada = TRES && !PARAM.has('sin-entrada') ? {t: 0, orbita: 0} : null, persp = null, ESC = null;   // ESC: el aumento de cada punto con perspectiva
+if (entrada){ rot.el = Math.PI / 2; persp = {D: D_CERCA * D_LEJOS, orto: 0}; }
+const suave5 = u => { u = Math.max(0, Math.min(1, u)); return u * u * u * (u * (6 * u - 15) + 10); };
+/* el centro de C en la vista conjunta: la mitad de la caja del 98 % central */
+function nubeC(){
+  const Q = M.Q.junto, N = M.n, c = [0, 1, 2].map(k => {
+    const a = []; for (let i = N; i < 2 * N; i++) a.push(Q[3 * i + k]);
+    a.sort((x, y) => x - y); return (a[Math.floor(N * .01)] + a[Math.floor(N * .99)]) / 2;
+  });
+  return {c};
+}
+function pasoEntrada(dt){
+  if (!entrada.C) entrada.C = nubeC();
+  const t = entrada.t += dt;
+  const a = suave5(t / T_BAJA), b = suave5((t - T_BAJA) / (T_ENTRA - T_BAJA)), v = suave5((t - T_SALE) / (T_VUELVE - T_SALE));
+  rot.el = Math.PI / 2 + (EL_FIN - Math.PI / 2) * a;
+  const orb = ORBITA * a + Math.PI * v;                                          // la órbita de la cámara, sumada al giro de las nubes
+  rot.az += orb - entrada.orbita; entrada.orbita = orb;
+  const D = t < T_BAJA ? D_CERCA * Math.exp(Math.log(D_LEJOS) * (1 - a))
+          : t < T_SALE ? D_CERCA + (-SALE - D_CERCA) * suave5((t - T_BAJA) / (T_SALE - T_BAJA))
+          : -SALE + (D_CERCA + SALE) * v;
+  const m = b * (1 - v), c = cam.c || [0, 0, 0];                                 // T: del centro de las dos nubes al de C, y de vuelta
+  persp = {D, orto: suave5((t - T_VUELVE) / (T_FIN - T_VUELVE)), T: c.map((x, k) => x + (entrada.C.c[k] - x) * m)};
+  if (t >= T_FIN){ entrada = null; persp = null; ESC = null; rot.el = EL_FIN; }
+}
+function terminarEntrada(){ if (entrada){ entrada = null; persp = null; ESC = null; } }
+function proyectar(){
+  const n = P3.length / 3, ca = Math.cos(rot.az), sa = Math.sin(rot.az), ce = Math.cos(rot.el), se = Math.sin(rot.el), R = cam.r || 1;
+  const c = persp && persp.T || cam.c || [0, 0, 0];
+  if (!P || P.length !== 2 * n) P = new Float32Array(2 * n);
+  if (persp && (!ESC || ESC.length !== n)) ESC = new Float32Array(n);
+  for (let i = 0; i < n; i++){
+    // gira alrededor del centro de los puntos visibles (cam.c), o de T en la entrada
+    const x = P3[3 * i] - c[0], y = P3[3 * i + 1] - c[1], z = P3[3 * i + 2] - c[2], x2 = x * ca - z * sa, z2 = x * sa + z * ca;
+    let k = 1;
+    if (persp){
+      // con perspectiva, lo cercano se agranda; a la distancia D_CERCA y en el centro, el tamaño de siempre. Lo que quedó
+      // detrás de la cámara (o casi encima) no se dibuja
+      const prof = persp.D - (y * se + z2 * ce) / R;
+      if (prof < .03 && persp.orto < 1){ P[2 * i] = P[2 * i + 1] = 1e6; ESC[i] = 0; continue; }
+      k = persp.orto + (1 - persp.orto) * D_CERCA / prof; ESC[i] = k;
+    }
+    P[2 * i] = x2 * k; P[2 * i + 1] = (y * ce - z2 * se) * k;
+  }
+}
 const nombre = i => M.vocab[i % M.n];
 
 /* la distribución de una palabra: σ(C_c · W_palabra) para cada uno de los N contextos */
@@ -172,6 +258,7 @@ function buscar(){
   if (i === undefined) return;
   if (vista === 'c') ponerVista('junto', false);
   ponerGrupo(i);
+  if (TRES){ $('buscar').blur(); return; }     // en 3D la vista gira: la cámara no va hacia ella
   // si ya se ve, la cámara no se mueve (así siguen a la vista los naranjas); si no, va hacia ella
   const [px, py] = aPantalla(i);
   if (px > 40 && px < ancho - 40 && py > 160 && py < alto - 120){ $('buscar').blur(); return; }
@@ -234,9 +321,24 @@ function etiquetas(cand){
   }
   return puestas;
 }
+/* los puntos se juntan por color y opacidad (64 niveles) y cada lote se pinta de una vez con pintarPuntos():
+   en 3D se redibuja en cada cuadro y un fill por punto no alcanza. Los lotes se reutilizan entre cuadros */
+const LOTES = new Map();
 function punto(x, y, r, rgb, a){
-  ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a.toFixed(3)})`;
-  ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI); ctx.fill();
+  const q = Math.round(a * 64);
+  if (q <= 0) return;
+  const k = `${rgb[0]},${rgb[1]},${rgb[2]},${(q / 64).toFixed(3)}`;
+  let l = LOTES.get(k);
+  if (!l) LOTES.set(k, l = []);
+  l.push(x, y, r);
+}
+function pintarPuntos(){
+  for (const [k, l] of LOTES){
+    if (!l.length) continue;
+    ctx.fillStyle = `rgba(${k})`; ctx.beginPath();
+    for (let j = 0; j < l.length; j += 3){ ctx.moveTo(l[j] + l[j + 2], l[j + 1]); ctx.arc(l[j], l[j + 1], l[j + 2], 0, 2 * Math.PI); }
+    ctx.fill(); l.length = 0;
+  }
 }
 function anillo(x, y, r, c){
   ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI);
@@ -249,27 +351,31 @@ function dibujar(){
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, ancho, alto);
   const N = M.n, r = F * Math.max(1.2, Math.min(3, 1.2 * Math.sqrt(cam.s / cam.s0)));
   const fuera = (x, y) => x < -6 || x > ancho + 6 || y < -6 || y > alto + 6;
+  const tam = (i, b) => ESC ? Math.min(30, b * ESC[i]) : b;      // en la entrada, con perspectiva: lo cercano, más grande
   let cand;
   if (dist){
     /* una palabra señalada: los azules siguen ahí, más tenues; los C brillan y crecen según σ(C·W) */
     for (let i = N - 1; i >= 0; i--){
       const [x, y] = aPantalla(i), t = M.nivel[i];
       if (fuera(x, y) || vis[0] < .01) continue;
-      punto(x, y, r * (.55 + 1.1 * t * t), AZUL, vis[0] * (.12 + .3 * t));
+      punto(x, y, tam(i, r * (.55 + 1.1 * t * t)), AZUL, vis[0] * (.12 + .3 * t));
     }
+    pintarPuntos();
     for (const c of dist.orden){
       const [x, y] = aPantalla(N + c), s = dist.s[c];
       if (fuera(x, y) || vis[1] < .01) continue;
-      punto(x, y, r * (.45 + 1.6 * s), NARANJA, vis[1] * (.05 + .95 * s * s));
+      punto(x, y, tam(N + c, r * (.45 + 1.6 * s)), NARANJA, vis[1] * (.05 + .95 * s * s));
     }
+    pintarPuntos();
     // con un clic, también la original y sus vecinas, en azul; la que se mira lleva el anillo
     const azules = grupo ? [grupo.origen, ...grupo.vecinas] : [dist.w];
     for (const i of azules){ const [x, y] = aPantalla(i); punto(x, y, r * 2, AZUL, 1); }
+    pintarPuntos();
     if (grupo && grupo.k){ const [x, y] = aPantalla(grupo.origen); anillo(x, y, 7, '#58c4dd'); }
     const [x, y] = aPantalla(dist.w);
     anillo(x, y, 9, '#ffffff');
     // la que se mira y la original siempre; las otras vecinas y los contextos más probables, de mayor a menor, mientras no se pisen
-    cand = [...azules.map(i => [i, i === dist.w || i === azules[0]]), ...dist.orden.slice(-60).reverse().map(c => [N + c, false])];
+    cand = [...azules.map(i => [i, i === dist.w || i === azules[0]]), ...(vis[1] > .5 ? dist.orden.slice(-60).reverse().map(c => [N + c, false]) : [])];   // en «solo W» los C no se ven: tampoco sus nombres
   } else {
     /* todo: primero los menos frecuentes, para que los frecuentes queden encima */
     for (let i = N - 1; i >= 0; i--){
@@ -277,13 +383,15 @@ function dibujar(){
         if (vis[k] < .01) continue;
         const [x, y] = aPantalla(k * N + i), t = M.nivel[i];
         if (fuera(x, y)) continue;
-        punto(x, y, r * (.55 + 1.1 * t * t), rgb, vis[k] * (.3 + .65 * t));
+        punto(x, y, tam(k * N + i, r * (.55 + 1.1 * t * t)), rgb, vis[k] * (.3 + .65 * t));
       }
     }
+    pintarPuntos();
     cand = [];
     for (let i = 0; i < N && cand.length < 12000; i++){ if (vis[0] > .5) cand.push([i, false]); if (vis[1] > .5) cand.push([N + i, false]); }
   }
-  if (!letras && !dist) return;
+  if (!letras && !grupo) return;               // sin palabras, pasar el ratón no las muestra; solo una palabra fijada con clic
+  if (entrada && entrada.t < T_VUELVE && !grupo) return;       // en la entrada, las palabras aparecen cuando la cámara ya volvió a salir
   for (const [i, x, y] of etiquetas(cand)){
     const esW = i < N;
     ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.strokeText(nombre(i), x, y);
@@ -296,6 +404,20 @@ const redibujar = () => { if (!pendiente){ pendiente = true; requestAnimationFra
 
 /* el encuadre de una vista: el 98 % central de los puntos visibles, con margen para los títulos */
 function encuadre(v){
+  /* en 3D el encuadre le sirve a cualquier giro: centro en la mitad de la caja del 98 % central de los puntos visibles
+     (alrededor de él se gira; no la mediana: W y C juntos son dos nubes y la mediana cae en el borde de una) y una
+     esfera que deja adentro al 98 % */
+  if (TRES){
+    const Q = M.Q[v], N = M.n, c = [0, 1, 2].map(k => {
+      const a = []; for (let j = 0; j < 2; j++) if (VIS[v][j]) for (let i = j * N; i < (j + 1) * N; i++) a.push(Q[3 * i + k]);
+      a.sort((x, y) => x - y); return (a[Math.floor(a.length * .01)] + a[Math.floor(a.length * .99)]) / 2;
+    });
+    const d = [];
+    for (let j = 0; j < 2; j++) if (VIS[v][j]) for (let i = j * N; i < (j + 1) * N; i++) d.push(Math.hypot(Q[3 * i] - c[0], Q[3 * i + 1] - c[1], Q[3 * i + 2] - c[2]));
+    d.sort((x, y) => x - y);
+    const r = d[Math.floor(d.length * .98)], s = Math.min(ancho * .9, alto - 260) / (1.7 * r);   // un poco más cerca que la esfera: de lado W y C juntos son angostos
+    return {x: 0, y: 20 / s, s, s0: s, c, r};
+  }
   const Q = M.P[v], N = M.n, xs = [], ys = [];
   for (let k = 0; k < 2; k++) if (VIS[v][k]) for (let i = k * N; i < (k + 1) * N; i++){ xs.push(Q[2 * i]); ys.push(Q[2 * i + 1]); }
   const q = a => { a.sort((x, y) => x - y); return [a[Math.floor(a.length * .01)], a[Math.floor(a.length * .99)]]; };
@@ -309,25 +431,29 @@ function ponerVista(nueva, animada){
   document.querySelectorAll('#vistas button').forEach(b => b.classList.toggle('si', b.dataset.vista === vista));
   if (vista === 'c'){ sobre = null; dist = null; grupo = null; $('nav').hidden = true; }
   textos();
-  const B = M.P[vista], v1 = VIS[vista], c1 = encuadre(vista);
-  if (!animada || !P){ P = B.slice(); vis = v1.slice(); cam = c1; pie(); dibujar(); return; }
-  const A = P.slice(), v0 = vis.slice(), c0 = {...cam}, t0 = performance.now(), T = 1100;
+  // en 3D los puntos viajan en el espacio (P3) y se vuelven a proyectar en cada cuadro
+  const B = TRES ? M.Q[vista] : M.P[vista], v1 = VIS[vista], c1 = encuadre(vista);
+  if (!animada || !P){ vis = v1.slice(); cam = c1; if (TRES){ P3 = B.slice(); proyectar(); } else P = B.slice(); pie(); dibujar(); return; }
+  const X = TRES ? P3 : P, A = X.slice(), v0 = vis.slice(), c0 = {...cam}, t0 = performance.now(), T = 1100;
+  animando = true;
   const paso = ahora => {
     let t = Math.min(1, (ahora - t0) / T);
     t = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    for (let k = 0; k < A.length; k++) P[k] = A[k] + (B[k] - A[k]) * t;
+    for (let k = 0; k < A.length; k++) X[k] = A[k] + (B[k] - A[k]) * t;
     vis = [v0[0] + (v1[0] - v0[0]) * t, v0[1] + (v1[1] - v0[1]) * t];
-    cam = {x: c0.x + (c1.x - c0.x) * t, y: c0.y + (c1.y - c0.y) * t, s: Math.exp(Math.log(c0.s) + (Math.log(c1.s) - Math.log(c0.s)) * t), s0: c1.s0};
+    cam = {x: c0.x + (c1.x - c0.x) * t, y: c0.y + (c1.y - c0.y) * t, s: Math.exp(Math.log(c0.s) + (Math.log(c1.s) - Math.log(c0.s)) * t), s0: c1.s0,
+           c: c1.c && c1.c.map((v, k) => c0.c[k] + (v - c0.c[k]) * t), r: c1.r && c0.r + (c1.r - c0.r) * t};
+    if (TRES){ if (girando && !arrastre) rot.az += .15 / 60; proyectar(); }      // sigue girando mientras viajan
     dibujar();
-    if (t < 1) requestAnimationFrame(paso);
+    if (t < 1) requestAnimationFrame(paso); else animando = false;
   };
   requestAnimationFrame(paso);
   pie();
 }
 function textos(){
-  $('s-tit').textContent = {junto: 'W y C', w: 'UMAP de W', c: 'UMAP de C'}[vista];
+  $('s-tit').textContent = {junto: 'W y C', w: 'UMAP de W', c: 'UMAP de C'}[vista] + (TRES ? ' en 3D' : '');
   $('s-sub').innerHTML = (vista === 'junto' ? 'W y C como un solo conjunto de vectores' : vista === 'w' ? 'los vectores de palabra' : 'los vectores de contexto') +
-    ' · UMAP con coseno<br>' + (vista !== 'c' ? '<span class="pt" style="background:var(--blue)"></span>W, las palabras' : '') +
+    (TRES ? ' · UMAP en 3D con coseno<br>' : ' · UMAP con coseno<br>') + (vista !== 'c' ? '<span class="pt" style="background:var(--blue)"></span>W, las palabras' : '') +
     (vista !== 'w' ? '<span class="pt" style="background:var(--orange)"></span>C, los contextos' : '');
 }
 function pie(){
@@ -341,7 +467,7 @@ function pie(){
   } else {
     const que = vista === 'w' ? '<b>azul</b>, su fila de W' : vista === 'c' ? '<i>naranja</i>, su fila de C' : '<b>azul</b> su fila de W, <i>naranja</i> su fila de C';
     $('s-pie').innerHTML = `cada punto es ${bpe ? 'un token' : 'una palabra'}: ${que} · ` +
-      `${bpe ? "los" : "las"} ${miles(M.n)} ${unidad} más frecuentes de ${miles(M.total)} · ${M.d} dimensiones → 2` + (vista !== 'c' ? ' · pasa el ratón por un azul' : '');
+      `${bpe ? "los" : "las"} ${miles(M.n)} ${unidad} más frecuentes de ${miles(M.total)} · ${M.d} dimensiones → ${TRES ? 3 : 2}` + (vista !== 'c' ? ' · pasa el ratón por un azul' : '') + (TRES ? ' · arrastra para rotar' : '');
   }
 }
 
@@ -364,13 +490,19 @@ lienzo.addEventListener('wheel', e => {
   cam.s *= f; cam.x = dx - (mx - ancho / 2) / cam.s; cam.y = dy + (my - alto / 2) / cam.s;
   redibujar();
 }, {passive: false});
-lienzo.addEventListener('pointerdown', e => { arrastre = {x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, movio: false}; lienzo.setPointerCapture(e.pointerId); });
+lienzo.addEventListener('pointerdown', e => { arrastre = {x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, az: rot.az, el: rot.el, movio: false}; lienzo.setPointerCapture(e.pointerId); });
 lienzo.addEventListener('pointermove', e => {
   if (!M) return;
   const mx = e.clientX, my = e.clientY, t = $('tip');
   if (arrastre){
     const dx = mx - arrastre.x, dy = my - arrastre.y;
     if (Math.abs(dx) + Math.abs(dy) > 3){ arrastre.movio = true; lienzo.classList.add('arrastra'); }
+    // en 3D arrastrar rota la nube (y deja de girar sola); en 2D la mueve
+    if (arrastre.movio && TRES){
+      if (entrada){ terminarEntrada(); arrastre.el = Math.max(-1.4, Math.min(1.4, rot.el)); arrastre.az = rot.az - dx * .008; }   // arrastrar termina la entrada desde donde iba
+      rot.az = arrastre.az + dx * .008; rot.el = Math.max(-1.4, Math.min(1.4, arrastre.el + dy * .008)); ponerGiro(false);
+      t.style.display = 'none'; proyectar(); redibujar(); return;
+    }
     if (arrastre.movio){ cam.x = arrastre.cx - dx / cam.s; cam.y = arrastre.cy + dy / cam.s; t.style.display = 'none'; redibujar(); return; }
   }
   // en «solo C» se señalan los naranjas, solo para leer su nombre
@@ -392,12 +524,32 @@ lienzo.addEventListener('pointerleave', () => { $('tip').style.display = 'none';
 addEventListener('resize', () => { medir(); redibujar(); });
 document.querySelectorAll('#vistas button').forEach(b => b.addEventListener('click', () => { if (M && b.dataset.vista !== vista) ponerVista(b.dataset.vista, true); }));
 $('letras').addEventListener('click', () => { letras = !letras; $('letras').classList.toggle('si', letras); redibujar(); });
+/* en 3D la nube gira sola, salvo después de arrastrarla (el botón la vuelve a poner a girar) */
+function ponerGiro(si){ girando = si; $('girar').classList.toggle('si', si); }
+$('girar').hidden = !TRES;
+$('girar').addEventListener('click', () => ponerGiro(!girando));
+let antes = performance.now();
+function girar(ahora){
+  requestAnimationFrame(girar);
+  const dt = Math.min(.05, (ahora - antes) / 1000); antes = ahora;
+  if (!M || !P3 || animando || arrastre || document.hidden || !innerWidth) return;   // oculta en la presentación (otra lámina): no dibuja
+  if (!girando && !entrada) return;
+  if (girando) rot.az += dt * .15;
+  if (entrada) pasoEntrada(dt);
+  proyectar(); dibujar();
+}
+if (TRES) requestAnimationFrame(girar);
 
 /* el modelo: el mismo selector que en las láminas, y se recuerda entre páginas */
 const sel = $('modelo'), CLAVE = 'mapa-modelo';
 let activo = null;
 sel.innerHTML = MODELOS.map(m => `<option value="${m.id}">${esc(m.nombre)}</option>`).join('');
 function usar(id){
+  if (TRES && !datos[id].junto3){
+    if (activo) sel.value = activo;
+    $('aviso').textContent = `mapas/${id}-wc.js no trae los UMAP en 3D (se arman con slides_src/espacio.py --wc3)`;
+    return;
+  }
   M = datos[id]; activo = id; preparar(M);
   sobre = null; dist = null; grupo = null; $('nav').hidden = true;
   $('vocab').innerHTML = M.vocab.map(w => `<option value="${esc(w)}">`).join('');
