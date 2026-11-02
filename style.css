@@ -42,15 +42,18 @@ body {
   padding: 0 2rem;
 }
 
-/* la nube es el fondo de toda la página: fija, de borde a borde, y el contenido pasa por encima */
-.hero canvas {
+/* la nube es el fondo de toda la página: fija, de borde a borde, y el contenido pasa por encima.
+   Dos nubes: la de embeddings (azul) y la que se enciende (naranja); el botón elige cuál se ve */
+.fondo {
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100vh;
   z-index: 0;
   pointer-events: none;
 }
+.fondo canvas { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity 0.8s ease; }
+#luz-canvas { opacity: 0; }
+body.fondo-luz #luz-canvas { opacity: 1; }
+body.fondo-luz #network { opacity: 0; }
 section, footer { position: relative; z-index: 1; text-shadow: 0 0 10px #000, 0 0 4px #000; }
 
 .hero-content {
@@ -757,29 +760,42 @@ footer a:hover { text-decoration: underline; }
   footer { padding: 2rem 1.25rem; }
 }
 
-/* ── LA NUBE QUE SE ENCIENDE (la última lámina de coocurrencias) ── */
-.nube-luz {
-  position: relative;
-  z-index: 1;
-  background: #000;
-  width: 100%;
-  height: 100vh;
-  height: 100svh;
-  overflow: hidden;
-}
-.nube-luz canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* ── LA NUBE QUE SE ENCIENDE: la palabra de turno y el botón que cambia el fondo ── */
 .luz-palabra {
-  position: absolute;
-  right: 4vw;
+  position: fixed;
+  right: calc(4vw + 56px);
   bottom: 3vw;
   margin: 0;
-  z-index: 1;
+  z-index: 2;
+  pointer-events: none;
   font-size: clamp(1.1rem, 2.2vw, 1.8rem);
   color: #58c4dd;
   text-shadow: 0 0 18px rgba(88, 196, 221, 0.7), 0 0 8px #000;
   opacity: 0;
 }
 .luz-palabra.ve { animation: luzVe 4.5s ease both; }
+body:not(.fondo-luz) .luz-palabra, body.abajo .luz-palabra { visibility: hidden; }
+.fondo-boton {
+  position: fixed;
+  right: 4vw;
+  bottom: 3vw;
+  z-index: 50;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.55);
+  color: #58c4dd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.fondo-boton svg { width: 60%; height: 60%; fill: currentColor; }
+.fondo-boton:hover, .fondo-boton:focus-visible { border-color: currentColor; outline: none; }
+body.fondo-luz .fondo-boton { color: #ff9a3c; }
 @keyframes luzVe {
   0%   { opacity: 0; transform: translateY(10px); }
   15%  { opacity: 1; transform: none; }
