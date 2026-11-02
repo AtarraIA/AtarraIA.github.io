@@ -763,9 +763,10 @@ footer a:hover { text-decoration: underline; }
 /* ── LA NUBE QUE SE ENCIENDE: la palabra de turno y el botón que cambia el fondo ── */
 .luz-palabra {
   position: fixed;
-  right: calc(4vw + 56px);
+  left: 4vw;
   bottom: 3vw;
   margin: 0;
+  text-align: left;
   z-index: 2;
   pointer-events: none;
   font-size: clamp(1.1rem, 2.2vw, 1.8rem);
@@ -795,7 +796,12 @@ body:not(.fondo-luz) .luz-palabra, body.abajo .luz-palabra { visibility: hidden;
 }
 .fondo-boton svg { width: 60%; height: 60%; fill: currentColor; }
 .fondo-boton:hover, .fondo-boton:focus-visible { border-color: currentColor; outline: none; }
-body.fondo-luz .fondo-boton { color: #ff9a3c; }
+body.fondo-luz #fondo-boton { color: #ff9a3c; }
+/* el botón del título, a la izquierda del de la nube */
+.titulo-boton { right: calc(4vw + 52px); color: #fff; }
+body.sin-titulo .titulo-boton { color: rgba(255, 255, 255, 0.45); }
+.hero-content { transition: opacity 0.6s ease; }
+body.sin-titulo .hero-content { opacity: 0; pointer-events: none; }
 @keyframes luzVe {
   0%   { opacity: 0; transform: translateY(10px); }
   15%  { opacity: 1; transform: none; }

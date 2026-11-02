@@ -33,6 +33,9 @@
       <canvas id="luz-canvas"></canvas>
     </div>
     <p class="luz-palabra" aria-hidden="true"></p>
+    <button type="button" class="fondo-boton titulo-boton" id="titulo-boton" title="Ocultar el título" aria-label="Ocultar el título" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v3h-6.5v11h-3V8H4z"/></svg>
+    </button>
     <button type="button" class="fondo-boton" id="fondo-boton" title="Cambiar el fondo" aria-label="Cambiar el fondo: la nube que se enciende" aria-pressed="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="8" r="2"/><circle cx="12" cy="5" r="1.5"/><circle cx="17" cy="9" r="2.5"/><circle cx="9" cy="14" r="1.5"/><circle cx="15" cy="16" r="2"/><circle cx="7" cy="19" r="1"/><circle cx="19" cy="19" r="1.2"/></svg>
     </button>
@@ -402,6 +405,21 @@
       }
       window.addEventListener("resize", () => cuadro(t));
       requestAnimationFrame(animar);
+    })();
+
+    /* ── El botón del título: lo oculta para ver solo la nube (y se recuerda en este navegador) ── */
+    (function () {
+      const b = document.getElementById("titulo-boton");
+      if (!b) return;
+      function poner(sin) {
+        document.body.classList.toggle("sin-titulo", sin);
+        b.setAttribute("aria-pressed", sin);
+        b.title = sin ? "Mostrar el título" : "Ocultar el título";
+        b.setAttribute("aria-label", b.title);
+        try { localStorage.setItem("atarraia-titulo", sin ? "no" : "si"); } catch (e) {}
+      }
+      b.addEventListener("click", () => poner(!document.body.classList.contains("sin-titulo")));
+      try { if (localStorage.getItem("atarraia-titulo") === "no") poner(true); } catch (e) {}
     })();
 
     /* ── El menú: transparente sobre el encabezado; con un velo oscuro al bajar ── */
