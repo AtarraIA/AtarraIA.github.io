@@ -263,6 +263,12 @@
 
 
   <!-- ── FOOTER ────────────────────────────── -->
+  <!-- ── LA NUBE QUE SE ENCIENDE ──────────── -->
+  <div class="nube-luz" id="nube-luz" aria-hidden="true">
+    <canvas id="luz-canvas"></canvas>
+    <p class="luz-palabra"></p>
+  </div>
+
   <footer>
     <p data-txt="footer">Atarraia – Semillero de Redes Neuronales · Universidad Nacional de Colombia, Sede Medellín · 2026-2</p>
   </footer>
@@ -341,7 +347,7 @@
           let rad = (0.7 + 2.6 * f * f) * D / pe;
           if (i !== N.foco) rad = Math.min(160, rad);
           const px = CX + FOC * x2 / pe, py = CY - FOC * y2 / pe;
-          if (px < -rad || px > W + rad || py < -rad || py > H + rad) continue;
+          if (px < vis[0] - rad || px > vis[2] + rad || py < vis[1] - rad || py > vis[3] + rad) continue;
           const a = Math.min(1, 1.2 * Math.max(0.15, Math.min(0.9, 0.35 + 0.35 * Math.max(-1, Math.min(1, zz / D * 0.9)) + 0.3 * f)));
           if (i === N.foco) { grande = [px, py, rad]; continue; }
           if (a < 0.02) continue;
@@ -370,14 +376,17 @@
         }
       }
 
-      /* el cuadro de 1600×900 cubre el encabezado (como background-size: cover) */
+      /* el cuadro de 1600×900 (el del video) cubre todo el encabezado, de borde a borde */
+      let vis = [0, 0, W, H];
       function cuadro(t) {
         const r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
         const bw = Math.round(r.width * dpr), bh = Math.round(r.height * dpr);
         if (canvas.width !== bw || canvas.height !== bh) { canvas.width = bw; canvas.height = bh; }
-        const e = Math.max(bw / W, bh / H);
+        const e = Math.max(bw / W, bh / H), ox = (bw - W * e) / 2, oy = (bh - H * e) / 2;
         ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, bw, bh);
-        ctx.setTransform(e, 0, 0, e, (bw - W * e) / 2, (bh - H * e) / 2);
+        ctx.setTransform(e, 0, 0, e, ox, oy);
+        /* lo que se ve del cuadro, en sus unidades: se pinta todo lo que cae en la pantalla, no solo en el cuadro */
+        vis = [-ox / e, -oy / e, (bw - ox) / e, (bh - oy) / e];
         pintar(t);
       }
 
@@ -393,6 +402,115 @@
       }
       window.addEventListener("resize", () => cuadro(t));
       requestAnimationFrame(animar);
+    })();
+
+    /* ── El menú: transparente sobre el encabezado; con un velo oscuro al bajar ── */
+    (function () {
+      const nav = document.querySelector(".site-nav"), hero = document.querySelector(".hero");
+      if (!nav || !hero) return;
+      const poner = () => nav.classList.toggle("velo", hero.getBoundingClientRect().bottom < nav.offsetHeight + 1);
+      window.addEventListener("scroll", poner, { passive: true });
+      window.addEventListener("resize", poner);
+      poner();
+    })();
+
+    /* ── La nube que se enciende (la última lámina de lenguaje/coocurrencias.html, sin «¡Gracias!»):
+       los vectores de contexto C de nuestro corpus (UMAP en 3D, naranja), girando despacio. Abajo van
+       pasando palabras (azul) y cada punto se enciende según σ(C·W_palabra), la probabilidad de que sea
+       contexto de esa palabra. Los datos (lenguaje/mapas/palabras-wc.js, 3,4 MB) se cargan solo cuando
+       la franja se acerca a la pantalla; mientras no se ve, no se dibuja. ── */
+    (function () {
+      const cvs = document.getElementById("luz-canvas");
+      if (!cvs) return;
+      const c = cvs.getContext("2d"), banda = cvs.parentElement, rotulo = banda.querySelector(".luz-palabra");
+      const W = 1600, H = 900, NIV = 24;
+      const PALABRAS = ["universidad", "amor", "comida", "música", "gobierno", "fútbol", "agua", "parcial", "mamá", "dinero", "café", "Bogotá", "IA", "perro"];
+      const CADA = 4.5, SUAVE = 0.9, GIRO = 0.07;          // s por palabra, constante de tiempo del brillo (s), rad/s
+      let M = null, brillo = null, meta = null, actual = -1, t = 0, antes = null, visible = false, cargando = false;
+      let GX, GY, GR, GB, GO;
+      const GC = new Int32Array(NIV + 1), GP = new Int32Array(NIV + 1);
+
+      const previo = window.registrarWC;
+      window.registrarWC = function (id, d) { if (previo) previo(id, d); if (id === "palabras" && d.c3) preparar(d); };
+      const bytes = b64 => { const s = atob(b64), a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a.buffer; };
+      function preparar(d) {
+        const n = d.n;
+        /* las coordenadas: centradas en la mediana, el 96 % central en [−1, 1] */
+        const ejes = d.c3.map(e => Array.from(new Uint16Array(bytes(e.q)), x => e.lo + x / 65535 * (e.hi - e.lo)));
+        const est = ejes.map(a => { const o = a.slice().sort((x, y) => x - y); return [o[Math.floor(n * .02)], o[Math.floor(n * .98)], o[n >> 1]]; });
+        const es = 2 / Math.max(...est.map(e => e[1] - e[0])), P = new Float32Array(3 * n);
+        for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) P[3 * i + k] = (ejes[k][i] - est[k][2]) * es;
+        const mat = (q, s) => { const Q = new Int8Array(bytes(q)), S = new Float32Array(bytes(s)), A = new Float32Array(n * d.d);
+          for (let i = 0; i < n; i++) for (let j = 0; j < d.d; j++) A[i * d.d + j] = Q[i * d.d + j] * S[i]; return A; };
+        const idx = new Map(d.vocab.map((w, i) => [w, i]));
+        M = { n, d: d.d, P, Wf: mat(d.W, d.Ws), Cf: mat(d.C, d.Cs), palabras: PALABRAS.filter(w => idx.has(w)).map(w => [w, idx.get(w)]) };
+        brillo = new Float32Array(n); meta = new Float32Array(n);
+        GX = new Float32Array(n); GY = new Float32Array(n); GR = new Float32Array(n); GB = new Uint8Array(n); GO = new Int32Array(n);
+      }
+      /* σ(C_c · W_w) de todos los contextos c: casi todos quedan tenues y se encienden pocos */
+      function distribucion(w) {
+        const n = M.n, d = M.d, s = new Float32Array(n);
+        for (let k = 0; k < n; k++) { let z = 0; for (let j = 0; j < d; j++) z += M.Wf[w * d + j] * M.Cf[k * d + j]; s[k] = 1 / (1 + Math.exp(-z)); }
+        return s;
+      }
+      function cargar() {
+        if (cargando) return;
+        cargando = true;
+        const s = document.createElement("script"); s.src = "lenguaje/mapas/palabras-wc.js"; document.head.appendChild(s);
+      }
+      new IntersectionObserver(es => { if (es[0].isIntersecting) cargar(); }, { rootMargin: "800px 0px" }).observe(banda);
+      new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe(banda);
+
+      function cuadro(now) {
+        requestAnimationFrame(cuadro);
+        const dt = antes == null ? 0 : Math.min(0.1, (now - antes) / 1000); antes = now;
+        if (!visible || document.hidden || !M) return;
+        t += dt;
+        const r = cvs.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+        const bw = Math.round(r.width * dpr), bh = Math.round(r.height * dpr);
+        if (cvs.width !== bw || cvs.height !== bh) { cvs.width = bw; cvs.height = bh; }
+        const e = Math.max(bw / W, bh / H);
+        c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, bw, bh);
+        c.setTransform(e, 0, 0, e, (bw - W * e) / 2, (bh - H * e) / 2);
+
+        /* la palabra de turno; al cambiar, nueva meta de brillo */
+        const k = t < 1.5 ? -1 : Math.floor((t - 1.5) / CADA) % M.palabras.length;
+        if (k !== actual) {
+          actual = k;
+          if (k < 0) meta.fill(0); else meta = distribucion(M.palabras[k][1]);
+          rotulo.classList.remove("ve"); void rotulo.offsetWidth;
+          if (k >= 0) { rotulo.textContent = M.palabras[k][0]; rotulo.classList.add("ve"); }
+        }
+        const a = 1 - Math.exp(-dt / SUAVE);
+        for (let i = 0; i < M.n; i++) brillo[i] += (meta[i] - brillo[i]) * a;
+
+        /* la nube, girando despacio. Sin Path2D nuevos en cada cuadro (en Firefox su memoria se acumula):
+           búferes reutilizados, ordenados por grupo de opacidad, y un camino del lienzo por grupo */
+        const az = 0.6 + GIRO * t, el = 0.35, ca = Math.cos(az), sa = Math.sin(az), ce = Math.cos(el), se = Math.sin(el);
+        const D = 1.84, foc = 1150, cx = 800, cy = 450, P = M.P;
+        let m = 0;
+        GC.fill(0);
+        c.beginPath();
+        for (let i = 0; i < M.n; i++) {
+          const x = P[3 * i], y = P[3 * i + 1], z = P[3 * i + 2], x2 = x * ca - z * sa, z2 = x * sa + z * ca, y2 = y * ce - z2 * se, zz = y * se + z2 * ce;
+          const pe = D - zz; if (pe < 0.15) continue;
+          const b = brillo[i], px = cx + foc * x2 / pe, py = cy - foc * y2 / pe, rad = (1.2 + 3.2 * Math.pow(b, 1.6)) * D / pe;
+          const al = 0.11 + 0.89 * Math.pow(b, 1.6), nv = Math.min(NIV - 1, Math.round(al * (NIV - 1)));
+          GX[m] = px; GY[m] = py; GR[m] = rad; GB[m] = nv; GC[nv + 1]++; m++;
+          if (b > 0.25) { c.moveTo(px + rad * 2.6, py); c.arc(px, py, rad * 2.6, 0, 6.2832); }
+        }
+        c.fillStyle = "rgba(255,154,60,0.08)"; c.fill();
+        for (let b = 1; b <= NIV; b++) GC[b] += GC[b - 1];
+        GP.set(GC);
+        for (let j = 0; j < m; j++) GO[GP[GB[j]]++] = j;
+        for (let nv = 0; nv < NIV; nv++) {
+          if (GC[nv + 1] === GC[nv]) continue;
+          c.fillStyle = `rgba(255,154,60,${(nv / (NIV - 1)).toFixed(3)})`; c.beginPath();
+          for (let q = GC[nv]; q < GC[nv + 1]; q++) { const o = GO[q]; c.moveTo(GX[o] + GR[o], GY[o]); c.arc(GX[o], GY[o], GR[o], 0, 6.2832); }
+          c.fill();
+        }
+      }
+      requestAnimationFrame(cuadro);
     })();
 
 
