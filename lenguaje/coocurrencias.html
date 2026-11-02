@@ -6751,6 +6751,14 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     tc = 0; cuenta = 11; corriendo = true; pasado = false; negroDesde = 0; volviendo = false;
     sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3');
   });
+  /* de ENTRA (0:34, entra el primer vecino) a AVANZA (1:07,5, empieza el vuelo) el reloj corre al doble (RAPIDO), con
+     rampas suaves de RAMPA_R s en cada punta que quedan dentro del tramo: a la 1:07,5 ya va otra vez a ritmo normal */
+  var RAPIDO = 2, RAMPA_R = 1.5;
+  function ritmo(t){
+    if (t <= ENTRA || t >= AVANZA) return 1;
+    var a = Math.min(1, (t - ENTRA) / RAMPA_R, (AVANZA - t) / RAMPA_R), k = a * a * (3 - 2 * a);
+    return 1 + (RAPIDO - 1) * k;
+  }
   window.__cine = function(t){ if (t != null) tc = t; return tc; };
   /* barra de depuración (con el reloj): arrastrarla salta a ese momento de la entrada y sigue desde ahí */
   var barra = document.createElement('input');
@@ -6790,7 +6798,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     sl.classList.toggle('zh-cuenta', cuenta > 0 && corriendo && tTit == null);
     /* cuenta regresiva de 10 a 0 antes de la entrada (abajo a la derecha, muy pequeña); mientras dura, el reloj no corre */
     if (cuenta > 0 && corriendo && tTit == null){ cuenta -= real; }
-    else if (corriendo || tTit != null) tc += real * (tTit != null && tc < FIN ? 60 : 1);
+    else if (corriendo || tTit != null) tc += real * (tTit != null && tc < FIN ? 60 : ritmo(tc));
     if (tTit != null && tTit < 0) tc = Math.max(tc, FIN + 15);
     TEXTOS.forEach(function(t, k){ if (corriendo && tc >= t) mostrar(k, true); });
     var pt = 0;                                                           // la zambullida va en línea recta: la nube no se corre
