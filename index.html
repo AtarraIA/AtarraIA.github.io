@@ -408,7 +408,14 @@
     (function () {
       const nav = document.querySelector(".site-nav"), hero = document.querySelector(".hero");
       if (!nav || !hero) return;
-      const poner = () => nav.classList.toggle("velo", hero.getBoundingClientRect().bottom < nav.offsetHeight + 1);
+      /* y la nube de fondo se desenfoca al bajar: nítida arriba, 6 px de desenfoque al terminar el encabezado */
+      const nube = document.getElementById("network");
+      const poner = () => {
+        const fondo = hero.getBoundingClientRect().bottom;
+        nav.classList.toggle("velo", fondo < nav.offsetHeight + 1);
+        const k = Math.min(1, Math.max(0, 1 - fondo / hero.offsetHeight));
+        if (nube) nube.style.filter = k > 0.01 ? `blur(${(6 * k).toFixed(2)}px)` : "";
+      };
       window.addEventListener("scroll", poner, { passive: true });
       window.addEventListener("resize", poner);
       poner();
