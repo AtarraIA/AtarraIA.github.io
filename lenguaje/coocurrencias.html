@@ -6600,24 +6600,29 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
       if (r0 < borde) dentro = true; else if (dentro){ sSale = s0; break; }
     }
     var T1 = RECTA - AVANZA - ARRANQUE / 2, v1 = LENTA * Math.min(VCAM * T1, sSale - 1.0) / T1, Ls = v1 * T1;
-    /* el ritmo de la recta: acelera parejo (en línea recta) desde la 1:07,5 hasta la 1:40, donde va a FINAL·v1. El
-       ritmo del arranque se elige para que a la 1:40 llegue EXACTAMENTE adonde llegaba antes (Ls = v1·T1): el lugar
-       donde para la recta no se toca nunca, y el giro que sigue es el de siempre */
-    var FINAL = 1.7, DT = 0.01, NS = Math.ceil((RECTA - AVANZA) / DT);
-    function velRecta(t, v0){
-      var x = t - AVANZA, r = Math.min(1, x / ARRANQUE), u = x / (RECTA - AVANZA);
-      return r * r * r * (r * (6 * r - 15) + 10) * lerp(v0, FINAL * v1, u);
+    /* el ritmo de la recta (los momentos no se mueven: el giro empieza a la 1:40 y la recta para EXACTAMENTE donde paraba
+       antes, Ls = v1·T1):
+         1:07,5 → PICO (1:35)   arranca a INICIO·v1 y sube, cada vez más rápido, hasta PICO_V·v1 (curva suave que llega
+                                 plana al pico)
+         PICO → 1:40            baja suave a v1, el ritmo de siempre: el giro que sigue es el original
+       La forma de la subida (exponente EXP) se elige para que el recorrido dé justo Ls */
+    var INICIO = 0.3, PICO = 95, PICO_V = 3, DT = 0.01, NS = Math.ceil((RECTA - AVANZA) / DT);
+    function velRecta(t, ex){
+      var x = t - AVANZA, r = Math.min(1, x / ARRANQUE), v;
+      if (t <= PICO){ var g = Math.pow((1 - Math.cos(Math.PI * x / (PICO - AVANZA))) / 2, ex); v = INICIO + (PICO_V - INICIO) * g; }
+      else { var w = Math.min(1, (t - PICO) / (RECTA - PICO)); v = PICO_V + (1 - PICO_V) * w * w * w * (w * (6 * w - 15) + 10); }
+      return r * r * r * (r * (6 * r - 15) + 10) * v * v1;
     }
-    function perfil(v0){ var tb = new Float32Array(NS + 1), acc = 0; for (var k = 1; k <= NS; k++){ acc += DT * velRecta(AVANZA + (k - 0.5) * DT, v0); tb[k] = acc; } return tb; }
-    var lo = 0, hi = v1, tabla = null;
-    for (var it = 0; it < 50; it++){ var mid = (lo + hi) / 2; tabla = perfil(mid); if (tabla[NS] > Ls) hi = mid; else lo = mid; }
+    function perfil(ex){ var tb = new Float32Array(NS + 1), acc = 0; for (var k = 1; k <= NS; k++){ acc += DT * velRecta(AVANZA + (k - 0.5) * DT, ex); tb[k] = acc; } return tb; }
+    var lo = 0.1, hi = 80, tabla = null;
+    for (var it = 0; it < 60; it++){ var mid = (lo + hi) / 2; tabla = perfil(mid); if (tabla[NS] > Ls) lo = mid; else hi = mid; }
     function recorrido(t){ var f = Math.max(0, Math.min(NS, (t - AVANZA) / DT)), k = Math.floor(f); return k >= NS ? tabla[NS] : lerp(tabla[k], tabla[k + 1], f - k); }
-    var V0 = (lo + hi) / 2; Ls = tabla[NS];
+    var EXP = (lo + hi) / 2; Ls = tabla[NS];
     var pr = mas(p0, u, Ls);
     /* el punto del giro: el punto de la nube más cercano a su centro */
     var piv = null, md = Infinity;
     for (var j = 0; j < n; j++){ var dj = dist([P[3 * j], P[3 * j + 1], P[3 * j + 2]], cm); if (dj < md){ md = dj; piv = [P[3 * j], P[3 * j + 1], P[3 * j + 2]]; } }
-    CAMINO = { p0: p0, u: u, v1: v1, V0: V0, extra: (FINAL - 1) * v1, Ls: Ls, recorrido: recorrido, pr: pr, piv: piv, R0: dist(pr, piv), atras0: unit(mas(pr, piv, -1)), nrm: nrm, cm: cm };
+    CAMINO = { p0: p0, u: u, v1: v1, EXP: EXP, extra: 0, Ls: Ls, recorrido: recorrido, pr: pr, piv: piv, R0: dist(pr, piv), atras0: unit(mas(pr, piv, -1)), nrm: nrm, cm: cm };
     /* el empalme de la recta con el giro: el giro arranca moviéndose hacia el punto, no en la dirección de la recta; esta
        diferencia de velocidad se suma y se apaga despacio (ver giroEn), así la cámara no da un tirón de lado a la 1:40 */
     CAMINO.dv = mas(u, CAMINO.atras0, 1).map(function(x){ return x * v1; });
