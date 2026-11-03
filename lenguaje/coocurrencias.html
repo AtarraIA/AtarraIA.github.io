@@ -6599,12 +6599,28 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
       var r0 = dist(mas(p0, u, s0), cm);
       if (r0 < borde) dentro = true; else if (dentro){ sSale = s0; break; }
     }
-    var T1 = RECTA - AVANZA - ARRANQUE / 2, Ls = LENTA * Math.min(VCAM * T1, sSale - 1.0), v1 = Ls / T1;
-    var pr = mas(p0, u, Ls);
+    var T1 = RECTA - AVANZA - ARRANQUE / 2, v1 = LENTA * Math.min(VCAM * T1, sSale - 1.0) / T1;
+    /* arranca RAPIDO_V veces más rápido que el ritmo de crucero v1 y frena (exponencial, constante TAU) hasta llegar a la
+       1:40 a v1, como siempre (así el empalme con el giro no cambia); TAU se elige para que pare a MARGEN del otro borde
+       (con MARGEN = 1,3 termina antes de pasar el punto del giro: el empalme no frena; más cerca del borde, frena a la 1:40) */
+    var RAPIDO_V = 8, MARGEN = 1.3, Ls = sSale - MARGEN, DT = 0.01, NS = Math.ceil((RECTA - AVANZA) / DT);
+    function perfil(tau){
+      var tb = new Float32Array(NS + 1), acc = 0;
+      for (var k = 1; k <= NS; k++){
+        var x = (k - 0.5) * DT, r = Math.min(1, x / ARRANQUE), ra = r * r * r * (r * (6 * r - 15) + 10);
+        acc += DT * ra * (v1 + (RAPIDO_V - 1) * v1 * Math.exp(-Math.max(0, x - ARRANQUE) / tau)); tb[k] = acc;
+      }
+      return tb;
+    }
+    var lo = 0.05, hi = 60, tabla = null;
+    for (var it = 0; it < 50; it++){ var mid = (lo + hi) / 2; tabla = perfil(mid); if (tabla[NS] > Ls) hi = mid; else lo = mid; }
+    if (tabla[NS] < Ls * 0.98) Ls = tabla[NS];                                   // ni frenando tarde llega: se queda donde llega
+    var pr = mas(p0, u, tabla[NS]);
+    function recorrido(t){ var f = Math.max(0, Math.min(NS, (t - AVANZA) / DT)), k = Math.floor(f); return k >= NS ? tabla[NS] : lerp(tabla[k], tabla[k + 1], f - k); }
     /* el punto del giro: el punto de la nube más cercano a su centro */
     var piv = null, md = Infinity;
     for (var j = 0; j < n; j++){ var dj = dist([P[3 * j], P[3 * j + 1], P[3 * j + 2]], cm); if (dj < md){ md = dj; piv = [P[3 * j], P[3 * j + 1], P[3 * j + 2]]; } }
-    CAMINO = { p0: p0, u: u, v1: v1, Ls: Ls, pr: pr, piv: piv, R0: dist(pr, piv), atras0: unit(mas(pr, piv, -1)), nrm: nrm, cm: cm };
+    CAMINO = { p0: p0, u: u, v1: v1, Ls: tabla[NS], recorrido: recorrido, pr: pr, piv: piv, R0: dist(pr, piv), atras0: unit(mas(pr, piv, -1)), nrm: nrm, cm: cm };
     /* el empalme de la recta con el giro: el giro arranca moviéndose hacia el punto, no en la dirección de la recta; esta
        diferencia de velocidad se suma y se apaga despacio (ver giroEn), así la cámara no da un tirón de lado a la 1:40 */
     CAMINO.dv = mas(u, CAMINO.atras0, 1).map(function(x){ return x * v1; });
@@ -6674,7 +6690,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
   /* dónde está la cámara a la hora t (≥ 1:07,5) y hacia dónde mira (unitario) */
   function vuelo(t){
     var C = CAMINO, ir = function(a, b){ var d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], l = Math.hypot(d[0], d[1], d[2]) || 1; return [d[0] / l, d[1] / l, d[2] / l]; };
-    if (t < RECTA){ var s = C.v1 * integralRampa(t - AVANZA, ARRANQUE); return { p: [C.p0[0] + s * C.u[0], C.p0[1] + s * C.u[1], C.p0[2] + s * C.u[2]], l: C.u }; }
+    if (t < RECTA){ var s = C.recorrido(t); return { p: [C.p0[0] + s * C.u[0], C.p0[1] + s * C.u[1], C.p0[2] + s * C.u[2]], l: C.u }; }
     var g = giroEn(t), l = miradaGiro(t);
     return { p: g, l: l };                                                         // el giro, la salida y la vista final
   }
@@ -6751,14 +6767,6 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     tc = 0; cuenta = 11; corriendo = true; pasado = false; negroDesde = 0; volviendo = false;
     sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3');
   });
-  /* de ENTRA (0:34, entra el primer vecino) a AVANZA (1:07,5, empieza el vuelo) el reloj corre RAPIDO veces más rápido, con
-     rampas suaves de RAMPA_R s en cada punta que quedan dentro del tramo: a la 1:07,5 ya va otra vez a ritmo normal */
-  var RAPIDO = 4, RAMPA_R = 1.5;
-  function ritmo(t){
-    if (t <= ENTRA || t >= AVANZA) return 1;
-    var a = Math.min(1, (t - ENTRA) / RAMPA_R, (AVANZA - t) / RAMPA_R), k = a * a * (3 - 2 * a);
-    return 1 + (RAPIDO - 1) * k;
-  }
   window.__cine = function(t){ if (t != null) tc = t; return tc; };
   /* barra de depuración (con el reloj): arrastrarla salta a ese momento de la entrada y sigue desde ahí */
   var barra = document.createElement('input');
@@ -6798,7 +6806,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     sl.classList.toggle('zh-cuenta', cuenta > 0 && corriendo && tTit == null);
     /* cuenta regresiva de 10 a 0 antes de la entrada (abajo a la derecha, muy pequeña); mientras dura, el reloj no corre */
     if (cuenta > 0 && corriendo && tTit == null){ cuenta -= real; }
-    else if (corriendo || tTit != null) tc += real * (tTit != null && tc < FIN ? 60 : ritmo(tc));
+    else if (corriendo || tTit != null) tc += real * (tTit != null && tc < FIN ? 60 : 1);
     if (tTit != null && tTit < 0) tc = Math.max(tc, FIN + 15);
     TEXTOS.forEach(function(t, k){ if (corriendo && tc >= t) mostrar(k, true); });
     var pt = 0;                                                           // la zambullida va en línea recta: la nube no se corre
