@@ -6810,15 +6810,16 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
      con pulsos encima, al compás de la canción (9999999, 170 BPM; el reloj de la entrada es el de la canción).
      En cada pulso, un punto al azar que se vea lanza 4 olas: sus 5 vecinas más cercanas, las 5 de cada una, etc.
      (como «al azar» en pulso.html). Las luces son blancas, destellan y se quedan encendidas hasta el pulso
-     siguiente; la palabra y las del pulso 1 se ven escritas. Cuántos tiempos hay entre pulso y pulso depende de la
-     parte de la canción (CADA); las 4 olas caben justo entre un pulso y el siguiente. Todo va con el reloj de la
+     siguiente; la palabra y las del pulso 1 se ven escritas. Hay un pulso cada 16 tiempos (CADA); las olas van una por
+     tiempo. Todo va con el reloj de la
      entrada (tc), así que al grabar sale igual siempre. ── */
   var GRABAR = /[?&]grabar\b/.test(location.search);
   var PULSOS = /[?&]pulsos\b/.test(location.search), pulso = null, previo2 = null, ultimoBeat = -1;
   var BPM = 170, FASE = 0.0265, BEAT = 60 / BPM, OLAS = 4, KP = 5, APAGA = 0.3, GRANDE = 30;
-  /* tiempos por pulso según el compás: hasta el compás 24 (0:33,9) cada compás; hasta el 48 (1:07,8) cada 2
-     tiempos; hasta el 96 (2:15,5, la salida) cada tiempo; después, otra vez cada compás */
-  var CADA = [[24, 4], [48, 2], [96, 1], [1e9, 4]];
+  /* tiempos por pulso, por tramos de compases ([hasta el compás, cada cuántos tiempos]): un pulso cada 16 tiempos
+     (4 compases) en toda la canción. Las olas van a lo sumo una por tiempo (OLA_MAX tiempos): el pulso se riega en el
+     primer compás y sus luces se quedan los otros tres */
+  var CADA = [[1e9, 16]], OLA_MAX = 1;
   function cadaEn(beat){ for (var q = 0; q < CADA.length; q++) if (beat < CADA[q][0] * 4) return CADA[q][1]; return 4; }
   function azar(k){ var x = Math.sin(k * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); }      // el mismo «azar» en cada grabación
   function armarPulso(sem, t0, paso){
@@ -6882,7 +6883,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
         var cada = cadaEn(bb);
         if (bb >= 0 && bb % cada === 0){
           var sem = semilla(bb);
-          if (sem >= 0){ previo2 = pulso; if (previo2) previo2.fin = FASE + bb * BEAT; pulso = armarPulso(sem, FASE + bb * BEAT, cada * BEAT / OLAS); }
+          if (sem >= 0){ previo2 = pulso; if (previo2) previo2.fin = FASE + bb * BEAT; pulso = armarPulso(sem, FASE + bb * BEAT, Math.min(cada / OLAS, OLA_MAX) * BEAT); }
         }
       }
       ultimoBeat = b;
