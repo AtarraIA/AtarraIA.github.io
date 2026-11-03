@@ -6573,7 +6573,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
                                mueve. Arranca con la rapidez que traía y se va acelerando; el giro sigue y baja, parejo,
                                a la velocidad lenta de la vista final (OMEGA_FIN), con la que sigue girando después */
   var CAMINO = null, VCAM = 0.12, ARRANQUE = 1.5, ZVUELO = 1.3, RECTA = 100, LENTA = 0.65;
-  var OMEGA_G = -0.12, RAMPA_G = 10, RAMPA_MIRA = 14, DESFASE = 0.35, INCLINA = 6, R_FIN = 0.6, D_FIN = 2.5, OMEGA_FIN = -0.06, EMPALME = 6, CURVA = 0.8, ELEVA = 0.05;      // < 0: gira en el otro sentido
+  var OMEGA_G = -0.12, RAMPA_G = 10, RAMPA_MIRA = 14, DESFASE = 0.35, INCLINA = 6, R_FIN = 0.6, D_FIN = 2.5, OMEGA_FIN = -0.06, EMPALME = 10, CURVA = 0.8, ELEVA = 0.05;      // < 0: gira en el otro sentido
   function construirCamino(){
     var ca = Math.cos(AZ0), sa = Math.sin(AZ0), ce = Math.cos(EL0), se = Math.sin(EL0), Dc = 2.1;
     var b0 = [sa * ce, se, ca * ce], u = [-b0[0], -b0[1], -b0[2]];
@@ -6600,30 +6600,23 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
       if (r0 < borde) dentro = true; else if (dentro){ sSale = s0; break; }
     }
     var T1 = RECTA - AVANZA - ARRANQUE / 2, v1 = LENTA * Math.min(VCAM * T1, sSale - 1.0) / T1;
-    /* arranca RAPIDO_V veces más rápido que el ritmo de crucero v1 y frena (exponencial, constante TAU) hasta llegar a la
-       1:40 a v1, como siempre (así el empalme con el giro no cambia); TAU se elige para que pare a MARGEN del otro borde
-       (con MARGEN = 1,3 termina antes de pasar el punto del giro: el empalme no frena; más cerca del borde, frena a la 1:40) */
-    var RAPIDO_V = 8, MARGEN = 1.3, Ls = sSale - MARGEN, DT = 0.01, NS = Math.ceil((RECTA - AVANZA) / DT);
-    function perfil(tau){
-      var tb = new Float32Array(NS + 1), acc = 0;
-      for (var k = 1; k <= NS; k++){
-        var x = (k - 0.5) * DT, r = Math.min(1, x / ARRANQUE), ra = r * r * r * (r * (6 * r - 15) + 10);
-        acc += DT * ra * (v1 + (RAPIDO_V - 1) * v1 * Math.exp(-Math.max(0, x - ARRANQUE) / tau)); tb[k] = acc;
-      }
-      return tb;
-    }
-    var lo = 0.05, hi = 60, tabla = null;
-    for (var it = 0; it < 50; it++){ var mid = (lo + hi) / 2; tabla = perfil(mid); if (tabla[NS] > Ls) hi = mid; else lo = mid; }
-    if (tabla[NS] < Ls * 0.98) Ls = tabla[NS];                                   // ni frenando tarde llega: se queda donde llega
-    var pr = mas(p0, u, tabla[NS]);
-    function recorrido(t){ var f = Math.max(0, Math.min(NS, (t - AVANZA) / DT)), k = Math.floor(f); return k >= NS ? tabla[NS] : lerp(tabla[k], tabla[k + 1], f - k); }
+    /* de la 1:07,5 a ACELERA (1:11) va al ritmo de siempre (v1); ahí acelera (en RAMPA_V s) a una velocidad constante vR,
+       la mayor que lo deja, a la 1:40, a MARGEN del otro borde de la nube */
+    var ACELERA = 71, RAMPA_V = 1.5, MARGEN = 0.3, Ls = sSale - MARGEN;
+    var vR = Math.max(v1, v1 + (Ls - v1 * T1) / (RECTA - ACELERA - RAMPA_V / 2));
+    function recorrido(t){ return v1 * integralRampa(t - AVANZA, ARRANQUE) + (vR - v1) * integralRampa(t - ACELERA, RAMPA_V); }
+    Ls = recorrido(RECTA);
+    var pr = mas(p0, u, Ls);
     /* el punto del giro: el punto de la nube más cercano a su centro */
     var piv = null, md = Infinity;
     for (var j = 0; j < n; j++){ var dj = dist([P[3 * j], P[3 * j + 1], P[3 * j + 2]], cm); if (dj < md){ md = dj; piv = [P[3 * j], P[3 * j + 1], P[3 * j + 2]]; } }
-    CAMINO = { p0: p0, u: u, v1: v1, Ls: tabla[NS], recorrido: recorrido, pr: pr, piv: piv, R0: dist(pr, piv), atras0: unit(mas(pr, piv, -1)), nrm: nrm, cm: cm };
+    CAMINO = { p0: p0, u: u, v1: vR, Ls: Ls, recorrido: recorrido, pr: pr, piv: piv, R0: dist(pr, piv), atras0: unit(mas(pr, piv, -1)), nrm: nrm, cm: cm };
     /* el empalme de la recta con el giro: el giro arranca moviéndose hacia el punto, no en la dirección de la recta; esta
        diferencia de velocidad se suma y se apaga despacio (ver giroEn), así la cámara no da un tirón de lado a la 1:40 */
-    CAMINO.dv = mas(u, CAMINO.atras0, 1).map(function(x){ return x * v1; });
+    /* vr: lo que la cámara se aleja (> 0) o se acerca (< 0) del punto del giro al llegar a la 1:40; el giro arranca con
+       esa misma velocidad radial y dv es el resto (de lado), así no frena aunque la recta ya haya pasado el punto */
+    CAMINO.vr = vR * punto3(u, CAMINO.atras0);
+    CAMINO.dv = mas(u.map(function(x){ return x * vR; }), CAMINO.atras0, -CAMINO.vr);
     return CAMINO;
   }
   /* el giro alrededor del punto: el avance se apaga con la misma rampa con que el giro arranca */
@@ -6670,7 +6663,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
        llega al centro, porque desde ahí se ven pocos puntos; desde R_FIN, mirando hacia el centro, se ve la nube entera */
     var C = CAMINO, x = Math.max(0, t - RECTA), u5 = Math.min(1, x / (SALE - RECTA));
     var ce = u5 * u5 * u5 * (u5 * (6 * u5 - 15) + 10);                              // se cierra parejo, y llega justo a las SALE
-    var R = lerp(C.R0 - C.v1 * (x - integralRampa(x, RAMPA_G)), R_FIN, ce), r = rotar(C.atras0, C.nrm, anguloGiro(t));
+    var R = lerp(C.R0 + C.vr * (x - integralRampa(x, RAMPA_G)), R_FIN, ce), r = rotar(C.atras0, C.nrm, anguloGiro(t));
     /* la salida: el radio va de R_FIN a D_FIN (Hermite en el tiempo): arranca a la rapidez que traía la cámara en el
        giro (|OMEGA_G|·R_FIN), se va acelerando y llega quieta en el radio; el giro sigue */
     if (t > SALE){
