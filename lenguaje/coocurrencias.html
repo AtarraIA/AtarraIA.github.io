@@ -6572,7 +6572,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
        SALE → REVELA (2:15)    sale: el radio crece hasta D_FIN, así que retrocede mirando justo al revés de como se
                                mueve. Arranca con la rapidez que traía y se va acelerando; el giro sigue y baja, parejo,
                                a la velocidad lenta de la vista final (OMEGA_FIN), con la que sigue girando después */
-  var CAMINO = null, VCAM = 0.12, ARRANQUE = 1.5, ZVUELO = 1.3, RECTA = 95, LENTA = 0.65;      // RECTA: 1:35, la recta termina (a 8×) y empieza el giro
+  var CAMINO = null, VCAM = 0.12, ARRANQUE = 1.5, ZVUELO = 1.3, RECTA = 100, LENTA = 0.65;
   var OMEGA_G = -0.12, RAMPA_G = 10, RAMPA_MIRA = 14, DESFASE = 0.35, INCLINA = 6, R_FIN = 0.6, D_FIN = 2.5, OMEGA_FIN = -0.06, EMPALME = 6, CURVA = 0.8, ELEVA = 0.05;      // < 0: gira en el otro sentido
   function construirCamino(){
     var ca = Math.cos(AZ0), sa = Math.sin(AZ0), ce = Math.cos(EL0), se = Math.sin(EL0), Dc = 2.1;
@@ -6599,30 +6599,28 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
       var r0 = dist(mas(p0, u, s0), cm);
       if (r0 < borde) dentro = true; else if (dentro){ sSale = s0; break; }
     }
-    /* v1: el ritmo de crucero del diseño original (cuando la recta duraba hasta la 1:40) */
-    var T1 = 100 - AVANZA - ARRANQUE / 2, v1 = LENTA * Math.min(VCAM * T1, sSale - 1.0) / T1, Ls;
-    /* el ritmo de la recta: arranca al ritmo de siempre (v1) y acelera sin parar, en exponencial (constante KE), hasta
-       llegar justo a la 1:35 (RECTA) a RAPIDO_V·v1, su límite. Recorre ~1,9, a ~0,5 del otro borde de la nube. Así recorre más que antes, pero sigue dentro de la nube */
-    var RAPIDO_V = 8, PICO = RECTA, KE = 5, DT = 0.01, NS = Math.ceil((RECTA - AVANZA) / DT);
-    function velRecta(t){
-      var x = t - AVANZA, r = Math.min(1, x / ARRANQUE), u = Math.min(1, x / (PICO - AVANZA));      // de PICO a la 1:40 se queda en el límite
-      return r * r * r * (r * (6 * r - 15) + 10) * v1 * (1 + (RAPIDO_V - 1) * (Math.exp(KE * u) - 1) / (Math.exp(KE) - 1));
+    var T1 = RECTA - AVANZA - ARRANQUE / 2, v1 = LENTA * Math.min(VCAM * T1, sSale - 1.0) / T1, Ls = v1 * T1;
+    /* el ritmo de la recta: acelera parejo (en línea recta) desde la 1:07,5 hasta la 1:40, donde va a FINAL·v1. El
+       ritmo del arranque se elige para que a la 1:40 llegue EXACTAMENTE adonde llegaba antes (Ls = v1·T1): el lugar
+       donde para la recta no se toca nunca, y el giro que sigue es el de siempre */
+    var FINAL = 1.7, DT = 0.01, NS = Math.ceil((RECTA - AVANZA) / DT);
+    function velRecta(t, v0){
+      var x = t - AVANZA, r = Math.min(1, x / ARRANQUE), u = x / (RECTA - AVANZA);
+      return r * r * r * (r * (6 * r - 15) + 10) * lerp(v0, FINAL * v1, u);
     }
-    var tabla = new Float32Array(NS + 1);
-    for (var k = 1, acc = 0; k <= NS; k++){ acc += DT * velRecta(AVANZA + (k - 0.5) * DT); tabla[k] = acc; }
+    function perfil(v0){ var tb = new Float32Array(NS + 1), acc = 0; for (var k = 1; k <= NS; k++){ acc += DT * velRecta(AVANZA + (k - 0.5) * DT, v0); tb[k] = acc; } return tb; }
+    var lo = 0, hi = v1, tabla = null;
+    for (var it = 0; it < 50; it++){ var mid = (lo + hi) / 2; tabla = perfil(mid); if (tabla[NS] > Ls) hi = mid; else lo = mid; }
     function recorrido(t){ var f = Math.max(0, Math.min(NS, (t - AVANZA) / DT)), k = Math.floor(f); return k >= NS ? tabla[NS] : lerp(tabla[k], tabla[k + 1], f - k); }
-    Ls = tabla[NS];
+    var V0 = (lo + hi) / 2; Ls = tabla[NS];
     var pr = mas(p0, u, Ls);
     /* el punto del giro: el punto de la nube más cercano a su centro */
     var piv = null, md = Infinity;
     for (var j = 0; j < n; j++){ var dj = dist([P[3 * j], P[3 * j + 1], P[3 * j + 2]], cm); if (dj < md){ md = dj; piv = [P[3 * j], P[3 * j + 1], P[3 * j + 2]]; } }
-    CAMINO = { p0: p0, u: u, v1: v1, extra: (RAPIDO_V - 1) * v1, Ls: Ls, recorrido: recorrido, pr: pr, piv: piv, R0: dist(pr, piv), atras0: unit(mas(pr, piv, -1)), nrm: nrm, cm: cm };
+    CAMINO = { p0: p0, u: u, v1: v1, V0: V0, extra: (FINAL - 1) * v1, Ls: Ls, recorrido: recorrido, pr: pr, piv: piv, R0: dist(pr, piv), atras0: unit(mas(pr, piv, -1)), nrm: nrm, cm: cm };
     /* el empalme de la recta con el giro: el giro arranca moviéndose hacia el punto, no en la dirección de la recta; esta
        diferencia de velocidad se suma y se apaga despacio (ver giroEn), así la cámara no da un tirón de lado a la 1:40 */
-    /* vr: lo que la cámara se aleja (> 0) o se acerca (< 0) del punto del giro al llegar a la 1:40 (a ritmo v1); el giro
-       arranca con esa misma velocidad radial y dv es el resto (de lado): no frena aunque la recta ya haya pasado el punto */
-    CAMINO.vr = v1 * punto3(u, CAMINO.atras0);
-    CAMINO.dv = mas(u.map(function(x){ return x * v1; }), CAMINO.atras0, -CAMINO.vr);
+    CAMINO.dv = mas(u, CAMINO.atras0, 1).map(function(x){ return x * v1; });
     return CAMINO;
   }
   /* el giro alrededor del punto: el avance se apaga con la misma rampa con que el giro arranca */
@@ -6669,7 +6667,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
        llega al centro, porque desde ahí se ven pocos puntos; desde R_FIN, mirando hacia el centro, se ve la nube entera */
     var C = CAMINO, x = Math.max(0, t - RECTA), u5 = Math.min(1, x / (SALE - RECTA));
     var ce = u5 * u5 * u5 * (u5 * (6 * u5 - 15) + 10);                              // se cierra parejo, y llega justo a las SALE
-    var R = lerp(C.R0 + C.vr * (x - integralRampa(x, RAMPA_G)), R_FIN, ce), r = rotar(C.atras0, C.nrm, anguloGiro(t));
+    var R = lerp(C.R0 - C.v1 * (x - integralRampa(x, RAMPA_G)), R_FIN, ce), r = rotar(C.atras0, C.nrm, anguloGiro(t));
     /* la salida: el radio va de R_FIN a D_FIN (Hermite en el tiempo): arranca a la rapidez que traía la cámara en el
        giro (|OMEGA_G|·R_FIN), se va acelerando y llega quieta en el radio; el giro sigue */
     if (t > SALE){
@@ -6691,7 +6689,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
   function vuelo(t){
     var C = CAMINO, ir = function(a, b){ var d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], l = Math.hypot(d[0], d[1], d[2]) || 1; return [d[0] / l, d[1] / l, d[2] / l]; };
     if (t < RECTA){ var s = C.recorrido(t); return { p: [C.p0[0] + s * C.u[0], C.p0[1] + s * C.u[1], C.p0[2] + s * C.u[2]], l: C.u }; }
-    /* la recta llega a la 1:35 con C.extra de más que el giro: ese exceso se frena en FRENO s (sigue de largo un poco) y
+    /* la recta llega a la 1:40 con C.extra de más que el giro: ese exceso se frena en FRENO s (sigue de largo un poco) y
        lo que se pasó se devuelve, parejo, en los REGRESO s siguientes; después el giro es exactamente el de siempre */
     var g = giroEn(t), l = miradaGiro(t), x = t - RECTA, q = Math.min(1, x / REGRESO), k = C.extra * FRENO * (1 - Math.exp(-x / FRENO)) * (1 - q * q * q * (q * (6 * q - 15) + 10));
     g = [g[0] + k * C.u[0], g[1] + k * C.u[1], g[2] + k * C.u[2]];
