@@ -462,7 +462,7 @@ body:has(.sin-barra.active) .fs-flot, body:has(.gracias-sl.active) .fs-flot{disp
 /* las visualizaciones de PCA y UMAP (2D y 3D) también ocupan toda la pantalla, sin barra */
 body:has(.sin-barra.active) #bar, body:has(.sin-barra.active) #hint{display:none}
 body:has(.sin-barra.active) #viewport{bottom:0}
-body.video #bar, body.video #hint, body.video .zh-botones{display:none !important}
+body.video #bar, body.video #hint, body.video .zh-botones, body.grabar #bar, body.grabar #hint, body.grabar .zh-botones{display:none !important}
 body.video #viewport{bottom:0}
 /* en el video (vertical, para ver en el teléfono) los versos van más grandes */
 body.video .zh .han{font-size:56px} body.video .zh .es{font-size:31px} body.video .zh .fuente{font-size:31px} body.video .zh .fuente .han{font-size:35px}
@@ -476,6 +476,7 @@ body.fs .zh-full{display:none}
   cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; transition:border-color .18s, color .18s}
 .zh-b svg{width:16px; height:16px; fill:currentColor}
 .zh-b:hover{border-color:var(--blue); color:var(--blue)}
+.zh-b.si{border-color:#fff; color:#fff}
 body.fs #bar{transform:translateY(100%); transition:transform .28s ease}
 body.fs.bar-show #bar{transform:none}
 
@@ -1363,6 +1364,7 @@ box-shadow:0 0 12px rgba(255,255,255,.25)}
   </div>
   <div class="zh-botones interactivo">
     <button class="zh-b zh-play" type="button" title="Empezar de nuevo" aria-label="Empezar de nuevo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+    <button class="zh-b zh-pulsos" type="button" title="Pulsos de vecinos (P)" aria-label="Pulsos de vecinos">✦</button>
     <button class="zh-b zh-full" type="button" title="Pantalla completa (F)" aria-label="Pantalla completa" onclick="document.getElementById('full').click()">⛶</button>
   </div>
   <!-- con → o Enter: los versos se van, la cámara se zambulle en la nube y se pasa sola a la portada -->
@@ -2534,6 +2536,8 @@ box-shadow:0 0 12px rgba(255,255,255,.25)}
   if (VIDEO){ document.body.classList.add('video'); stage.style.width = SW + 'px'; stage.style.height = SH + 'px'; }
   /* al grabar, el reloj lo pone quien graba (window.__vt, en segundos): cada cuadro dura exactamente lo mismo */
   if (VIDEO){ window.__vt = 0; performance.now = function(){ return window.__vt * 1000; }; }
+  /* ?grabar: lo mismo, en horizontal (para grabar la entrada en 1920×1080) */
+  if (!VIDEO && /[?&]grabar\b/.test(location.search)){ window.__vt = 0; performance.now = function(){ return window.__vt * 1000; }; document.body.classList.add('grabar'); }
   function fit(){
     var w = viewport.clientWidth, h = viewport.clientHeight;
     var s = Math.min(w / SW, h / SH);
@@ -6406,6 +6410,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
   var VIDEO = document.body.classList.contains('video');
   /* en el modo video (vertical) el lienzo es 1080×1920 y la nube se ve un poco más chica para caber de ancho (FS) */
   var c = cvs.getContext('2d'), sl = cvs.closest('.slide'), W = VIDEO ? 1080 : 1600, H = VIDEO ? 1920 : 900, FS = VIDEO ? 0.8 : 1, P = null, F = null, n = 0;
+  var VEC = null, KVEC = 0, VOCAB = null, SX = null, SY = null, SR = null;      // vecinas y, en cada cuadro, dónde quedó cada punto en pantalla
   function preparar(cols, frec){
     n = cols[0].length;
     var est = cols.map(function(v){ var o = Array.from(v).sort(function(a, b){ return a - b; }); return [o[Math.floor(n * .02)], o[Math.floor(n * .98)], o[n >> 1]]; });
@@ -6425,6 +6430,11 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
   window.registrarMapa = function(id, M){
     if (previo) previo(id, M);
     if (id !== 'palabras' || !M.umap3) return;
+    if (M.vecinos){                                                     // para el modo de pulsos (ver PULSOS más abajo)
+      var tv = atob(M.vecinos); VEC = new Uint16Array(tv.length / 2);
+      for (var iv = 0; iv < VEC.length; iv++) VEC[iv] = tv.charCodeAt(2 * iv) | (tv.charCodeAt(2 * iv + 1) << 8);
+      KVEC = M.k; VOCAB = M.vocab;
+    }
     var cols = M.umap3.map(function(e){
       var t = atob(e.q), q = new Uint16Array(t.length / 2), a = new Float32Array(t.length / 2);
       for (var i = 0; i < q.length; i++){ q[i] = t.charCodeAt(2 * i) | (t.charCodeAt(2 * i + 1) << 8); a[i] = e.lo + q[i] / 65535 * (e.hi - e.lo); }
@@ -6710,12 +6720,13 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     var cx = lerp(W / 2, VIDEO ? W / 2 : 1120, m) - 320 * pt, cy = lerp(H / 2, VIDEO ? H * 0.62 : 470, m) - 20 * pt;
     var grande = null; var dib = 0, NIV = 32, grandes = [], m2 = 0;
     if (!BX || BX.length < n){ BX = new Float32Array(n); BY = new Float32Array(n); BR = new Float32Array(n); BB = new Uint8Array(n); BO = new Int32Array(n); }
+    if (!SX || SX.length < n){ SX = new Float32Array(n); SY = new Float32Array(n); SR = new Float32Array(n); }
     for (var b0 = 0; b0 <= NIV; b0++) BC[b0] = 0;
     for (var i = 0; i < n; i++){
       var ox = P[3 * i] - fx, oy = P[3 * i + 1] - fy, oz = P[3 * i + 2] - fz;
       var x2 = ox * ca - oz * sa, z2 = ox * sa + oz * ca, y2 = oy * ce - z2 * se, zz = oy * se + z2 * ce;
       /* los puntos que pasan la cámara vuelven a aparecer al fondo: seguimos cayendo dentro de la nube */
-      zz += avance;
+      zz += avance; SX[i] = NaN;
       var prof = d - zz - fwd;
       var pe = lerp(d, prof, w);                                          // w = 0: todos a la misma profundidad (plano)
       if (pe < 0.002) continue;                                            // solo se dejan de dibujar al pasar detrás de la cámara
@@ -6723,6 +6734,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
       if (i !== foco) rad = Math.min(160, rad);                            // los cercanos crecen y salen del cuadro por los bordes; no desaparecen
       var px = cx + foc * x2 / pe, py = cy - foc * y2 / pe;
       if (px < -rad || px > W + rad || py < -rad || py > H + rad) continue;
+      SX[i] = px; SY[i] = py; SR[i] = rad;
       var a = Math.min(1, 1.2 * Math.max(0.15, Math.min(0.9, 0.35 + 0.35 * w * Math.max(-1, Math.min(1, zz / Math.max(d, 0.3) * 0.9)) + 0.3 * f)));
       if (i === foco){ grande = [px, py, rad]; continue; }                // el punto de partida va encima de todos
       dib++;
@@ -6763,13 +6775,14 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     if (on && !corriendo){
       corriendo = true;
       if (volviendo){ tc = FIN + 15; [0, 1, 2].forEach(function(k){ mostrar(k, false); }); }
-      else { tc = 0; cuenta = VIDEO ? 0 : 11; sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3'); }
+      else { tc = 0; cuenta = VIDEO || GRABAR ? 0 : 11; sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3'); pulso = previo2 = null; ultimoBeat = -1; }
     }
     if (activa && mTit.classList.contains('on')) corriendo = corriendo || tc > 0;
-    if (!activa){ corriendo = false; volviendo = false; tc = 0; sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3'); }
+    if (!activa){ corriendo = false; volviendo = false; tc = 0; sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3'); pulso = previo2 = null; ultimoBeat = -1; }
   }
   /* el botón ▶ de la cuenta regresiva: vuelve a empezar todo (cuenta de 10 y entrada desde 0) */
   sl.querySelector('.zh-play').addEventListener('click', function(){
+    pulso = previo2 = null; ultimoBeat = -1;
     tc = 0; cuenta = 11; corriendo = true; pasado = false; negroDesde = 0; volviendo = false;
     sl.classList.remove('zh-e1', 'zh-e2', 'zh-e3');
   });
@@ -6793,8 +6806,100 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     setInterval(function(){ if (document.activeElement !== barra) barra.value = tc; }, 200);
   }
   window.__cineInfo = function(){ return { foco: foco, Z0: Z0, Z33: Z33, Z108: Z108, dibujados: window.__dib }; };   // para revisar: lee o salta el reloj de la entrada          // para revisar: salta a un momento de la entrada
+  /* ── MODO DE PULSOS (?pulsos en la dirección, la tecla P en esta lámina o el botón ✦): la entrada de siempre,
+     con pulsos encima, al compás de la canción (9999999, 170 BPM; el reloj de la entrada es el de la canción).
+     En cada pulso, un punto al azar que se vea lanza 4 olas: sus 5 vecinas más cercanas, las 5 de cada una, etc.
+     (como «al azar» en pulso.html). Las luces son blancas, destellan y se quedan encendidas hasta el pulso
+     siguiente; la palabra y las del pulso 1 se ven escritas. Cuántos tiempos hay entre pulso y pulso depende de la
+     parte de la canción (CADA); las 4 olas caben justo entre un pulso y el siguiente. Todo va con el reloj de la
+     entrada (tc), así que al grabar sale igual siempre. ── */
+  var GRABAR = /[?&]grabar\b/.test(location.search);
+  var PULSOS = /[?&]pulsos\b/.test(location.search), pulso = null, previo2 = null, ultimoBeat = -1;
+  var BPM = 170, FASE = 0.0265, BEAT = 60 / BPM, OLAS = 4, KP = 5, APAGA = 0.3, GRANDE = 30;
+  /* tiempos por pulso según el compás: hasta el compás 24 (0:33,9) cada compás; hasta el 48 (1:07,8) cada 2
+     tiempos; hasta el 96 (2:15,5, la salida) cada tiempo; después, otra vez cada compás */
+  var CADA = [[24, 4], [48, 2], [96, 1], [1e9, 4]];
+  function cadaEn(beat){ for (var q = 0; q < CADA.length; q++) if (beat < CADA[q][0] * 4) return CADA[q][1]; return 4; }
+  function azar(k){ var x = Math.sin(k * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); }      // el mismo «azar» en cada grabación
+  function armarPulso(sem, t0, paso){
+    var olas = [[sem]], visto = {}; visto[sem] = 1;
+    for (var w = 1; w <= OLAS; w++){
+      var nueva = [];
+      olas[w - 1].forEach(function(p){ for (var k = 0; k < KP && k < KVEC; k++){ var j = VEC[p * KVEC + k]; if (!visto[j]){ visto[j] = 1; nueva.push(j); } } });
+      olas.push(nueva);
+    }
+    return { olas: olas, t0: t0, paso: paso };
+  }
+  /* un punto que se vea entero (no de los gigantes que pasan junto a la cámara); primero entre los frecuentes. Con los
+     versos en pantalla, a la derecha de ellos */
+  function semilla(k){
+    var xmin = sl.classList.contains('zh-e1') && !VIDEO ? 560 : 40, ok = function(i){ return SX[i] === SX[i] && SR[i] < GRANDE && SX[i] > xmin && SX[i] < W - 40 && SY[i] > 40 && SY[i] < H - 40; };
+    var tope = Math.min(n, 3000);
+    for (var t = 0; t < 60; t++){ var i = Math.floor(azar(k * 61 + t) * tope); if (ok(i)) return i; }
+    var vis = []; for (var j = 0; j < n; j++) if (ok(j)) vis.push(j);
+    return vis.length ? vis[Math.floor(azar(k * 7 + 3) * vis.length)] : -1;
+  }
+  function pintarPulso(pu, T, alfa){
+    c.globalCompositeOperation = 'lighter';
+    for (var w = pu.olas.length - 1; w >= 0; w--){
+      var ll = T - w * pu.paso; if (ll < 0) continue;
+      var q = Math.exp(-ll / 0.12), base = w === 0 ? 6 : w === 1 ? 4 : w === 2 ? 3 : 2.3;
+      var vis = pu.olas[w].filter(function(j){ return SX[j] === SX[j] && SR[j] < GRANDE * 1.5; });
+      if (q > 0.03) [[4.2, 0.1], [2.2, 0.16]].forEach(function(h){
+        c.fillStyle = 'rgba(255,255,255,' + (h[1] * q * alfa).toFixed(3) + ')'; c.beginPath();
+        vis.forEach(function(j){ var rr = (base + 2) * (1 + h[0] * q); c.moveTo(SX[j] + rr, SY[j]); c.arc(SX[j], SY[j], rr, 0, 6.2832); });
+        c.fill();
+      });
+      c.fillStyle = 'rgba(255,255,255,' + alfa.toFixed(3) + ')'; c.beginPath();
+      vis.forEach(function(j){ var rr = Math.max(base * 0.7, SR[j] * 1.15) * (1 + 0.9 * q); c.moveTo(SX[j] + rr, SY[j]); c.arc(SX[j], SY[j], rr, 0, 6.2832); });
+      c.fill();
+    }
+    c.globalCompositeOperation = 'source-over';
+    /* las palabras: la del pulso y las del pulso 1, cuando se encienden; ninguna pisa a otra */
+    c.textAlign = 'left'; c.textBaseline = 'middle'; c.lineJoin = 'round';
+    var puestas = [];
+    for (var w2 = 0; w2 <= 1 && w2 < pu.olas.length; w2++){
+      var l2 = T - w2 * pu.paso; if (l2 < 0) break;
+      var tam = (w2 === 0 ? 30 : 21) * FS;
+      c.font = tam + "px 'LM Roman', Georgia, serif"; c.globalAlpha = Math.min(1, l2 / 0.06) * alfa;
+      pu.olas[w2].forEach(function(j){
+        if (SX[j] !== SX[j] || SR[j] >= GRANDE * 1.5) return;
+        var t = VOCAB[j], x = SX[j] + 10, y = SY[j] - 11, ca = [x - 2, y - tam / 2, x + c.measureText(t).width + 2, y + tam / 2];
+        if (w2 > 0 && puestas.some(function(p){ return ca[0] < p[2] && ca[2] > p[0] && ca[1] < p[3] && ca[3] > p[1]; })) return;
+        puestas.push(ca);
+        c.lineWidth = 5; c.strokeStyle = 'rgba(0,0,0,0.85)'; c.strokeText(t, x, y); c.fillStyle = '#fff'; c.fillText(t, x, y);
+      });
+    }
+    c.globalAlpha = 1;
+  }
+  /* en cada tiempo de la canción que toca (según CADA), un pulso nuevo; el anterior se apaga en APAGA s */
+  function pulsos(t){
+    if (!VEC || !SX) return;
+    var b = Math.floor((t - FASE) / BEAT);
+    if (b < ultimoBeat - 1){ pulso = previo2 = null; ultimoBeat = -1; }           // el reloj volvió atrás (barra, ▶)
+    if (b > ultimoBeat){
+      for (var bb = Math.max(ultimoBeat + 1, b); bb <= b; bb++){
+        var cada = cadaEn(bb);
+        if (bb >= 0 && bb % cada === 0){
+          var sem = semilla(bb);
+          if (sem >= 0){ previo2 = pulso; if (previo2) previo2.fin = FASE + bb * BEAT; pulso = armarPulso(sem, FASE + bb * BEAT, cada * BEAT / OLAS); }
+        }
+      }
+      ultimoBeat = b;
+    }
+    if (previo2){ var e = (t - previo2.fin) / APAGA; if (e >= 1 || e < 0) previo2 = null; else pintarPulso(previo2, t - previo2.t0, 1 - e); }
+    if (pulso) pintarPulso(pulso, t - pulso.t0, 1);
+  }
+  function ponerPulsos(si){ PULSOS = si; pulso = previo2 = null; ultimoBeat = -1; var bp = sl.querySelector('.zh-pulsos'); if (bp) bp.classList.toggle('si', si); }
+  document.addEventListener('keydown', function(e){
+    if (!sl.classList.contains('active') || e.ctrlKey || e.altKey || e.metaKey || (e.key !== 'p' && e.key !== 'P')) return;
+    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    e.preventDefault(); ponerPulsos(!PULSOS);
+  });
+  var bPul = sl.querySelector('.zh-pulsos');
+  if (bPul){ bPul.addEventListener('click', function(){ ponerPulsos(!PULSOS); }); bPul.classList.toggle('si', PULSOS); }
   function cuadro(now){
-    if (VIDEO) now = performance.now();
+    if (VIDEO || GRABAR) now = performance.now();
     requestAnimationFrame(cuadro);
     var real = Math.min(1, (now - antes) / 1000), dt = Math.min(0.05, real); antes = now;      // el reloj de la entrada va en tiempo real
     if (!sl.classList.contains('active') || !P) return;
@@ -6882,6 +6987,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.reglas-pila'), function
     var avance = tZoom == null ? 0 : sz < 2 ? 0.25 * sz * sz : 1 + 1 * (sz - 2);       // ~3 s cruzando la nube
     var dib = pintarNube(c, fx, fy, fz, az, el, d, w, Z, m, pt, avance, fwd, foco);
     window.__dib = dib;
+    if (PULSOS && corriendo && tZoom == null && tTit == null && cuenta <= 0) pulsos(tc);
     if (tZoom != null && avance > 1 && dib === 0){ if (!negroDesde) negroDesde = now; } else negroDesde = 0;
     /* reloj de depuración: el segundo de la entrada, abajo a la derecha */
     if (RELOJ){
