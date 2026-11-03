@@ -163,16 +163,22 @@ function proyectar(){
   }
 }
 /* ── dibujo ── */
+const NIV = 24;
 function dibujar(ahora){
   c.setTransform(dpr, 0, 0, dpr, 0, 0); c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
   const n = M.n;
-  /* la nube: puntos azules llenos (sin transparencia), todos de una vez; no cambia durante los destellos */
-  c.fillStyle = 'rgb(88,196,221)'; c.beginPath();
-  for (let i = 0; i < n; i++){
-    const x = X[i], y = Y[i], r = R[i]; if (x < -r || x > W + r || y < -r || y > H + r) continue;
-    c.moveTo(x + r, y); c.arc(x, y, r, 0, 6.2832);
+  /* la nube: puntos azules con sombreado, como en las láminas (los de atrás más tenues, los frecuentes más
+     brillantes), en NIV grupos de opacidad, cada uno de una vez; no cambia durante los destellos */
+  for (let b = 0; b < NIV; b++){
+    c.fillStyle = `rgba(88,196,221,${((b + .5) / NIV).toFixed(3)})`;
+    c.beginPath();
+    for (let i = 0; i < n; i++){
+      if (Math.min(NIV - 1, A[i] * NIV | 0) !== b) continue;
+      const x = X[i], y = Y[i], r = R[i]; if (x < -r || x > W + r || y < -r || y > H + r) continue;
+      c.moveTo(x + r, y); c.arc(x, y, r, 0, 6.2832);
+    }
+    c.fill();
   }
-  c.fill();
   if (semilla !== null) dibujarPulso(ahora);
   if (sobre !== null){ c.strokeStyle = '#fff'; c.lineWidth = 1.5; c.beginPath(); c.arc(X[sobre], Y[sobre], R[sobre] + 5, 0, 6.2832); c.stroke(); }
 }
