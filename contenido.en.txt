@@ -178,6 +178,12 @@ Introduction to the group
 [presentacion.intro.desc]
 What AtarraIA is: the paradigm shift of neural networks, their applications, our sessions and events. Animated with manim; use the arrow keys to advance. In Spanish.
 
+[presentacion.redes.titulo]
+Neural networks
+
+[presentacion.redes.desc]
+From one neuron to a network: MNIST, training, XOR, how a network transforms space, autoencoders, representations and InceptionV1's feature visualizations. Use the bar, the arrow keys or swipe on a phone to advance. In Spanish.
+
 [presentacion.convolucion.titulo]
 Convolution
 

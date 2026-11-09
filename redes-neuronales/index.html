@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redes neuronales · AtarraIA</title>
+<style>
+  html, body{margin:0; height:100%; background:#fff; color:#1b1b1b}
+  #carga{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px;
+    font-family:'Latin Modern Roman', 'LM Roman 10', Georgia, serif}
+  .logo{font-family:Impact,'Anton','Haettenschweiler','Arial Narrow Bold',sans-serif; font-size:min(96px, 16vw); line-height:1; letter-spacing:.01em; margin:0}
+  .c-ambar{color:#e8a800}
+  #barra{width:min(520px, 70vw); height:4px; background:#e6e6e6; border-radius:3px; overflow:hidden}
+  #barra i{display:block; height:100%; width:0; background:#2f6fd0; border-radius:3px; transition:width .25s ease}
+  #texto{font-size:20px; color:#8a8a8a; margin:0}
+</style>
+</head>
+<body>
+<!-- cargador: descarga las diapositivas (un solo archivo grande) mostrando el avance, y luego las abre aquí mismo -->
+<div id="carga">
+  <h1 class="logo">ATARRA<span class="c-ambar">IA</span></h1>
+  <div id="barra"><i></i></div>
+  <p id="texto">Descargando…</p>
+</div>
+<script>
+(function(){
+  var ARCHIVO = 'slides.html', BYTES = 21600309, PARTE = 0.75;   /* la descarga llena el 75 % de la barra; el resto, la preparación */
+  var barra = document.querySelector('#barra i'), texto = document.getElementById('texto');
+  function pintar(p){
+    barra.style.width = (100 * PARTE * p).toFixed(1) + '%';
+    texto.textContent = 'Cargando… ' + Math.floor(100 * PARTE * p) + ' %';
+  }
+  function abrir(html){
+    window.CARGA_BASE = PARTE;
+    document.open(); document.write(html); document.close();
+  }
+  function aLaAntigua(){ location.replace(ARCHIVO + location.hash); }
+  if (!window.fetch || !window.TextDecoder){ aLaAntigua(); return; }
+  fetch(ARCHIVO).then(function(r){
+    if (!r.ok) throw new Error(r.status);
+    if (!r.body || !r.body.getReader) return r.text().then(abrir);
+    var lector = r.body.getReader(), dec = new TextDecoder('utf-8'), trozos = [], n = 0;
+    function leer(){
+      return lector.read().then(function(x){
+        if (x.done){ trozos.push(dec.decode()); pintar(1); abrir(trozos.join('')); return; }
+        n += x.value.length; trozos.push(dec.decode(x.value, {stream: true}));
+        pintar(Math.min(1, n / BYTES));
+        return leer();
+      });
+    }
+    return leer();
+  }).catch(aLaAntigua);
+})();
+</script>
+</body>
+</html>
