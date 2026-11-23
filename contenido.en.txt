@@ -220,6 +220,12 @@ Embeddings
 [presentacion.coocurrencias.desc]
 Embeddings by counting neighbors: the vocabulary of a real corpus (UNAL chats, Wikipedia, subtitles, Reddit and Colombian literature), the co-occurrence matrix column by column, the cosine similarity between two words, and the columns projected with PCA and UMAP. In Spanish.
 
+[presentacion.geometria.titulo]
+Embeddings: geometry and search
+
+[presentacion.geometria.desc]
+Why more concepts than dimensions fit: angles between random vectors, collisions and capacity. Then a language model of Don Quixote that runs in the browser with its real weights: cutting it layer by layer, looking at its neurons and measuring the dimensionality of each token. In Spanish.
+
 
 # ── Playgrounds ───────────────────────────────────────────────────
 
